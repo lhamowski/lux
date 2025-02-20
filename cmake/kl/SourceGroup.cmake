@@ -1,0 +1,18 @@
+# Copyright (c) Kajetan Świerk
+# This file is part of the kl project: https://github.com/k0zmo/kl
+# Licensed under the MIT License. See the KL_LICENSE file for more details.
+
+function(kl_source_group _target)
+    cmake_parse_arguments(arg "" "TREE;PREFIX" "" ${ARGN})
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown keywords given to kl_source_group(): \"${arg_UNPARSED_ARGUMENTS}\"")
+    endif()
+    if(NOT arg_TREE)
+        message(FATAL_ERROR "Required argument TREE not given for kl_source_group")
+    endif()
+    if(arg_PREFIX)
+        list(APPEND args PREFIX ${arg_PREFIX})
+    endif()
+    get_target_property(sources_list ${_target} SOURCES)
+    source_group(TREE ${arg_TREE} FILES ${sources_list} ${args})
+endfunction()

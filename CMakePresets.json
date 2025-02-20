@@ -1,0 +1,236 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "common",
+            "description": "Common configuration for all platforms",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
+            "cacheVariables": {
+                "CMAKE_COLOR_DIAGNOSTICS": "ON"
+            }
+        },
+
+        {
+            "name": "windows",
+            "description": "Windows configuration for MSBuild toolchain that apply to msvc and clang",
+            "hidden": true,
+            "inherits": "common",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "unixlike",
+            "description": "Unix-like OS settings for gcc and clang toolchains",
+            "hidden": true,
+            "inherits": "common",
+            "condition": {
+                "type": "inList",
+                "string": "${hostSystemName}",
+                "list": [ "Linux", "Darwin" ]
+            }
+        },
+
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+            }
+        },
+        {
+            "name": "coverage",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Coverage"
+            }
+        },
+        {
+            "name": "asan",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "ASan"
+            }
+        },
+        {
+            "name": "tsan",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "TSan"
+            }
+        },
+        {
+            "name": "ubsan",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "UBSan"
+            }
+        },
+        {
+            "name": "msan",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MSan"
+            }
+        },
+
+        {
+            "name": "msvc",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/msvc.cmake",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/build_options/msvc.cmake"
+            }
+        },
+        {
+            "name": "gcc",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/gcc.cmake",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/build_options/gcc.cmake"
+            }
+        },
+        {
+            "name": "gcc-arm64-cross",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/gcc-arm64-cross.cmake",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/build_options/gcc.cmake",
+                "CMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE": "PRE_TEST"
+            }
+        },
+        {
+            "name": "clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchain/clang.cmake",
+                "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": "${sourceDir}/cmake/build_options/clang.cmake"
+            }
+        },
+
+        {
+            "name": "windows-msvc-debug",
+            "inherits": [ "windows", "msvc", "debug" ]
+        },
+        {
+            "name": "windows-msvc-release",
+            "inherits": [ "windows", "msvc", "release" ]
+        },
+        {
+            "name": "windows-msvc-coverage",
+            "inherits": [ "windows", "msvc", "coverage" ]
+        },
+        {
+            "name": "windows-msvc-asan",
+            "inherits": [ "windows", "msvc", "asan" ]
+        },
+
+        {
+            "name": "unixlike-gcc-debug",
+            "inherits": [ "unixlike", "gcc", "debug" ]
+        },
+        {
+            "name": "unixlike-gcc-release",
+            "inherits": [ "unixlike", "gcc", "release" ]
+        },
+        {
+            "name": "unixlike-gcc-coverage",
+            "inherits": [ "unixlike", "gcc", "coverage" ]
+        },
+        {
+            "name": "unixlike-gcc-asan",
+            "inherits": [ "unixlike", "gcc", "asan" ]
+        },
+        {
+            "name": "unixlike-gcc-tsan",
+            "inherits": [ "unixlike", "gcc", "tsan" ]
+        },
+        {
+            "name": "unixlike-gcc-ubsan",
+            "inherits": [ "unixlike", "gcc", "ubsan" ]
+        },
+
+        {
+            "name": "unixlike-gcc-arm64-cross-debug",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "debug" ]
+        },
+        {
+            "name": "unixlike-gcc-arm64-cross-release",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "release" ]
+        },
+        {
+            "name": "unixlike-gcc-arm64-cross-coverage",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "coverage" ]
+        },
+        {
+            "name": "unixlike-gcc-arm64-cross-asan",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "asan" ]
+        },
+        {
+            "name": "unixlike-gcc-arm64-cross-tsan",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "tsan" ]
+        },
+        {
+            "name": "unixlike-gcc-arm64-cross-ubsan",
+            "inherits": [ "unixlike", "gcc-arm64-cross", "ubsan" ]
+        },
+
+        {
+            "name": "unixlike-clang-debug",
+            "inherits": [ "unixlike", "clang", "debug" ]
+        },
+        {
+            "name": "unixlike-clang-release",
+            "inherits": [ "unixlike", "clang", "release" ]
+        },
+        {
+            "name": "unixlike-clang-coverage",
+            "inherits": [ "unixlike", "clang", "coverage" ]
+        },
+        {
+            "name": "unixlike-clang-asan",
+            "inherits": [ "unixlike", "clang", "asan" ]
+        },
+        {
+            "name": "unixlike-clang-tsan",
+            "inherits": [ "unixlike", "clang", "tsan" ]
+        },
+        {
+            "name": "unixlike-clang-ubsan",
+            "inherits": [ "unixlike", "clang", "ubsan" ]
+        },
+        {
+            "name": "unixlike-clang-msan",
+            "inherits": [ "unixlike", "clang", "msan" ]
+        },
+
+        {
+            "name": "vs2022",
+            "inherits": [ "windows", "msvc" ],
+            "architecture": "x64",
+            "toolset": "host=x64",
+            "generator": "Visual Studio 17 2022"
+        }
+    ]
+}
