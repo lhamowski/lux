@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-test-unixlike-gcc-release:
+    name: Build and test (unixlike-gcc)
+    runs-on: ubuntu-latest
+    container: lhamowski/devops:ubuntu-24.04-gcc-14-boost-1.87-latest
+    strategy:
+      matrix:
+        preset: [unixlike-gcc-release, unixlike-gcc-asan, unixlike-gcc-tsan, unixlike-gcc-ubsan]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset=${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build build/${{ matrix.preset }}
+
+      - name: Run tests
+        run: cd build/${{ matrix.preset }} && ctest -VV --output-on-failure
+
+  build-and-test-windows-msvc-release:
+    name: Build and test (windows-msvc-release)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          vsversion: "2022"
+
+      - name: Configure
+        run: cmake --preset=windows-msvc-release
+
+      - name: Build
+        run: cmake --build build/windows-msvc-release
+
+      - name: Run tests
+        run: cd build/windows-msvc-release && ctest -VV --output-on-failure
