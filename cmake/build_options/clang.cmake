@@ -73,12 +73,14 @@ cflex_set_cxx_flags(
 )
 
 cflex_set_linker_flags(
-    BUILD_TYPES 
-        Release
-        Debug
-        Coverage
     GLOBAL
         -Wl,--exclude-libs=ALL # It specifies a list of archive libraries from which symbols should not be automatically exported
         -Wl,--as-needed # Only link libraries that are needed
         -Wl,-z,defs # Ensure that all symbols are defined
+)
+
+cflex_set_linker_flags(
+    BUILD_TYPES Coverage
+    PRIVATE
+        --coverage # Enable coverage
 )
