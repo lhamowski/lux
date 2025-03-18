@@ -9,8 +9,8 @@ on:
       - master
 
 jobs:
-  build-and-test-unixlike-gcc-release:
-    name: Build and test (unixlike-gcc)
+  build-and-test-unixlike-gcc:
+    name: Build and test
     runs-on: ubuntu-latest
     container: lhamowski/devops:ubuntu-24.04-gcc-14-boost-1.87-latest
     strategy:
@@ -55,3 +55,30 @@ jobs:
 
       - name: Run tests
         run: cd build/windows-msvc-release && ctest -VV --output-on-failure
+
+  build-and-test-unixlike-clang-coverage:
+    name: Build, test and generate coverage report (unixlike-clang-coverage)
+    runs-on: ubuntu-latest
+    container: lhamowski/devops:ubuntu-24.04-clang-18-boost-1.87-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset=unixlike-clang-coverage
+
+      - name: Build
+        run: cmake --build build/unixlike-clang-coverage --target lux-coverage
+
+      - name: Run tests and generate coverage report
+        run: cd build/unixlike-clang-coverage && ctest -VV --output-on-failure
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: true
+          files: build/unixlike-clang-coverage/coverage.info
+          flags: unittests
+          name: lux-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}

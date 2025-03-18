@@ -16,8 +16,9 @@ catch_discover_tests(lux-test)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     include(CodeCoverage)
-    kl_add_coverage_target_gcovr(lux-coverage
+    kl_add_coverage_target_lcov(lux-coverage
         COMMAND lux-test
+        OUTPUT_NAME coverage
         FILTERS
            ${lux_SOURCE_DIR}/src/
            ${lux_SOURCE_DIR}/include/
