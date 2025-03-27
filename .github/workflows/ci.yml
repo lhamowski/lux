@@ -13,7 +13,7 @@ jobs:
   build-and-test-unixlike-gcc:
     name: Build and test
     runs-on: ubuntu-latest
-    container: lhamowski/devops:ubuntu-24.04-gcc-14-boost-1.87-latest
+    container: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest
     strategy:
       matrix:
         preset: [unixlike-gcc-release, unixlike-gcc-asan, unixlike-gcc-tsan, unixlike-gcc-ubsan]
@@ -60,7 +60,7 @@ jobs:
   build-and-test-unixlike-clang-coverage:
     name: Build, test and generate coverage report (unixlike-clang-coverage)
     runs-on: ubuntu-latest
-    container: lhamowski/devops:ubuntu-24.04-clang-18-boost-1.87-latest
+    container: lhamowski/devops:ubuntu-24.04-cpp-clang-18-boost-1.87-latest
 
     steps:
       - name: Checkout repo
