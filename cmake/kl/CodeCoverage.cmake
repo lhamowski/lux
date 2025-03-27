@@ -128,8 +128,7 @@ function(kl_add_coverage_target_lcov _target)
     )
     add_custom_command(TARGET ${_target}
         POST_BUILD
-        COMMAND ;
-        COMMENT "Open ./${output_name}/index.html to see coverage report"
+        COMMAND ${CMAKE_COMMAND} -E echo "Open ./${output_name}/index.html to see coverage report"
     )
 endfunction()
 
