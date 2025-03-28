@@ -19,9 +19,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     kl_add_coverage_target_lcov(lux-coverage
         COMMAND lux-test
         OUTPUT_NAME coverage
-        LLVM
         FILTERS
            ${lux_SOURCE_DIR}/src/
            ${lux_SOURCE_DIR}/include/
+        LCOV_ARGS 
+            --gcov-tool llvm-cov-gcov
+             # see https://github.com/linux-test-project/lcov/issues/220
+            --erase-functions __cxx_global_var_init
     )
 endif()

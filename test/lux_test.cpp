@@ -5,4 +5,5 @@
 TEST_CASE("Lux test", "[lux]")
 {
     CHECK(lux::foo() == 1);
+    CHECK(lux::bar() == 42);
 }

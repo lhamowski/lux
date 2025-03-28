@@ -9,7 +9,8 @@
 #       [OUTPUT_NAME <output_name>]
 #       [BRANCHES]
 #       [FILTERS <filter>...]
-#       [ARGS <arg>...]
+#       [RUNNER_ARGS <arg>...]
+#       [LCOV_ARGS <arg>...]
 #   )
 #
 #   kl_add_coverage_target_gcovr(<target_name>
@@ -18,7 +19,8 @@
 #       [XML]
 #       [FILTERS <filter>...]
 #       [EXCLUDE <filter>...]
-#       [ARGS <arg>...]
+#       [RUNNER_ARGS <arg>...]
+#       [GCOVR_ARGS <arg>...]
 #   )
 #
 # Example:
@@ -70,7 +72,7 @@ function(kl_add_coverage_target_lcov _target)
 
     set(options BRANCHES IGNORE_COMMAND_ERRORS)
     set(one_value_args COMMAND OUTPUT_NAME)
-    set(multi_value_args FILTERS ARGS)
+    set(multi_value_args FILTERS RUNNER_ARGS LCOV_ARGS)
     cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
     if(NOT arg_COMMAND)
@@ -95,7 +97,7 @@ function(kl_add_coverage_target_lcov _target)
     endif()
 
     list(APPEND cmd COMMAND ${LCOV_EXECUTABLE} -q --zerocounters --directory .)
-    list(APPEND cmd COMMAND ${arg_COMMAND} ${arg_ARGS} ${ignore_errors})
+    list(APPEND cmd COMMAND ${arg_COMMAND} ${arg_RUNNER_ARGS} ${ignore_errors})
     list(APPEND cmd COMMAND
         ${LCOV_EXECUTABLE}
         -q
@@ -103,6 +105,7 @@ function(kl_add_coverage_target_lcov _target)
         --directory .
         --output-file ${output_name}.all.info
         ${branch_coverage}
+        ${arg_LCOV_ARGS}
     )
     list(APPEND cmd COMMAND
         ${LCOV_EXECUTABLE}
@@ -146,7 +149,7 @@ function(kl_add_coverage_target_gcovr _target)
 
     set(options XML LLVM IGNORE_COMMAND_ERRORS)
     set(one_value_args COMMAND OUTPUT_NAME)
-    set(multi_value_args FILTERS EXCLUDE ARGS)
+    set(multi_value_args FILTERS EXCLUDE RUNNER_ARGS GCOVR_ARGS)
     cmake_parse_arguments(arg "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
     if(NOT arg_COMMAND)
@@ -211,7 +214,7 @@ function(kl_add_coverage_target_gcovr _target)
         kl_ignore_errors_call(ignore_errors)
     endif()
 
-    list(APPEND cmd COMMAND ${arg_COMMAND} ${arg_ARGS} ${ignore_errors})
+    list(APPEND cmd COMMAND ${arg_COMMAND} ${arg_RUNNER_ARGS} ${ignore_errors})
     list(APPEND cmd COMMAND
         ${GCOVR_EXECUTABLE}
         --delete ${output_mode}
@@ -220,6 +223,7 @@ function(kl_add_coverage_target_gcovr _target)
         ${arg_EXCLUDE}
         --output=${output_file}
         ${gcov_executable}
+        ${arg_GCOVR_ARGS}
     )
 
     add_custom_target(${_target}
