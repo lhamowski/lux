@@ -30,7 +30,8 @@ cflex_set_cxx_flags(
         -O0 # Disable optimizations
         -g # Generate debug information
     PRIVATE 
-        --coverage # Enable coverage
+        -fprofile-instr-generate # Enable profiling instrumentation
+        -fcoverage-mapping # Enable coverage mapping
 )
 
 cflex_set_cxx_flags(
@@ -82,5 +83,6 @@ cflex_set_linker_flags(
 cflex_set_linker_flags(
     BUILD_TYPES Coverage
     PRIVATE
-        --coverage # Enable coverage
+        -fprofile-instr-generate # Enable profiling instrumentation
+        -fcoverage-mapping # Enable coverage mapping
 )

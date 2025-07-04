@@ -70,10 +70,19 @@ jobs:
         run: cmake --preset=unixlike-clang-coverage
 
       - name: Build
-        run: cmake --build build/unixlike-clang-coverage --target lux-coverage
+        run: cmake --build build/unixlike-clang-coverage
 
       - name: Run tests and generate coverage report
-        run: cd build/unixlike-clang-coverage && ctest -VV --output-on-failure
+        run: |
+          cd build/unixlike-clang-coverage
+          echo "=== Running tests with coverage ==="
+          LLVM_PROFILE_FILE=coverage-%p.profraw ctest -VV --output-on-failure
+          echo "=== Profile files in test directory ==="
+          ls -la test/*.profraw || echo "No .profraw files found in test/"
+          echo "=== Merging profile files ==="
+          llvm-profdata-18 merge --sparse test/*.profraw -o coverage.profdata
+          echo "=== Generating coverage report ==="
+          llvm-cov-18 export ./test/lux-test -instr-profile=coverage.profdata -format=lcov -ignore-filename-regex=".*test/.*" > coverage.info
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5
