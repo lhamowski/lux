@@ -82,7 +82,7 @@ jobs:
           echo "=== Merging profile files ==="
           llvm-profdata-18 merge --sparse test/*.profraw -o coverage.profdata
           echo "=== Generating coverage report ==="
-          llvm-cov-18 export ./test/lux-test -instr-profile=coverage.profdata -format=lcov -ignore-filename-regex=".*test/.*" > coverage.info
+          llvm-cov-18 export ./test/lux-test -instr-profile=coverage.profdata -format=lcov -ignore-filename-regex=".*test/.*|.*support/assert\.hpp" > coverage.info
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5
