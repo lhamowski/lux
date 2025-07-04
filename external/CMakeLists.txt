@@ -1,5 +1,18 @@
 include(../cmake/CPM.cmake)
 
+CPMAddPackage(
+    NAME fmt
+    URL https://github.com/fmtlib/fmt/archive/11.2.0.zip
+    URL_HASH SHA256=ebb31f63e14048ffba9200bbe27b339ec50226cbe8e96ca8b62ee16a0a4fb1af
+)
+
+CPMAddPackage(
+    NAME spdlog
+    URL https://github.com/gabime/spdlog/archive/v1.15.3.zip
+    URL_HASH SHA256=b74274c32c8be5dba70b7006c1d41b7d3e5ff0dff8390c8b6390c1189424e094
+    OPTIONS "SPDLOG_FMT_EXTERNAL ON"
+)
+
 if(LUX_TEST)
     CPMAddPackage(
         NAME Catch2
