@@ -1,5 +1,3 @@
-#pragma once
-
 #ifdef _WIN32
 // std::getenv may generate warnings about unsafe functions
 #define _CRT_SECURE_NO_WARNINGS

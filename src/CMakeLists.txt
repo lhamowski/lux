@@ -16,7 +16,12 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/fwd.hpp
 )
 add_library(lux::lux ALIAS lux)
-target_link_libraries(lux PRIVATE fmt::fmt spdlog::spdlog)
+target_link_libraries(lux 
+	PUBLIC 
+		spdlog::spdlog 
+	PRIVATE
+		fmt::fmt
+)
 
 target_compile_features(lux PUBLIC cxx_std_20)
 target_include_directories(lux PUBLIC ${lux_SOURCE_DIR}/include)

@@ -9,7 +9,6 @@ target_link_libraries(lux-test PRIVATE
     Catch2::Catch2WithMain
     lux::lux 
     fmt::fmt
-    spdlog::spdlog
 )
 set_target_properties(lux-test PROPERTIES FOLDER lux)
 

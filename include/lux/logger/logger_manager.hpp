@@ -13,7 +13,7 @@
 
 namespace lux {
 
-static constexpr std::string_view default_log_pattern{"[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%n] %v"};
+static constexpr std::string_view default_log_pattern{"%Y-%m-%d %H:%M:%S.%e [%^%l%$] <%n> %v"};
 static constexpr auto default_log_level{log_level::info};
 
 struct console_log_config
