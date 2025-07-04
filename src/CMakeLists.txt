@@ -11,6 +11,7 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/support/assert.hpp
 	${lux_include_files_dir}/support/move.hpp
 	${lux_include_files_dir}/support/overload.hpp
+	${lux_include_files_dir}/support/path.hpp ${lux_source_files_dir}/support/path.cpp
 
 	${lux_include_files_dir}/fwd.hpp
 )

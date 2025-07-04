@@ -1,8 +1,8 @@
-include(CFlex)
-
 cflex_add_executable(lux-test SOURCES
-    logger_test.cpp
-    finally_test.cpp
+    logger/logger_test.cpp
+    
+    support/finally_test.cpp
+    support/path_test.cpp
 )
 
 target_link_libraries(lux-test PRIVATE 
