@@ -1,14 +1,21 @@
 #include <lux/logger/logger.hpp>
 #include <lux/logger/logger_manager.hpp>
 
+#include <lux/support/finally.hpp>
+
 #include <catch2/catch_all.hpp>
 
 #include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/logger.h>
 
-#include <sstream>
-#include <memory>
+#include <chrono>
+#include <filesystem>
+#include <format>
+#include <fstream>
 #include <iostream>
+#include <memory>
+#include <regex>
+#include <sstream>
 
 TEST_CASE("Logger basic functionality", "[logger]")
 {
@@ -92,7 +99,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         REQUIRE_NOTHROW(lux::logger_manager{config});
     }
 
-    SECTION("Logger manager can be created with file config")
+    SECTION("Logger manager can be created with basic file config")
     {
         lux::log_config config;
         config.file = lux::basic_file_log_config{
@@ -100,19 +107,22 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
             .filename = "test_log.log",
             .pattern = "[%Y-%m-%d %H:%M:%S] %v"
         };
-        
+
+        // Ensure the file does not exist before creating the logger manager
+        std::filesystem::remove("test_log.log");
+
+        // finally block to clean up the file after the test
+        LUX_FINALLY({ std::filesystem::remove("test_log.log"); });
+
         REQUIRE_NOTHROW(lux::logger_manager{config});
+
+        // Check if the file was created
+        CHECK(std::filesystem::exists("test_log.log"));
     }
 
-    SECTION("Logger manager can be created with both console and file config")
+    SECTION("Logger manager can be created with rotating file config")
     {
         lux::log_config config;
-        config.console = lux::console_log_config{
-            .level = lux::log_level::debug,
-            .pattern = "[%H:%M:%S] %v",
-            .colorize = false
-        };
-
         lux::rotating_file_log_config rotating_config;
         rotating_config.level = lux::log_level::info;
         rotating_config.filename = "rotating_test.log";
@@ -120,7 +130,43 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         rotating_config.max_files = 3;
         config.file = rotating_config;
         
+        // Ensure the file does not exist before creating the logger manager
+        std::filesystem::remove("rotating_test.log");
+
+        // finally block to clean up the file after the test
+        LUX_FINALLY({ std::filesystem::remove("rotating_test.log"); });
+
         REQUIRE_NOTHROW(lux::logger_manager{config});
+
+        // Check if the file was created
+        CHECK(std::filesystem::exists("rotating_test.log"));
+    }
+
+    SECTION("Logger manager can be created with daily file config")
+    {
+        lux::log_config config;
+        lux::daily_file_log_config daily_config;
+        daily_config.level = lux::log_level::warn;
+        daily_config.filename = "daily_test.log";
+        daily_config.rotation_hour = 23; // Rotate at 11 PM
+        daily_config.rotation_minute = 59; // Rotate at 59 minutes past the hour
+        config.file = daily_config;
+
+        namespace chrono = std::chrono;
+        const auto now = chrono::floor<chrono::days>(chrono::system_clock::now());
+        const auto ymd = chrono::year_month_day{now};
+        const auto expected_filename = std::format("daily_test_{:%Y-%m-%d}.log", ymd);
+
+        // Ensure the file does not exist before creating the logger manager
+        std::filesystem::remove(expected_filename);
+
+        // finally block to clean up the file after the test
+        LUX_FINALLY({ std::filesystem::remove(expected_filename); });
+
+        REQUIRE_NOTHROW(lux::logger_manager{config});
+
+        // Check if the file was created with the current date in the filename
+        CHECK(std::filesystem::exists(expected_filename));
     }
 
     SECTION("Logger manager provides loggers by name")
@@ -137,20 +183,6 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         // Should return the same logger instance for the same name
         CHECK(&logger1 == &logger1_again);
         CHECK(&logger1 != &logger2);
-    }
-
-    SECTION("Logger manager supports daily file rotation config")
-    {
-        lux::log_config config;
-
-        lux::daily_file_log_config daily_config;
-        daily_config.level = lux::log_level::warn;
-        daily_config.filename = "daily_test.log";
-        daily_config.rotation_hour = 23;
-        daily_config.rotation_minute = 59;
-        config.file = daily_config;
-        
-        REQUIRE_NOTHROW(lux::logger_manager{config});
     }
 }
 
@@ -201,23 +233,79 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
     {
         // Create a logger manager with console output
         lux::log_config config;
-        config.console = lux::console_log_config{
-            .level = lux::log_level::debug,
-            .pattern = "[%l] %n: %v",
-            .colorize = false
-        };
+
+        lux::console_log_config console_config;
+        console_config.level = lux::log_level::debug;
+        console_config.pattern = "[%l] %n: %v";
+
+        lux::basic_file_log_config file_config;
+        file_config.level = lux::log_level::info;
+        file_config.filename = "integration_test.log";
+        file_config.pattern = "[%Y-%m-%d %H:%M:%S] [%^%l%$] [%n] %v";
         
-        lux::logger_manager manager{config};
+        config.console = console_config;
+        config.file = file_config;
+
+        // Ensure the file does not exist before creating the logger manager
+        std::filesystem::remove("integration_test.log");
+
+        // finally block to clean up the file after the test
+        LUX_FINALLY({ std::filesystem::remove("integration_test.log"); });
         
+        std::optional<lux::logger_manager> manager;
+
+        REQUIRE_NOTHROW(manager.emplace(config));
+        REQUIRE(manager.has_value());
+
+        // Check sinks
+        const auto& sinks = manager->sinks();
+        REQUIRE(sinks.size() == 2); // One console sink and one file sink
+
+        CHECK(sinks[0]->level() == spdlog::level::debug);
+        CHECK(sinks[1]->level() == spdlog::level::info);
+
         // Get a logger and use it
-        auto& logger = manager.get_logger("integration_test");
+        auto& logger = manager->get_logger("test");
+
+        // Log messages at different levels
+        REQUIRE_NOTHROW(LUX_LOG_TRACE(logger, "Trace message"));
+        REQUIRE_NOTHROW(LUX_LOG_DEBUG(logger, "Debug message with value: {}", 123));
+        REQUIRE_NOTHROW(LUX_LOG_INFO(logger, "Starting integration test"));
+        REQUIRE_NOTHROW(LUX_LOG_WARN(logger, "Warning message"));
+        REQUIRE_NOTHROW(LUX_LOG_ERROR(logger, "Error message"));
+        REQUIRE_NOTHROW(LUX_LOG_CRITICAL(logger, "Critical message"));
+
+        // Flush the logger to ensure all messages are written
+        REQUIRE_NOTHROW(logger.flush());
+
+        // Check if the file was created and contains the expected log messages
+        CHECK(std::filesystem::exists("integration_test.log"));
+        std::ifstream log_file("integration_test.log");
+        REQUIRE(log_file.is_open());
         
-        // These should not throw
-        REQUIRE_NOTHROW(logger.log(lux::log_level::info, "Starting integration test"));
-        REQUIRE_NOTHROW(logger.log(lux::log_level::debug, "Debug message with value: {}", 123));
-        REQUIRE_NOTHROW(logger.log(lux::log_level::warn, "Warning message"));
-        REQUIRE_NOTHROW(logger.log(lux::log_level::error, "Error message"));
+        // Debug log message is not in the file, as it is only logged to console.
+
+        // Check info log message
+        std::string line;
+        std::getline(log_file, line);
+
+        // Check expected pattern using regex
+        std::regex info_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[info\] \[test\] Starting integration test)");
+        CHECK(std::regex_search(line, info_pattern));
+
+        // Check warning log message
+        std::getline(log_file, line);
+        std::regex warn_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[warning\] \[test\] Warning message)");
+        CHECK(std::regex_search(line, warn_pattern));
+
+        // Check error log message
+        std::getline(log_file, line);
+        std::regex error_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[error\] \[test\] Error message)");
+        CHECK(std::regex_search(line, error_pattern));
+
+        // Check critical log message
+        std::getline(log_file, line);
+        std::regex critical_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[critical\] \[test\] Critical message)");
+        CHECK(std::regex_search(line, critical_pattern));
     }
 }
-
-
