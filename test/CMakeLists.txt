@@ -2,6 +2,7 @@ include(CFlex)
 
 cflex_add_executable(lux-test SOURCES
     logger_test.cpp
+    finally_test.cpp
 )
 
 target_link_libraries(lux-test PRIVATE 
