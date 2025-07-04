@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 project(lux LANGUAGES CXX VERSION 0.1)
 
-list(APPEND CMAKE_MODULE_PATH ${lux_SOURCE_DIR}/cmake;${lux_SOURCE_DIR}/cmake/kl)
+list(APPEND CMAKE_MODULE_PATH ${lux_SOURCE_DIR}/cmake)
 
 include(CMakeDependentOption)
 include(CFlex)

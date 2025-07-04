@@ -16,5 +16,5 @@ list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")
 include(Catch)
 include(SourceGroup)
 
-kl_source_group(lux-test TREE ${lux_SOURCE_DIR})
+lux_source_group(lux-test TREE ${lux_SOURCE_DIR})
 catch_discover_tests(lux-test)
