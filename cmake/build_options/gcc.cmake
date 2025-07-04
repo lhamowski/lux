@@ -7,19 +7,20 @@ cflex_set_cxx_flags(
         -Wall # Enable all warnings
         -Wextra # Enable extra warnings
         -Wpedantic # Enable pedantic warnings
-        -Werror # Treat warnings as errors
 )
 
 cflex_set_cxx_flags(
     BUILD_TYPES Debug
     GLOBAL 
+        -Werror # Treat warnings as errors
         -O0 # Disable optimizations
         -g # Generate debug information
 )
 
 cflex_set_cxx_flags(
     BUILD_TYPES Release
-    GLOBAL 
+    GLOBAL
+        -Werror # Treat warnings as errors
         -O3 # Enable optimizations
         -DNDEBUG # Disable assertions
 )
@@ -27,6 +28,7 @@ cflex_set_cxx_flags(
 cflex_set_cxx_flags(
     BUILD_TYPES Coverage
     GLOBAL
+        -Werror # Treat warnings as errors
         -O0 # Disable optimizations
         -g # Generate debug information
     PRIVATE
