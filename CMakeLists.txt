@@ -27,6 +27,7 @@ cmake_dependent_option(
     OFF
 )
 option(LUX_FETCH_DEPS "Fetch required dependencies" ON)
+option(LUX_FMT_EXTERNAL "Use external fmt library" OFF)
 
 if(LUX_FETCH_DEPS)
     add_subdirectory(external)

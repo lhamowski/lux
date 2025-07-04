@@ -1,4 +1,4 @@
-# SourceGroup
+# LuxSourceGroup
 #
 # lux_source_group(<target> TREE <tree_root>)
 #

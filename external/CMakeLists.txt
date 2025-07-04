@@ -1,10 +1,14 @@
 include(../cmake/CPM.cmake)
 
-CPMAddPackage(
-    NAME fmt
-    URL https://github.com/fmtlib/fmt/archive/11.2.0.zip
-    URL_HASH SHA256=ebb31f63e14048ffba9200bbe27b339ec50226cbe8e96ca8b62ee16a0a4fb1af
-)
+if (NOT LUX_FMT_EXTERNAL)
+    CPMAddPackage(
+        NAME fmt
+        URL https://github.com/fmtlib/fmt/archive/11.2.0.zip
+        URL_HASH SHA256=ebb31f63e14048ffba9200bbe27b339ec50226cbe8e96ca8b62ee16a0a4fb1af
+    )
+else()
+    message(STATUS "Using external fmt library")
+endif()
 
 CPMAddPackage(
     NAME spdlog
