@@ -21,5 +21,4 @@ target_compile_features(lux PUBLIC cxx_std_20)
 target_include_directories(lux PUBLIC ${lux_SOURCE_DIR}/include)
 set_target_properties(lux PROPERTIES FOLDER lux)
 
-include(SourceGroup)
 lux_source_group(lux TREE ${lux_SOURCE_DIR})
