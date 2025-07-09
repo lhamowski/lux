@@ -20,7 +20,7 @@ namespace lux {
 template<typename T>
 concept compile_time_format_string = fmt::is_compiled_string<T>::value;
 
-class logger final
+class logger
 {
 public:
    explicit logger(std::shared_ptr<spdlog::logger> spd_logger) : spd_logger_(lux::move(spd_logger))

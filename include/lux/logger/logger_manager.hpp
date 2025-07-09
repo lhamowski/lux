@@ -51,7 +51,7 @@ struct log_config
     std::optional<file_log_config> file;
 };
 
-class logger_manager final
+class logger_manager
 {
 public:
     logger_manager(const log_config& config);
