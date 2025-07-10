@@ -17,40 +17,46 @@
 namespace lux {
 
 // Concept for compile-time format strings
-template<typename T>
+template <typename T>
 concept compile_time_format_string = fmt::is_compiled_string<T>::value;
 
 class logger
 {
 public:
-   explicit logger(std::shared_ptr<spdlog::logger> spd_logger) : spd_logger_(lux::move(spd_logger))
-   {
-       LUX_ASSERT(spd_logger_, "spdlog::logger must not be null");
-   }
+    explicit logger(std::shared_ptr<spdlog::logger> spd_logger) : spd_logger_(lux::move(spd_logger))
+    {
+        LUX_ASSERT(spd_logger_, "spdlog::logger must not be null");
+    }
 
-   logger(const logger&) = delete;
-   logger& operator=(const logger&) = delete;
-   logger(logger&&) = default;
-   logger& operator=(logger&&) = default;
+    logger(const logger&) = delete;
+    logger& operator=(const logger&) = delete;
+    logger(logger&&) = default;
+    logger& operator=(logger&&) = default;
 
-   // Overload for compile-time format string validation
-   template <compile_time_format_string FormatString, typename... Args>
-   void log(log_level level, const FormatString& fmt, Args&&... args)
-   {
-       spd_logger_->log(detail::to_spdlog_level(level), fmt, std::forward<Args>(args)...);
-   }
+    // Overload for compile-time format string validation
+    template <compile_time_format_string FormatString, typename... Args>
+    void log(log_level level, const FormatString& fmt, Args&&... args)
+    {
+        if (const auto spdlog_level = detail::to_spdlog_level(level); spd_logger_->should_log(spdlog_level))
+        {
+            spd_logger_->log(spdlog_level, fmt, std::forward<Args>(args)...);
+        }
+    }
 
-   // Overload for string_view (runtime validation)
-   template <typename... Args>
-   void log(log_level level, std::string_view fmt, Args&&... args)
-   {
-       spd_logger_->log(detail::to_spdlog_level(level), fmt::runtime(fmt), std::forward<Args>(args)...);
-   }
+    // Overload for string_view (runtime validation)
+    template <typename... Args>
+    void log(log_level level, std::string_view fmt, Args&&... args)
+    {
+        if (const auto spdlog_level = detail::to_spdlog_level(level); spd_logger_->should_log(spdlog_level))
+        {
+            spd_logger_->log(detail::to_spdlog_level(level), fmt::runtime(fmt), std::forward<Args>(args)...);
+        }
+    }
 
-   void flush() { spd_logger_->flush(); }
+    void flush() { spd_logger_->flush(); }
 
 private:
-   std::shared_ptr<spdlog::logger> spd_logger_;
+    std::shared_ptr<spdlog::logger> spd_logger_;
 };
 
 } // namespace lux

@@ -2,6 +2,7 @@
 
 #include <lux/logger/log_level.hpp>
 #include <lux/logger/logger.hpp>
+#include <lux/logger/logger_factory.hpp>
 
 #include <spdlog/common.h>
 
@@ -19,7 +20,7 @@ static constexpr auto default_log_level{log_level::info};
 struct console_log_config
 {
     log_level level{default_log_level};
-    std::string pattern{default_log_pattern}; 
+    std::string pattern{default_log_pattern};
     bool colorize{true};
 };
 
@@ -33,13 +34,13 @@ struct basic_file_log_config
 struct rotating_file_log_config : public basic_file_log_config
 {
     size_t max_size{10 * 1024 * 1024}; // 10 MB
-    size_t max_files{5};               
+    size_t max_files{5};
 };
 
 struct daily_file_log_config : public basic_file_log_config
 {
     // Rotate at midnight by default
-    unsigned rotation_hour{0}; 
+    unsigned rotation_hour{0};
     unsigned rotation_minute{0};
 };
 
@@ -51,7 +52,7 @@ struct log_config
     std::optional<file_log_config> file;
 };
 
-class logger_manager
+class logger_manager : public lux::logger_factory
 {
 public:
     logger_manager(const log_config& config);
@@ -63,9 +64,10 @@ public:
     logger_manager& operator=(logger_manager&&) = default;
 
 public:
-    // Get or create a logger by name
-    logger& get_logger(const char* name);
+    // lux::logger_factory implementation
+    lux::logger& get_logger(const char* name) override;
 
+public:
     const auto& sinks() const { return sinks_; }
     const auto& loggers() const { return loggers_; }
 

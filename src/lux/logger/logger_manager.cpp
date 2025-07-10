@@ -63,7 +63,11 @@ void logger_manager::configure_sinks(const log_config& config)
     if (!sinks_.empty())
     {
         const auto elem = std::ranges::min_element(sinks_, [](const auto& a, const auto& b) { return a->level() < b->level(); });
-        LUX_ASSERT(elem != sinks_.end(), "No sinks configured");
+        if (elem == sinks_.end())
+        {
+            min_log_level_ = spdlog::level::off;
+            return;
+        }
 
         min_log_level_ = (*elem)->level();
     }
