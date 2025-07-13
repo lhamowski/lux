@@ -44,7 +44,7 @@ TEST_CASE("Logger basic functionality", "[logger]")
         CHECK(output.find("info: Test message") != std::string::npos);
     }
 
-    SECTION("Logger logs formatted messages")
+    SECTION("Logger logs formatted messages with consteval format string")
     {
         std::ostringstream oss;
         auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
@@ -57,6 +57,43 @@ TEST_CASE("Logger basic functionality", "[logger]")
         logger.log(lux::log_level::info, "Number: {}, String: {}", 42, "test");
         spd_logger->flush();
         
+        std::string output = oss.str();
+        CHECK(output.find("Number: 42, String: test") != std::string::npos);
+    }
+
+    SECTION("Logger logs formatted messages with runtime format std::string")
+    {
+        std::ostringstream oss;
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+        auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
+        spd_logger->set_level(spdlog::level::trace);
+        spd_logger->set_pattern("%v");
+        
+        lux::logger logger{spd_logger};
+
+        std::string format_string = "Number: {}, String: {}";
+        logger.log(lux::log_level::info, lux::runtime(format_string), 42, "test");
+        spd_logger->flush();
+
+        std::string output = oss.str();
+        CHECK(output.find("Number: 42, String: test") != std::string::npos);
+    }
+
+    SECTION("Logger logs formatted messages with runtime format std::string_view")
+    {
+        std::ostringstream oss;
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+        auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
+        spd_logger->set_level(spdlog::level::trace);
+        spd_logger->set_pattern("%v");
+
+        lux::logger logger{spd_logger};
+
+        std::string str = "Number: {}, String: {}";
+        std::string_view format_string = str;
+        logger.log(lux::log_level::info, lux::runtime(format_string), 42, "test");
+        spd_logger->flush();
+
         std::string output = oss.str();
         CHECK(output.find("Number: 42, String: test") != std::string::npos);
     }
