@@ -1,6 +1,7 @@
 cflex_add_executable(lux-test SOURCES
     logger/logger_test.cpp
     
+    support/enum_test.cpp
     support/finally_test.cpp
     support/path_test.cpp
 )
