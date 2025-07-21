@@ -1,5 +1,7 @@
 #pragma once
 
+#include <compare>
+
 namespace lux {
 
 template <typename T, typename Tag>
