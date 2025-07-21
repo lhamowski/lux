@@ -17,6 +17,12 @@ CPMAddPackage(
     OPTIONS "SPDLOG_FMT_EXTERNAL ON"
 )
 
+CPMAddPackage(
+    NAME magic_enum
+    GITHUB_REPOSITORY Neargye/magic_enum
+    GIT_TAG v0.9.7
+)
+
 if(LUX_TEST)
     CPMAddPackage(
         NAME Catch2

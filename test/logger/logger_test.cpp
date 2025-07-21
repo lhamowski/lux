@@ -23,7 +23,7 @@ TEST_CASE("Logger basic functionality", "[logger]")
     {
         auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(std::cout);
         auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
-        
+
         REQUIRE_NOTHROW(lux::logger{spd_logger});
     }
 
@@ -32,15 +32,15 @@ TEST_CASE("Logger basic functionality", "[logger]")
         std::ostringstream oss;
         auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
         auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
-        spd_logger->set_level(spdlog::level::trace);  // Allow all levels
-        spd_logger->set_pattern("%l: %v");  // Simple pattern for testing
-        
+        spd_logger->set_level(spdlog::level::trace); // Allow all levels
+        spd_logger->set_pattern("%l: %v");           // Simple pattern for testing
+
         lux::logger logger{spd_logger};
-        
+
         logger.log(lux::log_level::info, "Test message");
         spd_logger->flush();
-        
-        std::string output = oss.str();
+
+        const std::string output = oss.str();
         CHECK(output.find("info: Test message") != std::string::npos);
     }
 
@@ -51,13 +51,13 @@ TEST_CASE("Logger basic functionality", "[logger]")
         auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
         spd_logger->set_level(spdlog::level::trace);
         spd_logger->set_pattern("%v");
-        
+
         lux::logger logger{spd_logger};
-        
+
         logger.log(lux::log_level::info, "Number: {}, String: {}", 42, "test");
         spd_logger->flush();
-        
-        std::string output = oss.str();
+
+        const std::string output = oss.str();
         CHECK(output.find("Number: 42, String: test") != std::string::npos);
     }
 
@@ -68,14 +68,14 @@ TEST_CASE("Logger basic functionality", "[logger]")
         auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
         spd_logger->set_level(spdlog::level::trace);
         spd_logger->set_pattern("%v");
-        
+
         lux::logger logger{spd_logger};
 
         std::string format_string = "Number: {}, String: {}";
         logger.log(lux::log_level::info, lux::runtime(format_string), 42, "test");
         spd_logger->flush();
 
-        std::string output = oss.str();
+        const std::string output = oss.str();
         CHECK(output.find("Number: 42, String: test") != std::string::npos);
     }
 
@@ -94,8 +94,32 @@ TEST_CASE("Logger basic functionality", "[logger]")
         logger.log(lux::log_level::info, lux::runtime(format_string), 42, "test");
         spd_logger->flush();
 
-        std::string output = oss.str();
+        const std::string output = oss.str();
         CHECK(output.find("Number: 42, String: test") != std::string::npos);
+    }
+
+    SECTION("Logger automatically converts enum arguments to string")
+    {
+        std::ostringstream oss;
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+        auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
+        spd_logger->set_level(spdlog::level::trace);
+        spd_logger->set_pattern("%v");
+
+        lux::logger logger{spd_logger};
+
+        enum class color
+        {
+            red,
+            green,
+            blue
+        };
+
+        logger.log(lux::log_level::info, "Color: {}", color::green);
+        spd_logger->flush();
+
+        const std::string output = oss.str();
+        CHECK(output.find("Color: green") != std::string::npos);
     }
 
     SECTION("Logger supports all log levels")
@@ -105,9 +129,9 @@ TEST_CASE("Logger basic functionality", "[logger]")
         auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
         spd_logger->set_level(spdlog::level::trace);
         spd_logger->set_pattern("%l");
-        
+
         lux::logger logger{spd_logger};
-        
+
         logger.log(lux::log_level::trace, "trace");
         logger.log(lux::log_level::debug, "debug");
         logger.log(lux::log_level::info, "info");
@@ -115,8 +139,8 @@ TEST_CASE("Logger basic functionality", "[logger]")
         logger.log(lux::log_level::error, "error");
         logger.log(lux::log_level::critical, "critical");
         spd_logger->flush();
-        
-        std::string output = oss.str();
+
+        const std::string output = oss.str();
         CHECK(output.find("trace") != std::string::npos);
         CHECK(output.find("debug") != std::string::npos);
         CHECK(output.find("info") != std::string::npos);
@@ -132,7 +156,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
     {
         lux::log_config config;
         config.console = lux::console_log_config{};
-        
+
         REQUIRE_NOTHROW(lux::logger_manager{config});
     }
 
@@ -140,10 +164,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
     {
         lux::log_config config;
         config.file = lux::basic_file_log_config{
-            .level = lux::log_level::info,
-            .filename = "test_log.log",
-            .pattern = "[%Y-%m-%d %H:%M:%S] %v"
-        };
+            .level = lux::log_level::info, .filename = "test_log.log", .pattern = "[%Y-%m-%d %H:%M:%S] %v"};
 
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove("test_log.log");
@@ -166,7 +187,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         rotating_config.max_size = 1024 * 1024;
         rotating_config.max_files = 3;
         config.file = rotating_config;
-        
+
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove("rotating_test.log");
 
@@ -185,7 +206,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         lux::daily_file_log_config daily_config;
         daily_config.level = lux::log_level::warn;
         daily_config.filename = "daily_test.log";
-        daily_config.rotation_hour = 23; // Rotate at 11 PM
+        daily_config.rotation_hour = 23;   // Rotate at 11 PM
         daily_config.rotation_minute = 59; // Rotate at 59 minutes past the hour
         config.file = daily_config;
 
@@ -210,13 +231,13 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
     {
         lux::log_config config;
         config.console = lux::console_log_config{};
-        
+
         lux::logger_manager manager{config};
-        
+
         auto& logger1 = manager.get_logger("test_logger_1");
         auto& logger2 = manager.get_logger("test_logger_2");
         auto& logger1_again = manager.get_logger("test_logger_1");
-        
+
         // Should return the same logger instance for the same name
         CHECK(&logger1 == &logger1_again);
         CHECK(&logger1 != &logger2);
@@ -228,7 +249,7 @@ TEST_CASE("Log configuration structures", "[log_config]")
     SECTION("Console log config has reasonable defaults")
     {
         lux::console_log_config config;
-        
+
         CHECK(config.level == lux::log_level::info);
         CHECK(config.pattern == lux::default_log_pattern);
         CHECK(config.colorize == true);
@@ -237,7 +258,7 @@ TEST_CASE("Log configuration structures", "[log_config]")
     SECTION("Basic file log config has reasonable defaults")
     {
         lux::basic_file_log_config config;
-        
+
         CHECK(config.level == lux::log_level::info);
         CHECK(config.filename == "lux.log");
         CHECK(config.pattern == lux::default_log_pattern);
@@ -246,17 +267,17 @@ TEST_CASE("Log configuration structures", "[log_config]")
     SECTION("Rotating file log config has reasonable defaults")
     {
         lux::rotating_file_log_config config;
-        
+
         CHECK(config.level == lux::log_level::info);
         CHECK(config.filename == "lux.log");
-        CHECK(config.max_size == 10 * 1024 * 1024);  // 10MB
+        CHECK(config.max_size == 10 * 1024 * 1024); // 10MB
         CHECK(config.max_files == 5);
     }
 
     SECTION("Daily file log config has reasonable defaults")
     {
         lux::daily_file_log_config config;
-        
+
         CHECK(config.level == lux::log_level::info);
         CHECK(config.filename == "lux.log");
         CHECK(config.rotation_hour == 0);
@@ -279,7 +300,7 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
         file_config.level = lux::log_level::info;
         file_config.filename = "integration_test.log";
         file_config.pattern = "[%Y-%m-%d %H:%M:%S] [%^%l%$] [%n] %v";
-        
+
         config.console = console_config;
         config.file = file_config;
 
@@ -288,7 +309,7 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
 
         // finally block to clean up the file after the test
         LUX_FINALLY({ std::filesystem::remove("integration_test.log"); });
-        
+
         std::optional<lux::logger_manager> manager;
 
         REQUIRE_NOTHROW(manager.emplace(config));
@@ -319,7 +340,7 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
         CHECK(std::filesystem::exists("integration_test.log"));
         std::ifstream log_file("integration_test.log");
         REQUIRE(log_file.is_open());
-        
+
         // Debug log message is not in the file, as it is only logged to console.
 
         // Check info log message

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <lux/logger/log_level.hpp>
+
 #include <lux/support/assert.hpp>
+#include <lux/support/enum.hpp>
 #include <lux/support/move.hpp>
 
 #include <spdlog/logger.h>
@@ -30,10 +32,42 @@ public:
     logger(logger&&) = default;
     logger& operator=(logger&&) = default;
 
-    template <typename... Args>
-    void log(log_level level, fmt::format_string<Args...> fmt, Args&&... args)
+private:
+    template <lux::enumeration T>
+    static auto stringify_enum(T arg)
     {
-        spd_logger_->log(detail::to_spdlog_level(level), fmt, std::forward<Args>(args)...);
+        static_assert(std::is_enum_v<std::decay_t<T>>, "Argument must be an enum");
+        return lux::to_string_view(arg);
+    }
+
+    template <typename T>
+    static auto stringify_arg_if_needed(T&& arg)
+    {
+        if constexpr (lux::enumeration<T>)
+        {
+            return stringify_enum(arg);
+        }
+        else
+        {
+            return std::forward<T>(arg);
+        }
+    }
+
+    template <typename T>
+    static auto preprocess_argument(T&& arg)
+    {
+        // Maybe in the future we can add more preprocessing steps here
+        return stringify_arg_if_needed(std::forward<T>(arg));
+    }
+
+    template <typename T>
+    using preprocessed_argument_t = decltype(preprocess_argument(std::declval<T>()));
+
+public:
+    template <typename... Args>
+    void log(log_level level, fmt::format_string<preprocessed_argument_t<Args>...> fmt, Args&&... args)
+    {
+        spd_logger_->log(detail::to_spdlog_level(level), fmt, preprocess_argument(std::forward<Args>(args))...);
     }
 
     void flush() { spd_logger_->flush(); }

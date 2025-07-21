@@ -18,7 +18,8 @@ cflex_add_library(lux SOURCES
 add_library(lux::lux ALIAS lux)
 target_link_libraries(lux 
 	PUBLIC 
-		spdlog::spdlog 
+		spdlog::spdlog
+		magic_enum::magic_enum
 	PRIVATE
 		fmt::fmt
 )
