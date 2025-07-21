@@ -11,6 +11,7 @@ public:
     using value_type = T;
 
 public:
+    strong_typedef() = default;
     explicit strong_typedef(T value) : value_(value) {}
 
 public:
@@ -23,7 +24,7 @@ public:
     const T& get() const { return value_; }
 
 private:
-    T value_;
+    T value_{};
 };
 
 } // namespace lux
