@@ -12,7 +12,7 @@ public:
     explicit strong_typedef(T value) : value_(value) {}
 
 public:
-    operator T&() const { return value_; }
+    operator T&() { return value_; }
     operator const T&() const { return value_; }
     auto operator<=>(const strong_typedef&) const = default;
 
