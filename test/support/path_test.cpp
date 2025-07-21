@@ -8,7 +8,7 @@
 #include <string>
 #include <optional>
 
-TEST_CASE("Create app data directory", "[path]")
+TEST_CASE("Create app data directory", "[path][support]")
 {
     SECTION("Create app data directory")
     {

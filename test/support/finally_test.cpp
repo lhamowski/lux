@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <fstream>
 
-TEST_CASE("Finally macro basic functionality", "[finally]")
+TEST_CASE("Finally macro basic functionality", "[finally][support]")
 {
     SECTION("Finally executes code at scope exit")
     {
