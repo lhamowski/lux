@@ -7,23 +7,22 @@ macro(cflex_message mode)
 endmacro()
 
 # Check if CFlex has already been initialized
-get_property(CFLEX_INITIALIZED GLOBAL PROPERTY CFLEX_INITIALIZED SET)
-if(CFLEX_INITIALIZED)
+get_property(CFLEX_ALREADY_INITIALIZED GLOBAL PROPERTY CFLEX_INITIALIZED SET)
+if(CFLEX_ALREADY_INITIALIZED)
+
     # Retrieve the previously initialized version of CFlex
     get_property(
-        CFLEX_INITIALIZED_VERSION
+        CFLEX_ALREADY_INITIALIZED_VERSION
         GLOBAL
         PROPERTY CFLEX_INITIALIZED_VERSION
     )
 
     # Check if a newer version is being used by dependent projects
-    if(CFLEX_INITIALIZED_VERSION VERSION_LESS CFLEX_VERSION)
-        cflex_message(
-            AUTHOR_WARNING
-            "A newer version of CFlex (${CFLEX_VERSION}) has been detected in a dependent project. "
-            "However, only one version can be active at a time, so the first loaded version (${CFLEX_INITIALIZED_VERSION}) will be used. "
-            "It is recommended to update CFlex to the newer version (${CFLEX_VERSION}) to maintain consistency."
-        )
+    if(CFLEX_ALREADY_INITIALIZED_VERSION VERSION_LESS CFLEX_VERSION)
+        cflex_message(STATUS "\
+A newer version of CFlex (${CFLEX_VERSION}) has been detected in a dependent project.\n\
+However, only one version can be active at a time, so the first loaded version (${CFLEX_ALREADY_INITIALIZED_VERSION}) will be used.\n\
+It is recommended to update CFlex to the newer version (${CFLEX_VERSION}) to maintain consistency.")
     endif()
     return()
 endif()
@@ -115,6 +114,20 @@ macro(_cflex_dispatch_build_options flag_name)
         endforeach()
     endif()
 endmacro()
+
+# cflex_set_c_flags(
+#   [BUILD_TYPES <build_types>...] 
+#   [PUBLIC <flags>...] 
+#   [PRIVATE <flags>...] 
+#   [INTERFACE <flags>...] 
+#   [GLOBAL <flags>...]
+# )
+#
+#   Set C compiler flags for targets. Flags can be applied to specific scopes (PUBLIC, PRIVATE, INTERFACE) or globally (GLOBAL).
+#   If BUILD_TYPES is specified, flags will only apply to the specified builds type (e.g., DEBUG, RELEASE).
+function(cflex_set_c_flags)
+    _cflex_dispatch_build_options("C_FLAGS" ${ARGN})
+endfunction()
 
 # cflex_set_cxx_flags(
 #   [BUILD_TYPES <build_types>...] 
@@ -250,10 +263,36 @@ function(cflex_configure_target target)
 
     # Apply flags for each scope
     foreach(scope IN ITEMS PUBLIC PRIVATE INTERFACE)
-        # General compile flags
-        set(compile_flags "CFLEX_${project_id}_CXX_FLAGS_${scope}")
-        if(DEFINED ${compile_flags})
-            target_compile_options(${target} ${scope} ${${compile_flags}})
+        # Skip PRIVATE scope for INTERFACE libraries
+        if(target_type STREQUAL "INTERFACE" AND scope STREQUAL "PRIVATE")
+            # Check if there are any PRIVATE flags defined and warn about them
+            set(c_private_flags "CFLEX_${project_id}_C_FLAGS_PRIVATE")
+            set(cxx_private_flags "CFLEX_${project_id}_CXX_FLAGS_PRIVATE")
+            set(linker_private_flags "CFLEX_${project_id}_INTERFACE_LINK_OPTIONS_PRIVATE")
+            
+            if(CMAKE_BUILD_TYPE)
+                set(c_private_flags_build "CFLEX_${project_id}_C_FLAGS_${build_type_upper}_PRIVATE")
+                set(cxx_private_flags_build "CFLEX_${project_id}_CXX_FLAGS_${build_type_upper}_PRIVATE")
+                set(linker_private_flags_build "CFLEX_${project_id}_INTERFACE_LINK_OPTIONS_${build_type_upper}_PRIVATE")
+            endif()
+            
+            if(DEFINED ${c_private_flags} OR DEFINED ${cxx_private_flags} OR DEFINED ${linker_private_flags} OR 
+               (CMAKE_BUILD_TYPE AND (DEFINED ${c_private_flags_build} OR DEFINED ${cxx_private_flags_build} OR DEFINED ${linker_private_flags_build})))
+                cflex_message(WARNING "Target ${target} is an INTERFACE library, but PRIVATE flags were specified. PRIVATE flags will be ignored for INTERFACE libraries.")
+            endif()
+            continue()
+        endif()
+
+        # General C compile flags
+        set(c_compile_flags "CFLEX_${project_id}_C_FLAGS_${scope}")
+        if(DEFINED ${c_compile_flags})
+            target_compile_options(${target} ${scope} $<$<COMPILE_LANGUAGE:C>:${${c_compile_flags}}>)
+        endif()
+
+        # General C++ compile flags
+        set(cxx_compile_flags "CFLEX_${project_id}_CXX_FLAGS_${scope}")
+        if(DEFINED ${cxx_compile_flags})
+            target_compile_options(${target} ${scope} $<$<COMPILE_LANGUAGE:CXX>:${${cxx_compile_flags}}>)
         endif()
 
         # General linker options
@@ -266,15 +305,27 @@ function(cflex_configure_target target)
 
         # Build-specific flags if CMAKE_BUILD_TYPE is set
         if(CMAKE_BUILD_TYPE)
-            # Build-specific compile flags
-            set(compile_flags_build
-                "CFLEX_${project_id}_CXX_FLAGS_${build_type_upper}_${scope}"
+            # Build-specific C compile flags
+            set(c_compile_flags_build
+                "CFLEX_${project_id}_C_FLAGS_${build_type_upper}_${scope}"
             )
-            if(DEFINED ${compile_flags_build})
+            if(DEFINED ${c_compile_flags_build})
                 target_compile_options(
                     ${target}
                     ${scope}
-                    ${${compile_flags_build}}
+                    $<$<COMPILE_LANGUAGE:C>:${${c_compile_flags_build}}>
+                )
+            endif()
+
+            # Build-specific C++ compile flags
+            set(cxx_compile_flags_build
+                "CFLEX_${project_id}_CXX_FLAGS_${build_type_upper}_${scope}"
+            )
+            if(DEFINED ${cxx_compile_flags_build})
+                target_compile_options(
+                    ${target}
+                    ${scope}
+                    $<$<COMPILE_LANGUAGE:CXX>:${${cxx_compile_flags_build}}>
                 )
             endif()
 
@@ -300,8 +351,23 @@ function(cflex_configure_target target)
     if(CFLEX_LOG_BUILD_OPTIONS)
         get_target_property(compile_options ${target} COMPILE_OPTIONS)
         get_target_property(link_options ${target} LINK_OPTIONS)
-        cflex_message(STATUS "Compile options for target ${target}: ${compile_options}")
-        cflex_message(STATUS "Link options for target ${target}: ${link_options}")
+        
+        # Log compile options
+        if(compile_options AND NOT compile_options STREQUAL "NOTFOUND")
+            cflex_message(STATUS "Target ${target} - Compile options: ${compile_options}")
+        else()
+            cflex_message(STATUS "Target ${target} - No compile options set")
+        endif()
+        
+        # Log link options
+        if(link_options AND NOT link_options STREQUAL "NOTFOUND")
+            cflex_message(STATUS "Target ${target} - Link options: ${link_options}")
+        else()
+            cflex_message(STATUS "Target ${target} - No link options set")
+        endif()
+        
+        # Log target type for context
+        cflex_message(STATUS "Target ${target} - Type: ${target_type}")
     endif()
 endfunction()
 
