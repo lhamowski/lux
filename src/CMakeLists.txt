@@ -14,6 +14,9 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/support/path.hpp ${lux_source_files_dir}/support/path.cpp
 	${lux_include_files_dir}/support/strong_typedef.hpp
 
+	# Utils files
+	${lux_include_files_dir}/utils/stopwatch.hpp
+
 	${lux_include_files_dir}/fwd.hpp
 )
 add_library(lux::lux ALIAS lux)

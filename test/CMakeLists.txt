@@ -5,6 +5,8 @@ cflex_add_executable(lux-test SOURCES
     support/exception_test.cpp
     support/finally_test.cpp
     support/path_test.cpp
+
+    utils/stopwatch_test.cpp
 )
 
 target_link_libraries(lux-test PRIVATE 
