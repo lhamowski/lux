@@ -15,6 +15,7 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/support/strong_typedef.hpp
 
 	# Utils files
+	${lux_include_files_dir}/utils/memory_arena.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp
 
 	${lux_include_files_dir}/fwd.hpp

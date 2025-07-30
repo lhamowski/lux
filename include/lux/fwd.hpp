@@ -4,6 +4,8 @@ namespace lux {
 class logger_factory;
 class logger_manager;
 class logger;
+
+class memory_arena;
 } // namespace lux
 
 namespace lux::net::base {

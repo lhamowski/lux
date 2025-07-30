@@ -7,6 +7,7 @@ cflex_add_executable(lux-test SOURCES
     support/path_test.cpp
     support/strong_typedef_test.cpp
 
+    utils/memory_arena_test.cpp
     utils/stopwatch_test.cpp
 )
 
