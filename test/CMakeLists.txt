@@ -5,6 +5,7 @@ cflex_add_executable(lux-test SOURCES
     support/exception_test.cpp
     support/finally_test.cpp
     support/path_test.cpp
+    support/strong_typedef_test.cpp
 
     utils/stopwatch_test.cpp
 )
