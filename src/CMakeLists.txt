@@ -33,3 +33,24 @@ target_include_directories(lux PUBLIC ${lux_SOURCE_DIR}/include)
 set_target_properties(lux PROPERTIES FOLDER lux)
 
 lux_source_group(lux TREE ${lux_SOURCE_DIR})
+
+if(LUX_ENABLE_NET)
+    cflex_add_library(lux-net SOURCES 
+		${lux_include_files_dir}/net/base/socket_factory.hpp
+		${lux_include_files_dir}/net/base/udp_socket.hpp
+
+        ${lux_include_files_dir}/net/udp_socket.hpp ${lux_source_files_dir}/net/udp_socket.cpp
+    )
+	add_library(lux::net ALIAS lux-net)
+
+	if(TARGET Boost::disable_autolinking)
+		target_link_libraries(lux-net PRIVATE Boost::disable_autolinking)
+	endif()
+
+    target_link_libraries(lux-net 
+		PUBLIC
+			lux::lux
+			Boost::boost
+    )
+    lux_source_group(lux TREE ${lux_SOURCE_DIR})
+endif()
