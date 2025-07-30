@@ -5,6 +5,8 @@ include(${PROJECT_SOURCE_DIR}/cmake/CFlex.cmake)
 cflex_set_cxx_flags(
     GLOBAL
         /EHsc # Enable unwind semantics
+        /DWIN32_LEAN_AND_MEAN # Exclude rarely-used Windows headers
+        /D_WIN32_WINNT=0x0A00 # Set minimum Windows version to Windows 10
     PRIVATE
         /W4 # Enable all warnings
         /WX # Treat warnings as errors
