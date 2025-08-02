@@ -60,4 +60,8 @@ private:
     bytes_type addr_{};
 };
 
+inline address_v4 localhost = address_v4{0x7F000001};
+inline address_v4 any_address = address_v4{0x00000000};
+inline address_v4 broadcast_address = address_v4{0xFFFFFFFF};
+
 } // namespace lux::net::base

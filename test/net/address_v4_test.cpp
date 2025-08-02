@@ -47,4 +47,11 @@ TEST_CASE("address_v4 basic functionality", "[address_v4][net]")
         CHECK(addr1 <= addr1);
         CHECK(addr2 >= addr2);
     }
+
+    SECTION("Predefined addresses")
+    {
+        CHECK(lux::net::base::localhost == address_v4{"127.0.0.1"});
+        CHECK(lux::net::base::any_address == address_v4{0x00000000});
+        CHECK(lux::net::base::broadcast_address == address_v4{0xFFFFFFFF});
+    }
 }
