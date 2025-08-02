@@ -11,11 +11,23 @@ cflex_add_executable(lux-test SOURCES
     utils/stopwatch_test.cpp
 )
 
-target_link_libraries(lux-test PRIVATE 
-    Catch2::Catch2WithMain
-    lux::lux 
-    fmt::fmt
+target_link_libraries(lux-test 
+    PRIVATE 
+        Catch2::Catch2WithMain
+        lux::lux 
+        fmt::fmt
 )
+
+if(LUX_ENABLE_NET)
+    target_sources(lux-test PRIVATE
+        net/address_v4_test.cpp
+        net/endpoint_test.cpp
+    )
+    target_link_libraries(lux-test 
+        PRIVATE 
+            lux::net)
+endif()
+
 set_target_properties(lux-test PROPERTIES FOLDER lux)
 
 list(APPEND CMAKE_MODULE_PATH "${Catch2_SOURCE_DIR}/extras")

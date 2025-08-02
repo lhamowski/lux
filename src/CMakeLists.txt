@@ -37,6 +37,8 @@ lux_source_group(lux TREE ${lux_SOURCE_DIR})
 
 if(LUX_ENABLE_NET)
     cflex_add_library(lux-net SOURCES 
+		${lux_include_files_dir}/net/base/address_v4.hpp
+		${lux_include_files_dir}/net/base/endpoint.hpp
 		${lux_include_files_dir}/net/base/socket_factory.hpp
 		${lux_include_files_dir}/net/base/udp_socket.hpp
 
