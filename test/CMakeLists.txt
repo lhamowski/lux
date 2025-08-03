@@ -22,6 +22,7 @@ if(LUX_ENABLE_NET)
     target_sources(lux-test PRIVATE
         net/address_v4_test.cpp
         net/endpoint_test.cpp
+        net/udp_socket_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 

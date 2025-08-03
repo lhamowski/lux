@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lux/net/base/udp_socket.hpp>
+#include <lux/net/base/endpoint.hpp>
 #include <lux/fwd.hpp>
 
 #include <boost/asio/any_io_executor.hpp>
@@ -10,10 +11,18 @@
 
 namespace lux::net {
 
+struct udp_socket_config
+{
+    std::size_t memory_arena_initial_item_size = 1024; // Initial size of each item in the memory arena
+    std::size_t memory_arena_initial_item_count = 4;   // Initial number of items in the memory arena
+};
+
 class udp_socket : public lux::net::base::udp_socket
 {
 public:
-    udp_socket(boost::asio::any_io_executor exe, lux::net::base::udp_socket_handler& handler, lux::logger& logger);
+    udp_socket(boost::asio::any_io_executor exe,
+               lux::net::base::udp_socket_handler& handler,
+               const udp_socket_config& config);
 
     ~udp_socket();
 
@@ -24,11 +33,10 @@ public:
 
 public:
     // lux::net::base::udp_socket implementation
-    bool open() override;
-    bool close(bool send_pending_data) override;
-    void read() override;
-    bool bind(const boost::asio::ip::udp::endpoint& endpoint) override;
-    void send(const boost::asio::ip::udp::endpoint& endpoint, const std::span<const std::byte>& data) override;
+    std::error_code open() override;
+    std::error_code close(bool send_pending_data) override;
+    std::error_code bind(const lux::net::base::endpoint& endpoint) override;
+    void send(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data) override;
 
 private:
     class impl;

@@ -40,7 +40,7 @@ private:
     };
 
 public:
-    using item = std::unique_ptr<T, deleter>;
+    using element_type = std::unique_ptr<T, deleter>;
 
 public:
     growable_memory_arena() = delete;
@@ -62,7 +62,7 @@ public:
             push(std::make_unique<T>());
         }
 
-        item mem{arena_.top().release(), deleter{this->weak_from_this()}};
+        element_type mem{arena_.top().release(), deleter{this->weak_from_this()}};
         arena_.pop();
         mem->resize(size);
         return mem;
@@ -88,7 +88,7 @@ private:
     std::size_t reserve_size_{};
 };
 
-template <typename T>
+template <typename T = std::vector<std::byte>>
 using growable_memory_arena_ptr = std::shared_ptr<growable_memory_arena<T>>;
 
 template <typename T = std::vector<std::byte>>
