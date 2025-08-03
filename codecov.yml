@@ -1,0 +1,10 @@
+coverage:
+  range: 30...60  # 🔴<30%, 🟡30–60%, 🟢>60%
+
+  status:
+    project:
+      default:
+        informational: true  # do not fail the build
+    patch:
+      default:
+        informational: true  # do not require coverage in the patch
