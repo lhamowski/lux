@@ -23,6 +23,7 @@ if(LUX_ENABLE_NET)
         net/address_v4_test.cpp
         net/endpoint_test.cpp
         net/udp_socket_test.cpp
+        net/socket_factory_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 

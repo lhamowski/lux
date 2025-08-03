@@ -57,7 +57,9 @@ private:
     }
 
 public:
-    impl(boost::asio::any_io_executor exe, lux::net::base::udp_socket_handler& handler, const udp_socket_config& config)
+    impl(boost::asio::any_io_executor exe,
+         lux::net::base::udp_socket_handler& handler,
+         const lux::net::base::udp_socket_config& config)
         : socket_{exe},
           handler_{&handler},
           memory_arena_{lux::make_growable_memory_arena(config.memory_arena_initial_item_count,
@@ -214,8 +216,9 @@ private:
         const auto& data = *pending_packets_.front().data;
         const auto destination = pending_packets_.front().endpoint;
 
-        socket_.async_send_to(boost::asio::buffer(data),
-                              destination,
+        socket_.async_send_to(
+            boost::asio::buffer(data),
+            destination,
             [self = shared_from_this()](const auto& ec, [[maybe_unused]] auto size) { self->on_sent(ec); });
     }
 
@@ -285,7 +288,7 @@ private:
 
 udp_socket::udp_socket(boost::asio::any_io_executor exe,
                        lux::net::base::udp_socket_handler& handler,
-                       const udp_socket_config& config)
+                       const lux::net::base::udp_socket_config& config)
     : impl_{std::make_shared<impl>(exe, handler, config)}
 {
 }

@@ -6,6 +6,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
+
 #include <vector>
 #include <cstring>
 #include <thread>
@@ -69,7 +70,7 @@ TEST_CASE("Construction succeeds with default config", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
 
     REQUIRE_NOTHROW(lux::net::udp_socket{io_context.get_executor(), handler, config});
 }
@@ -78,7 +79,7 @@ TEST_CASE("Construction succeeds with custom config", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    lux::net::udp_socket_config config{};
+    lux::net::base::udp_socket_config config{};
     config.memory_arena_initial_item_size = 2048;
     config.memory_arena_initial_item_count = 8;
 
@@ -89,7 +90,7 @@ TEST_CASE("Socket opens successfully", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     const auto result = socket.open();
@@ -100,7 +101,7 @@ TEST_CASE("Opening already opened socket returns success", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     const auto result1 = socket.open();
@@ -114,7 +115,7 @@ TEST_CASE("Socket closes gracefully with send pending data", "[udp_socket][net]"
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     const auto result1 = socket.open();
@@ -132,7 +133,7 @@ TEST_CASE("Socket closes immediately without send pending data", "[udp_socket][n
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -144,7 +145,7 @@ TEST_CASE("Closing already closed socket returns success", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -159,7 +160,7 @@ TEST_CASE("Bind to localhost succeeds", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -174,7 +175,7 @@ TEST_CASE("Bind to any address", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -189,7 +190,7 @@ TEST_CASE("Send data to endpoint", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -216,7 +217,7 @@ TEST_CASE("Multiple sends are queued properly", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -249,7 +250,7 @@ TEST_CASE("Send error callback is called on network error", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -276,7 +277,7 @@ TEST_CASE("Complete lifecycle open bind send close", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     const auto open_result = socket.open();
@@ -300,7 +301,7 @@ TEST_CASE("Receive data from external sender", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
@@ -344,7 +345,7 @@ TEST_CASE("Receive multiple packets from external sender", "[udp_socket][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
-    const lux::net::udp_socket_config config{};
+    const lux::net::base::udp_socket_config config{};
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();

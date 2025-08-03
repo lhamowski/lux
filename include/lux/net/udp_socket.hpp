@@ -11,18 +11,12 @@
 
 namespace lux::net {
 
-struct udp_socket_config
-{
-    std::size_t memory_arena_initial_item_size = 1024; // Initial size of each item in the memory arena
-    std::size_t memory_arena_initial_item_count = 4;   // Initial number of items in the memory arena
-};
-
 class udp_socket : public lux::net::base::udp_socket
 {
 public:
     udp_socket(boost::asio::any_io_executor exe,
                lux::net::base::udp_socket_handler& handler,
-               const udp_socket_config& config);
+               const lux::net::base::udp_socket_config& config);
 
     ~udp_socket();
 

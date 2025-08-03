@@ -45,6 +45,12 @@ protected:
     virtual ~udp_socket_handler() = default;
 };
 
+struct udp_socket_config
+{
+    std::size_t memory_arena_initial_item_size = 1024; // Initial size of each item in the memory arena
+    std::size_t memory_arena_initial_item_count = 4;   // Initial number of items in the memory arena
+};
+
 class udp_socket
 {
 public:

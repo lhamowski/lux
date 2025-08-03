@@ -43,6 +43,7 @@ if(LUX_ENABLE_NET)
 		${lux_include_files_dir}/net/base/udp_socket.hpp
 
         ${lux_include_files_dir}/net/udp_socket.hpp ${lux_source_files_dir}/net/udp_socket.cpp
+		${lux_include_files_dir}/net/socket_factory.hpp ${lux_source_files_dir}/net/socket_factory.cpp
     )
 	add_library(lux::net ALIAS lux-net)
 

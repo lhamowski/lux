@@ -18,7 +18,8 @@ public:
      * @return A unique pointer to the created UDP socket.
      */
     virtual std::unique_ptr<lux::net::base::udp_socket>
-        create_udp_socket(lux::net::base::udp_socket_handler& handler) = 0;
+        create_udp_socket(const lux::net::base::udp_socket_config& config,
+                          lux::net::base::udp_socket_handler& handler) = 0;
 };
 
 } // namespace lux::net::base
