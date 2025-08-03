@@ -126,6 +126,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
+          directory: build/unixlike-clang-coverage
           files: build/unixlike-clang-coverage/coverage.info
           flags: unittests
           name:  lux-coverage
