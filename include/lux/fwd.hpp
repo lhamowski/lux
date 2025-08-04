@@ -9,12 +9,12 @@ class memory_arena;
 } // namespace lux
 
 namespace lux::net::base {
+class socket_factory;
 class udp_socket;
 class udp_socket_handler;
-class udp_socket_factory;
 } // namespace lux::net::base
 
 namespace lux::net {
 class udp_socket;
-class udp_socket_factory;
+class socket_factory;
 } // namespace lux::net
