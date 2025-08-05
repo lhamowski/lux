@@ -1,0 +1,48 @@
+#pragma once
+
+#include <lux/net/base/endpoint.hpp>
+#include <lux/net/base/tcp_socket.hpp>
+
+namespace lux::net::base {
+
+class tcp_acceptor_handler
+{
+public:
+    /**
+     * Called when a new connection is accepted.
+     * @param socket The TCP socket representing the accepted connection.
+     * @param local_endpoint The local endpoint of the acceptor that accepted the connection.
+     */
+    virtual void on_accepted(lux::net::base::tcp_socket& socket, const lux::net::base::endpoint& local_endpoint) = 0;
+
+protected:
+    virtual ~tcp_acceptor_handler() = default;
+};
+
+class tcp_acceptor
+{
+public:
+    /**
+     * Starts listening for incoming connections on the specified endpoint.
+     * @param endpoint The endpoint to listen on.
+     * @return An error code indicating success or failure.
+     */
+    virtual std::error_code listen(const lux::net::base::endpoint& endpoint) = 0;
+
+    /**
+     * Closes the acceptor.
+     * @return An error code indicating success or failure.
+     */
+    virtual std::error_code close() = 0;
+
+    /**
+     * Checks if the acceptor is currently listening for incoming connections.
+     * @return True if the acceptor is listening, false otherwise.
+     */
+    virtual bool is_listening() const = 0;
+
+protected:
+    virtual ~tcp_acceptor() = default;
+};
+
+} // namespace lux::net::base

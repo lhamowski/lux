@@ -10,6 +10,13 @@ class memory_arena;
 
 namespace lux::net::base {
 class socket_factory;
+
+class tcp_acceptor;
+class tcp_acceptor_handler;
+
+class tcp_socket;
+class tcp_socket_handler;
+
 class udp_socket;
 class udp_socket_handler;
 } // namespace lux::net::base

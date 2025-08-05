@@ -41,6 +41,8 @@ if(LUX_ENABLE_NET)
 		${lux_include_files_dir}/net/base/endpoint.hpp
 		${lux_include_files_dir}/net/base/socket_factory.hpp
 		${lux_include_files_dir}/net/base/udp_socket.hpp
+		${lux_include_files_dir}/net/base/tcp_socket.hpp
+		${lux_include_files_dir}/net/base/tcp_acceptor.hpp
 
         ${lux_include_files_dir}/net/udp_socket.hpp ${lux_source_files_dir}/net/udp_socket.cpp
 		${lux_include_files_dir}/net/socket_factory.hpp ${lux_source_files_dir}/net/socket_factory.cpp
