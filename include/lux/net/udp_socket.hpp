@@ -31,6 +31,7 @@ public:
     std::error_code close(bool send_pending_data) override;
     std::error_code bind(const lux::net::base::endpoint& endpoint) override;
     void send(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data) override;
+    bool is_open() const override;
 
 private:
     class impl;

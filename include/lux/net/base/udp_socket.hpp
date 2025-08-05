@@ -85,6 +85,12 @@ public:
      * @param data The data to send, represented as a span of bytes.
      */
     virtual void send(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data) = 0;
+
+    /**
+     * Checks if the UDP socket is currently open.
+     * @return true if the socket is open, false otherwise.
+     */
+    virtual bool is_open() const = 0;
 };
 
 } // namespace lux::net::base

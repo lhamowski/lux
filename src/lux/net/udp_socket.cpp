@@ -32,30 +32,6 @@ lux::net::base::endpoint from_boost_endpoint(const boost::asio::ip::udp::endpoin
 
 class udp_socket::impl : public std::enable_shared_from_this<impl>
 {
-private:
-    enum class state
-    {
-        open,
-        closing,
-        closed,
-    };
-    state state_{state::closed};
-
-    bool is_open() const
-    {
-        return state_ == state::open;
-    }
-
-    bool is_closing() const
-    {
-        return state_ == state::closing;
-    }
-
-    bool is_closed() const
-    {
-        return state_ == state::closed;
-    }
-
 public:
     impl(boost::asio::any_io_executor exe,
          lux::net::base::udp_socket_handler& handler,
@@ -163,6 +139,30 @@ public:
     void clear_handler()
     {
         handler_ = nullptr;
+    }
+
+public:
+    enum class state
+    {
+        open,
+        closing,
+        closed,
+    };
+    state state_{state::closed};
+
+    bool is_open() const
+    {
+        return state_ == state::open;
+    }
+
+    bool is_closing() const
+    {
+        return state_ == state::closing;
+    }
+
+    bool is_closed() const
+    {
+        return state_ == state::closed;
     }
 
 private:
@@ -333,6 +333,12 @@ void udp_socket::send(const lux::net::base::endpoint& endpoint, const std::span<
     const auto address = boost::asio::ip::address_v4{endpoint.address().to_uint()};
     const auto ep = boost::asio::ip::udp::endpoint{address, endpoint.port()};
     impl_->send(ep, data);
+}
+
+bool udp_socket::is_open() const
+{
+    LUX_ASSERT(impl_, "UDP socket implementation must not be null");
+    return impl_->is_open();
 }
 
 } // namespace lux::net

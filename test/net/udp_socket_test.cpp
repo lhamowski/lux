@@ -305,6 +305,8 @@ TEST_CASE("Receive data from external sender", "[udp_socket][net]")
     lux::net::udp_socket socket{io_context.get_executor(), handler, config};
 
     socket.open();
+    CHECK(socket.is_open());
+
     const lux::net::base::endpoint bind_endpoint{lux::net::base::localhost, 12400};
     const auto bind_result = socket.bind(bind_endpoint);
     REQUIRE_FALSE(bind_result);
@@ -339,6 +341,8 @@ TEST_CASE("Receive data from external sender", "[udp_socket][net]")
 
     sender_socket.close();
     socket.close(false);
+
+    CHECK_FALSE(socket.is_open());
 }
 
 TEST_CASE("Receive multiple packets from external sender", "[udp_socket][net]")
