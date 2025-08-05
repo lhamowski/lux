@@ -2,7 +2,6 @@
 
 #include <lux/net/base/endpoint.hpp>
 
-#include <lux/logger/logger.hpp>
 #include <lux/support/assert.hpp>
 #include <lux/support/finally.hpp>
 #include <lux/support/move.hpp>
@@ -47,8 +46,33 @@ public:
     {
         if (!is_closed())
         {
+            clear_handler(); // Clear the handler to avoid dangling pointer
             close_immediately();
         }
+    }
+
+public:
+    enum class state
+    {
+        open,
+        closing,
+        closed,
+    };
+    state state_{state::closed};
+
+    bool is_open() const
+    {
+        return state_ == state::open;
+    }
+
+    bool is_closing() const
+    {
+        return state_ == state::closing;
+    }
+
+    bool is_closed() const
+    {
+        return state_ == state::closed;
     }
 
 public:
@@ -139,30 +163,6 @@ public:
     void clear_handler()
     {
         handler_ = nullptr;
-    }
-
-public:
-    enum class state
-    {
-        open,
-        closing,
-        closed,
-    };
-    state state_{state::closed};
-
-    bool is_open() const
-    {
-        return state_ == state::open;
-    }
-
-    bool is_closing() const
-    {
-        return state_ == state::closing;
-    }
-
-    bool is_closed() const
-    {
-        return state_ == state::closed;
     }
 
 private:
