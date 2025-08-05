@@ -17,6 +17,8 @@ public:
     using uint_type = std::uint32_t;
 
 public:
+    address_v4() = default;
+
     explicit address_v4(const bytes_type& bytes) : addr_{bytes}
     {
     }

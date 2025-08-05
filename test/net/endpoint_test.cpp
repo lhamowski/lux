@@ -6,6 +6,13 @@ using namespace lux::net::base;
 
 TEST_CASE("Endpoint basic functionality", "[endpoint][net]")
 {
+    SECTION("Default constructor")
+    {
+        const lux::net::base::endpoint ep;
+        CHECK(ep.address().to_uint() == 0);
+        CHECK(ep.port() == 0);
+    }
+
     SECTION("Construct from address and port")
     {
         const lux::net::base::address_v4 addr{0xC0A80101}; //

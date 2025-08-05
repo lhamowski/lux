@@ -2,12 +2,17 @@
 
 #include <lux/net/base/address_v4.hpp>
 
+#include <cstdint>
 namespace lux::net::base {
 
 class endpoint
 {
 public:
-    explicit endpoint(const address_v4& addr, std::uint16_t port) : address_(addr), port_(port)
+    endpoint() : address_{}, port_{0}
+    {
+    }
+
+    explicit endpoint(const address_v4& addr, std::uint16_t port) : address_{addr}, port_{port}
     {
     }
 
