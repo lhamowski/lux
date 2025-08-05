@@ -3,6 +3,7 @@
 #include <lux/net/base/endpoint.hpp>
 
 #include <span>
+#include <string_view>
 #include <system_error>
 
 namespace lux::net::base {
@@ -40,6 +41,39 @@ protected:
     virtual  ~tcp_socket_handler() = default;
 };
 
+struct tcp_socket_config
+{
+    /**
+     * Keep-alive settings
+     * If true, enables TCP keep-alive to maintain the connection.
+     */
+    bool keep_alive{false};
+
+    /**
+     * Reconnect settings
+     * If true, attempts to reconnect on disconnect.
+     */
+    bool reconnect_on_disconnect{true};
+
+    /**
+     * Maximum number of reconnection attempts.
+     * If reconnect_on_disconnect is true, this specifies how many times to attempt reconnection.
+     */
+    std::size_t max_reconnect_attempts{5};
+
+    /**
+     * Memory arena configuration
+     * Initial size of each item in the memory arena.
+     */
+    std::size_t memory_arena_initial_item_size{1024};
+
+    /**
+     * Initial number of items in the memory arena.
+     * This is used to preallocate memory for socket operations.
+     */
+    std::size_t memory_arena_initial_item_count{4};
+};
+
 class tcp_socket
 {
 public:
@@ -48,6 +82,14 @@ public:
      * @return An error code indicating success or failure.
      */
     virtual std::error_code connect(const lux::net::base::endpoint& endpoint) = 0;
+
+    /**
+     * Opens the TCP socket using a host and port.
+     * @param host The host to connect to.
+     * @param port The port to connect to.
+     * @return An error code indicating success or failure.
+     */
+    virtual std::error_code connect(std::string_view host, std::uint16_t port) = 0;
     
     /**
      * Closes the TCP socket.

@@ -30,6 +30,15 @@ public:
     virtual std::error_code listen(const lux::net::base::endpoint& endpoint) = 0;
 
     /**
+     * Starts listening for incoming connections on the specified host and port.
+     * Uses resolved host and port to create an endpoint.
+     * @param host The host to listen on.
+     * @param port The port to listen on.
+     * @return An error code indicating success or failure.
+     */
+    virtual std::error_code listen(std::string_view host, std::uint16_t port) = 0;
+
+    /**
      * Closes the acceptor.
      * @return An error code indicating success or failure.
      */
