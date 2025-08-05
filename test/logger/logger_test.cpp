@@ -348,7 +348,8 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
         std::getline(log_file, line);
 
         // Check expected pattern using regex
-        std::regex info_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[info\] \[test\] Starting integration test)");
+        std::regex info_pattern(
+            R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[info\] \[test\] Starting integration test)");
         CHECK(std::regex_search(line, info_pattern));
 
         // Check warning log message
@@ -363,7 +364,8 @@ TEST_CASE("Integration test - end to end logging", "[logger][integration]")
 
         // Check critical log message
         std::getline(log_file, line);
-        std::regex critical_pattern(R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[critical\] \[test\] Critical message)");
+        std::regex critical_pattern(
+            R"(\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] \[critical\] \[test\] Critical message)");
         CHECK(std::regex_search(line, critical_pattern));
     }
 }

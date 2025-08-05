@@ -3,6 +3,7 @@
 #include <lux/net/udp_socket.hpp>
 
 namespace lux::net {
+
 net::socket_factory::socket_factory(boost::asio::any_io_executor exe) : executor_(exe)
 {
 }

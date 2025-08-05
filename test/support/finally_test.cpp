@@ -25,7 +25,7 @@ TEST_CASE("Finally macro basic functionality", "[finally][support]")
 
         try
         {
-            LUX_FINALLY({cleanup_executed = true;});
+            LUX_FINALLY({ cleanup_executed = true; });
             throw std::runtime_error("test exception");
         }
         catch (const std::exception&)
