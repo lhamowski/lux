@@ -46,7 +46,6 @@ public:
     {
         if (!is_closed())
         {
-            clear_handler(); // Clear the handler to avoid dangling pointer
             close_immediately();
         }
     }
@@ -295,6 +294,8 @@ udp_socket::udp_socket(boost::asio::any_io_executor exe,
 
 udp_socket::~udp_socket()
 {
+    LUX_ASSERT(impl_, "UDP socket implementation must not be null");
+    impl_->clear_handler(); // Clear the handler to avoid dangling pointer
 }
 
 std::error_code udp_socket::open()
