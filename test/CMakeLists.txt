@@ -25,8 +25,13 @@ if(LUX_ENABLE_IO)
         io/net/udp_socket_test.cpp
         io/net/socket_factory_test.cpp
 
+        io/time/delayed_retry_executor_test.cpp
         io/time/interval_timer_test.cpp
         io/time/timer_factory_test.cpp
+
+        # io/time mock files
+        io/time/mocks/interval_timer_mock.hpp
+        io/time/mocks/timer_factory_mock.hpp
     )
     target_link_libraries(lux-test 
         PRIVATE 

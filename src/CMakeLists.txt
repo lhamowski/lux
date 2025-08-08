@@ -48,6 +48,7 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/net/base/tcp_acceptor.hpp
 
 		${lux_include_files_dir}/io/time/interval_timer.hpp
+		${lux_include_files_dir}/io/time/delayed_retry_executor.hpp ${lux_source_files_dir}/io/time/delayed_retry_executor.cpp
 		${lux_include_files_dir}/io/time/timer_factory.hpp
 
 		${lux_source_files_dir}/io/net/utils.hpp
