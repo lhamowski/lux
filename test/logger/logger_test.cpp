@@ -211,7 +211,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         config.file = daily_config;
 
         namespace chrono = std::chrono;
-        const auto now = chrono::floor<chrono::days>(chrono::system_clock::now());
+        const auto now = chrono::ceil<chrono::days>(chrono::system_clock::now());
         const auto ymd = chrono::year_month_day{now};
         const auto expected_filename = std::format("daily_test_{:%Y-%m-%d}.log", ymd);
 
