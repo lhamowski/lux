@@ -23,9 +23,6 @@
 
 namespace lux::net {
 
-namespace {
-constexpr std::size_t read_buffer_size = 8 * 1024; // 8 KB
-} // namespace
 
 class tcp_socket::impl : public std::enable_shared_from_this<impl>
 {
@@ -38,8 +35,9 @@ public:
           parent_{&parent},
           handler_{&handler},
           config_{config},
-          memory_arena_{lux::make_growable_memory_arena(config.memory_arena_initial_item_count,
-                                                        config.memory_arena_initial_item_size)}
+          memory_arena_{lux::make_growable_memory_arena(config_.buffer.initial_send_chunk_size,
+                                                        config_.buffer.initial_send_chunk_count)},
+          read_buffer_{config_.buffer.read_buffer_size}
     {
     }
 
@@ -158,8 +156,8 @@ public:
         auto buffer = memory_arena_->get(data.size());
         std::memcpy(buffer->data(), data.data(), data.size());
 
-        const bool can_send = pending_data_.empty();
-        pending_data_.emplace_back(lux::move(buffer));
+        const bool can_send = pending_data_to_send_.empty();
+        pending_data_to_send_.emplace_back(lux::move(buffer));
 
         if (can_send)
         {
@@ -175,7 +173,7 @@ public:
         case state::disconnecting:
             return {}; // No error, already disconnected or disconnecting
         case state::connected:
-            if (pending_data_.empty())
+            if (pending_data_to_send_.empty())
             {
                 return disconnect_immediately(); // No pending data, disconnect immediately
             }
@@ -325,6 +323,20 @@ private:
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
             handler_->on_disconnected(*parent_, ec);
         }
+
+        // We need to check if on_disconnected handler changed the state
+        if (config_.reconnect.enabled() && is_disconnected())
+        {
+            reconnect();
+        }
+    }
+
+    void reconnect()
+    {
+        LUX_ASSERT(config_.reconnect.enabled(), "Reconnection is not enabled in the configuration");
+        LUX_ASSERT(is_disconnected(), "Cannot reconnect if not disconnected");
+
+        state_ = state::reconnecting;
     }
 
     void read()
@@ -334,7 +346,7 @@ private:
             return; // Cannot read if not connected
         }
 
-        socket_.async_read_some(boost::asio::mutable_buffer(read_buffer_.get(), read_buffer_size),
+        socket_.async_read_some(boost::asio::mutable_buffer(read_buffer_.data(), read_buffer_.size()),
                                 [self = shared_from_this()](const auto& ec, auto size) { self->on_read(ec, size); });
     }
 
@@ -345,9 +357,9 @@ private:
             return;
         }
 
-        LUX_ASSERT(!pending_data_.empty(), "No data to send");
+        LUX_ASSERT(!pending_data_to_send_.empty(), "No data to send");
 
-        auto& data = pending_data_.front();
+        auto& data = pending_data_to_send_.front();
         boost::asio::async_write(socket_,
                                  boost::asio::buffer(*data),
                                  [self = shared_from_this()](const auto& ec, auto size) { self->on_sent(ec, size); });
@@ -405,7 +417,7 @@ private:
 
         if (size > 0 && handler_)
         {
-            std::span<const std::byte> data(read_buffer_.get(), size);
+            std::span<const std::byte> data(read_buffer_);
 
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
             handler_->on_data_read(*parent_, data);
@@ -436,13 +448,13 @@ private:
         if (handler_)
         {
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
-            const auto& last_data_sent = *pending_data_.front();
+            const auto& last_data_sent = *pending_data_to_send_.front();
             const auto& last_data_view = std::span<const std::byte>(last_data_sent.data(), size);
             handler_->on_data_sent(*parent_, last_data_view);
         }
 
-        pending_data_.pop_front();
-        if (!pending_data_.empty())
+        pending_data_to_send_.pop_front();
+        if (!pending_data_to_send_.empty())
         {
             send_next_data();
         }
@@ -467,8 +479,8 @@ private:
     using arena_ptr = lux::growable_memory_arena_ptr<>;
     using arena_element = arena_ptr::element_type::element_type;
     arena_ptr memory_arena_;
-    std::deque<arena_element> pending_data_;
-    std::unique_ptr<std::byte[]> read_buffer_;
+    std::deque<arena_element> pending_data_to_send_;
+    std::vector<std::byte> read_buffer_;
 };
 
 tcp_socket::tcp_socket(boost::asio::any_io_executor exe,

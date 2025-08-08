@@ -17,29 +17,66 @@ struct tcp_socket_config
      */
     bool keep_alive{false};
 
-    /**
-     * Reconnect settings
-     * If true, attempts to reconnect on disconnect.
-     */
-    bool reconnect_on_disconnect{true};
+    struct reconnect_config
+    {
+        enum class strategy
+        {
+            disabled,
+            linear_backoff,
+            exponential_backoff,
+        };
 
-    /**
-     * Maximum number of reconnection attempts.
-     * If reconnect_on_disconnect is true, this specifies how many times to attempt reconnection.
-     */
-    std::size_t max_reconnect_attempts{5};
+        /**
+         * Reconnection strategy.
+         * If set to `disabled`, no reconnection attempts will be made.
+         */
+        strategy backoff_strategy{strategy::exponential_backoff};
 
-    /**
-     * Memory arena configuration
-     * Initial size of each item in the memory arena.
-     */
-    std::size_t memory_arena_initial_item_size{1024};
+        /**
+         * Maximum number of reconnection attempts.
+         * Set to 0 for infinite attempts.
+         */
+        std::size_t max_attempts{5};
 
-    /**
-     * Initial number of items in the memory arena.
-     * This is used to preallocate memory for socket operations.
-     */
-    std::size_t memory_arena_initial_item_count{4};
+        /**
+         * Initial delay between first reconnection attempt.
+         */
+        std::chrono::milliseconds base_delay{1000};
+
+        /**
+         * Maximum delay between reconnection attempts.
+         * Used as ceiling for both linear and exponential backoff.
+         */
+        std::chrono::milliseconds max_delay{30000};
+
+        /**
+         * Helper function to check if reconnection is enabled.
+         */
+        bool enabled() const
+        {
+            return backoff_strategy != strategy::disabled && max_attempts > 0;
+        }
+
+    } reconnect{};
+
+    struct buffer_config
+    {
+        /**
+         * Size of each allocated buffer chunk in bytes.
+         */
+        std::size_t initial_send_chunk_size{1024};
+
+        /**
+         * Number of buffer chunks to preallocate.
+         */
+        std::size_t initial_send_chunk_count{4};
+
+        /**
+         * Size of read buffer to preallocate for reading data.
+         */
+        std::size_t read_buffer_size{8 * 1024}; // 8 KB
+
+    } buffer{};
 };
 
 class tcp_socket
