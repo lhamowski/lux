@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lux/net/base/endpoint.hpp>
+#include <lux/io/net/base/endpoint.hpp>
 
 #include <span>
 #include <system_error>

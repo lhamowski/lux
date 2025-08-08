@@ -1,6 +1,7 @@
-#include <lux/net/udp_socket.hpp>
+#include <lux/io/net/udp_socket.hpp>
+#include <lux/io/net/utils.hpp>
 
-#include <lux/net/base/endpoint.hpp>
+#include <lux/io/net/base/endpoint.hpp>
 
 #include <lux/support/assert.hpp>
 #include <lux/support/finally.hpp>
@@ -20,13 +21,6 @@ namespace lux::net {
 
 namespace {
 constexpr std::size_t read_buffer_size = 8 * 1024; // 8 KB read buffer size
-
-lux::net::base::endpoint from_boost_endpoint(const boost::asio::ip::udp::endpoint& ep)
-{
-    const auto address_uint = ep.address().to_v4().to_uint();
-    const auto address_v4 = lux::net::base::address_v4{address_uint};
-    return lux::net::base::endpoint{address_v4, ep.port()};
-}
 } // namespace
 
 class udp_socket::impl : public std::enable_shared_from_this<impl>
@@ -188,10 +182,10 @@ private:
 
         if (handler_)
         {
-            const auto ep = from_boost_endpoint(sender_endpoint_);
+            const auto ep = lux::net::from_boost_endpoint(sender_endpoint_);
             if (ec)
             {
-                handler_->on_read_error(from_boost_endpoint(sender_endpoint_), ec);
+                handler_->on_read_error(ep, ec);
             }
             else
             {
@@ -242,7 +236,7 @@ private:
 
             if (handler_)
             {
-                const auto ep = from_boost_endpoint(destination);
+                const auto ep = lux::net::from_boost_endpoint(destination);
 
                 if (!ec)
                 {
@@ -322,18 +316,16 @@ std::error_code udp_socket::bind(const lux::net::base::endpoint& endpoint)
 {
     LUX_ASSERT(impl_, "UDP socket implementation must not be null");
 
-    const auto address = boost::asio::ip::address_v4{endpoint.address().to_uint()};
-    const auto ep = boost::asio::ip::udp::endpoint{address, endpoint.port()};
-    return impl_->bind(ep);
+    const auto boost_ep = lux::net::to_boost_endpoint<boost::asio::ip::udp>(endpoint);
+    return impl_->bind(boost_ep);
 }
 
 void udp_socket::send(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data)
 {
     LUX_ASSERT(impl_, "UDP socket implementation must not be null");
 
-    const auto address = boost::asio::ip::address_v4{endpoint.address().to_uint()};
-    const auto ep = boost::asio::ip::udp::endpoint{address, endpoint.port()};
-    impl_->send(ep, data);
+    const auto boost_ep = lux::net::to_boost_endpoint<boost::asio::ip::udp>(endpoint);
+    impl_->send(boost_ep, data);
 }
 
 bool udp_socket::is_open() const

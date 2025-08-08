@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lux/net/base/udp_socket.hpp>
+#include <lux/io/net/base/udp_socket.hpp>
 
 #include <memory>
 

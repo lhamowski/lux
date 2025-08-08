@@ -1,5 +1,5 @@
-#include <lux/net/socket_factory.hpp>
-#include <lux/net/udp_socket.hpp>
+#include <lux/io/net/socket_factory.hpp>
+#include <lux/io/net/udp_socket.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -37,7 +37,7 @@ public:
 
 } // namespace
 
-TEST_CASE("Socket factory creates UDP socket", "[socket_factory][net]")
+TEST_CASE("Socket factory creates UDP socket", "[io][net]")
 {
     boost::asio::io_context io_context;
 

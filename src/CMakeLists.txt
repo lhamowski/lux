@@ -30,33 +30,45 @@ target_link_libraries(lux
 )
 
 target_compile_features(lux PUBLIC cxx_std_20)
-target_include_directories(lux PUBLIC ${lux_SOURCE_DIR}/include)
+target_include_directories(lux 
+	PUBLIC 
+		${lux_SOURCE_DIR}/include
+)
 set_target_properties(lux PROPERTIES FOLDER lux)
 
 lux_source_group(lux TREE ${lux_SOURCE_DIR})
 
-if(LUX_ENABLE_NET)
-    cflex_add_library(lux-net SOURCES 
-		${lux_include_files_dir}/net/base/address_v4.hpp
-		${lux_include_files_dir}/net/base/endpoint.hpp
-		${lux_include_files_dir}/net/base/socket_factory.hpp
-		${lux_include_files_dir}/net/base/udp_socket.hpp
-		${lux_include_files_dir}/net/base/tcp_socket.hpp
-		${lux_include_files_dir}/net/base/tcp_acceptor.hpp
+if(LUX_ENABLE_IO)
+    cflex_add_library(lux-io SOURCES 
+		${lux_include_files_dir}/io/net/base/address_v4.hpp
+		${lux_include_files_dir}/io/net/base/endpoint.hpp
+		${lux_include_files_dir}/io/net/base/socket_factory.hpp
+		${lux_include_files_dir}/io/net/base/udp_socket.hpp
+		${lux_include_files_dir}/io/net/base/tcp_socket.hpp
+		${lux_include_files_dir}/io/net/base/tcp_acceptor.hpp
 
-        ${lux_include_files_dir}/net/udp_socket.hpp ${lux_source_files_dir}/net/udp_socket.cpp
-		${lux_include_files_dir}/net/socket_factory.hpp ${lux_source_files_dir}/net/socket_factory.cpp
+		${lux_source_files_dir}/io/net/utils.hpp
+		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
+        ${lux_include_files_dir}/io/net/tcp_acceptor.hpp ${lux_source_files_dir}/io/net/tcp_acceptor.cpp
+        ${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
+		${lux_include_files_dir}/io/net/udp_socket.hpp ${lux_source_files_dir}/io/net/udp_socket.cpp
     )
-	add_library(lux::net ALIAS lux-net)
+	add_library(lux::io ALIAS lux-io)
 
 	if(TARGET Boost::disable_autolinking)
-		target_link_libraries(lux-net PRIVATE Boost::disable_autolinking)
+		target_link_libraries(lux-io PRIVATE Boost::disable_autolinking)
 	endif()
 
-    target_link_libraries(lux-net 
+    target_link_libraries(lux-io
 		PUBLIC
 			lux::lux
 			Boost::boost
     )
+
+	target_include_directories(lux-io
+		PRIVATE
+			${lux_SOURCE_DIR}/src
+	)
+
     lux_source_group(lux TREE ${lux_SOURCE_DIR})
 endif()

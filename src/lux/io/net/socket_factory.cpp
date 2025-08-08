@@ -1,6 +1,6 @@
-#include <lux/net/socket_factory.hpp>
+#include <lux/io/net/socket_factory.hpp>
 
-#include <lux/net/udp_socket.hpp>
+#include <lux/io/net/udp_socket.hpp>
 
 namespace lux::net {
 

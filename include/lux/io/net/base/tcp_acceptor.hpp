@@ -1,7 +1,7 @@
 #pragma once
 
-#include <lux/net/base/endpoint.hpp>
-#include <lux/net/base/tcp_socket.hpp>
+#include <lux/io/net/base/endpoint.hpp>
+#include <lux/io/net/base/tcp_socket.hpp>
 
 namespace lux::net::base {
 

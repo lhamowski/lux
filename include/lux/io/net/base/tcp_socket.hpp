@@ -1,45 +1,13 @@
 #pragma once
 
-#include <lux/net/base/endpoint.hpp>
+#include <lux/io/net/base/endpoint.hpp>
 
+#include <optional>
 #include <span>
 #include <string_view>
 #include <system_error>
 
 namespace lux::net::base {
-
-class tcp_socket_handler
-{
-public:
-    /**
-     * Called when data is received from a specific endpoint.
-     * @param endpoint The endpoint from which the data was received.
-     * @param data The received data, represented as a span of bytes.
-     */
-    virtual void on_data_read(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data) = 0;
-
-    /**
-     * Called when data is successfully sent to a specific endpoint.
-     * @param endpoint The endpoint to which the data was sent.
-     * @param data The data that was sent, represented as a span of bytes.
-     */
-    virtual void on_data_sent(const lux::net::base::endpoint& endpoint, const std::span<const std::byte>& data) = 0;
-
-    /**
-     * Called when a connection is established with a specific endpoint.
-     * @param endpoint The endpoint to which the connection was established.
-     */
-    virtual void on_connected(const lux::net::base::endpoint& endpoint) = 0;
-
-    /**
-     * Called when a connection is disconnected from a specific endpoint.
-     * @param endpoint The endpoint from which the connection was disconnected.
-     */
-    virtual void on_disconnected(const lux::net::base::endpoint& endpoint) = 0;
-
-protected:
-    virtual  ~tcp_socket_handler() = default;
-};
 
 struct tcp_socket_config
 {
@@ -85,19 +53,18 @@ public:
 
     /**
      * Opens the TCP socket using a host and port.
-     * @param host The host to connect to.
-     * @param port The port to connect to.
+     * @param host The host endpoint to connect to.
      * @return An error code indicating success or failure.
      */
-    virtual std::error_code connect(std::string_view host, std::uint16_t port) = 0;
-    
+    virtual std::error_code connect(const lux::net::base::host_endpoint& host_endpoint) = 0;
+
     /**
      * Closes the TCP socket.
      * @param send_pending If true, sends any pending data before closing.
      * @return An error code indicating success or failure.
      */
     virtual std::error_code disconnect(bool send_pending) = 0;
-    
+
     /**
      * Sends data to the connected endpoint.
      * @param data The data to send, represented as a span of bytes.
@@ -110,8 +77,54 @@ public:
      */
     virtual bool is_connected() const = 0;
 
+    /**
+     * Gets the local endpoint of the socket.
+     * @return The local endpoint if connected, otherwise std::nullopt.
+     */
+    virtual std::optional<lux::net::base::endpoint> local_endpoint() const = 0;
+
+    /**
+     * Gets the remote endpoint of the socket.
+     * @return The remote endpoint if connected, otherwise std::nullopt.
+     */
+    virtual std::optional<lux::net::base::endpoint> remote_endpoint() const = 0;
+
 protected:
     virtual ~tcp_socket() = default;
 };
 
-} // namespace lux::net
+class tcp_socket_handler
+{
+public:
+    /**
+     * Called when a connection is established with a specific endpoint.
+     * @param socket The socket that is now connected.
+     */
+    virtual void on_connected(lux::net::base::tcp_socket& socket) = 0;
+
+    /**
+     * Called when a connection is disconnected from a specific endpoint.
+     * @param socket The socket that was disconnected.
+     * @param ec The error code indicating the reason for disconnection.
+     */
+    virtual void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec) = 0;
+
+    /**
+     * Called when data is received from a specific endpoint.
+     * @param socket The socket that received the data.
+     * @param data The received data, represented as a span of bytes.
+     */
+    virtual void on_data_read(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) = 0;
+
+    /**
+     * Called when data is successfully sent to a specific endpoint.
+     * @param socket The socket that sent the data.
+     * @param data The data that was sent, represented as a span of bytes.
+     */
+    virtual void on_data_sent(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) = 0;
+
+protected:
+    virtual ~tcp_socket_handler() = default;
+};
+
+} // namespace lux::net::base

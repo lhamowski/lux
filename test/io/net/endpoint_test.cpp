@@ -1,10 +1,10 @@
-#include <lux/net/base/endpoint.hpp>
+#include <lux/io/net/base/endpoint.hpp>
 
 #include <catch2/catch_all.hpp>
 
 using namespace lux::net::base;
 
-TEST_CASE("Endpoint basic functionality", "[endpoint][net]")
+TEST_CASE("Endpoint basic functionality", "[io][net]")
 {
     SECTION("Default constructor")
     {

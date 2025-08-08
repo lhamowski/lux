@@ -1,7 +1,7 @@
 #pragma once
 
-#include <lux/net/base/udp_socket.hpp>
-#include <lux/net/base/socket_factory.hpp>
+#include <lux/io/net/base/udp_socket.hpp>
+#include <lux/io/net/base/socket_factory.hpp>
 
 #include <boost/asio/any_io_executor.hpp>
 

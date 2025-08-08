@@ -32,11 +32,11 @@ cmake_dependent_option(
     "${lux_master_project}"
     OFF
 )
-option(LUX_ENABLE_NET "Enable lux-net module" ON)
+option(LUX_ENABLE_IO "Enable lux-io module" ON)
 option(LUX_FETCH_DEPS "Fetch required dependencies" ON)
 option(LUX_FMT_EXTERNAL "Use external fmt library" OFF)
 
-if(LUX_ENABLE_NET)
+if(LUX_ENABLE_IO)
     find_package(Boost 1.87.0 REQUIRED)
     if (${Boost_FOUND})
         message(STATUS "Found Boost ${Boost_VERSION}")

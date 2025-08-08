@@ -18,16 +18,16 @@ target_link_libraries(lux-test
         fmt::fmt
 )
 
-if(LUX_ENABLE_NET)
+if(LUX_ENABLE_IO)
     target_sources(lux-test PRIVATE
-        net/address_v4_test.cpp
-        net/endpoint_test.cpp
-        net/udp_socket_test.cpp
-        net/socket_factory_test.cpp
+        io/net/address_v4_test.cpp
+        io/net/endpoint_test.cpp
+        io/net/udp_socket_test.cpp
+        io/net/socket_factory_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 
-            lux::net)
+            lux::io)
 endif()
 
 set_target_properties(lux-test PROPERTIES FOLDER lux)

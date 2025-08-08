@@ -1,10 +1,10 @@
-#include <lux/net/base/address_v4.hpp>
+#include <lux/io/net/base/address_v4.hpp>
 
 #include <catch2/catch_all.hpp>
 
 using namespace lux::net::base;
 
-TEST_CASE("address_v4 basic functionality", "[address_v4][net]")
+TEST_CASE("address_v4 basic functionality", "[io][net]")
 {
     SECTION("Construct from bytes")
     {
