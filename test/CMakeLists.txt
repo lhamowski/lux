@@ -22,8 +22,9 @@ if(LUX_ENABLE_IO)
     target_sources(lux-test PRIVATE
         io/net/address_v4_test.cpp
         io/net/endpoint_test.cpp
-        io/net/udp_socket_test.cpp
         io/net/socket_factory_test.cpp
+        io/net/tcp_socket_test.cpp
+        io/net/udp_socket_test.cpp
 
         io/time/delayed_retry_executor_test.cpp
         io/time/interval_timer_test.cpp

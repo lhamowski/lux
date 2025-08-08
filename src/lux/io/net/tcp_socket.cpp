@@ -2,10 +2,13 @@
 #include <lux/io/net/utils.hpp>
 
 #include <lux/io/net/base/endpoint.hpp>
+#include <lux/io/time/base/timer.hpp>
+#include <lux/io/time/delayed_retry_executor.hpp>
 
 #include <lux/support/assert.hpp>
 #include <lux/support/finally.hpp>
 #include <lux/support/move.hpp>
+#include <lux/support/overload.hpp>
 #include <lux/utils/memory_arena.hpp>
 
 #include <boost/asio/ip/basic_resolver.hpp>
@@ -19,10 +22,10 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <variant>
 #include <vector>
 
 namespace lux::net {
-
 
 class tcp_socket::impl : public std::enable_shared_from_this<impl>
 {
@@ -30,7 +33,8 @@ public:
     impl(lux::net::base::tcp_socket& parent,
          boost::asio::any_io_executor exe,
          lux::net::base::tcp_socket_handler& handler,
-         const lux::net::base::tcp_socket_config& config)
+         const lux::net::tcp_socket_config& config,
+         lux::time::base::timer_factory& timer_factory)
         : socket_{exe},
           parent_{&parent},
           handler_{&handler},
@@ -39,11 +43,23 @@ public:
                                                         config_.buffer.initial_send_chunk_count)},
           read_buffer_{config_.buffer.read_buffer_size}
     {
+        if (config_.reconnect.enabled)
+        {
+            reconnect_executor_.emplace(timer_factory, config_.reconnect.retry_config);
+            reconnect_executor_->set_retry_action([this] {
+                LUX_ASSERT(is_disconnected(), "Cannot reconnect when socket is not disconnected");
+                reconnect();
+            });
+            reconnect_executor_->set_exhausted_callback([this] {
+                LUX_ASSERT(is_disconnected(), "Reconnect exhausted, but socket is not disconnected");
+                reconnect_executor_.reset();
+            });
+        }
     }
 
     ~impl()
     {
-        if (!is_connected())
+        if (is_connected())
         {
             disconnect_immediately();
         }
@@ -87,27 +103,37 @@ public:
     }
 
 public:
-    std::error_code connect(const boost::asio::ip::tcp::endpoint& endpoint)
+    std::error_code connect(const lux::net::base::endpoint& endpoint)
     {
         if (!is_disconnected())
         {
-            return std::make_error_code(std::errc::already_connected);
+            return std::make_error_code(std::errc::operation_in_progress);
         }
+
+        connect_target_ = endpoint;
 
         if (const auto ec = initialize_socket(); ec)
         {
             return ec;
         }
 
-        socket_.async_connect(endpoint, [self = shared_from_this()](const auto& ec) { self->on_connected(ec); });
+        state_ = state::connecting;
+
+        const auto boost_ep = lux::net::to_boost_endpoint<boost::asio::ip::tcp>(endpoint);
+        socket_.async_connect(boost_ep, [self = shared_from_this()](const auto& ec) { self->on_connected(ec); });
         return {};
     }
 
     std::error_code connect(const lux::net::base::host_endpoint& host_endpoint)
     {
         // TODO: Implement host resolution and connection logic
-        (void)host_endpoint; // Suppress unused parameter warning
-        return {};
+        if (!is_disconnected())
+        {
+            return std::make_error_code(std::errc::operation_in_progress);
+        }
+
+        connect_target_ = host_endpoint;
+        return std::make_error_code(std::errc::not_supported);
     }
 
     // std::error_code connect(const boost::asio::ip::tcp::resolver::results_type& endpoints)
@@ -131,6 +157,12 @@ public:
 
     std::error_code disconnect(bool send_pending)
     {
+        if (reconnect_executor_)
+        {
+            // Manual disconnection, reset the reconnect executor
+            reconnect_executor_->reset();
+        }
+
         if (send_pending)
         {
             return disconnect_gracefully();
@@ -141,16 +173,16 @@ public:
         }
     }
 
-    void send(const std::span<const std::byte>& data)
+    std::error_code send(const std::span<const std::byte>& data)
     {
         if (!is_connected() && !is_disconnecting())
         {
-            return;
+            return std::make_error_code(std::errc::not_connected);
         }
 
         if (data.empty())
         {
-            return;
+            return std::make_error_code(std::errc::invalid_argument);
         }
 
         auto buffer = memory_arena_->get(data.size());
@@ -163,6 +195,8 @@ public:
         {
             send_next_data();
         }
+
+        return {};
     }
 
     std::error_code disconnect_gracefully()
@@ -188,29 +222,24 @@ public:
         LUX_UNREACHABLE();
     }
 
-    std::error_code disconnect_immediately()
+    std::error_code disconnect_immediately(const std::error_code& ec = {})
     {
         if (is_disconnected())
         {
             return {}; // No error, already disconnected
         }
 
-        if (const auto ec = close_socket(); ec)
-        {
-            return ec; // Return error code if closing the socket fails
-        }
-
         state_ = state::disconnected;
+
+        const auto close_ec = close_socket();
 
         if (handler_)
         {
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
-
-            const auto no_error = std::error_code{}; // No error code for disconnection
-            handler_->on_disconnected(*parent_, no_error);
+            handler_->on_disconnected(*parent_, ec);
         }
 
-        return {}; // No error, disconnected successfully
+        return close_ec;
     }
 
     std::optional<lux::net::base::endpoint> local_endpoint() const
@@ -309,34 +338,40 @@ private:
     }
 
     /**
-    * Handles internal disconnection events due to socket errors.
-    * This function is called when an error occurs during socket operations (e.g., read/write errors).
-    * It performs immediate disconnection and initiates reconnection if configured.
-    */
+     * Handles internal disconnection events due to socket errors.
+     * This function is called when an error occurs during socket operations (e.g., read/write errors).
+     * It performs immediate disconnection and initiates reconnection if configured.
+     */
     void handle_disconnect(const std::error_code& ec)
     {
-        close_socket();
-        state_ = state::disconnected;
+        disconnect_immediately(ec);
 
-        if (handler_)
+        if (reconnect_executor_)
         {
-            LUX_ASSERT(parent_, "TCP socket parent must not be null");
-            handler_->on_disconnected(*parent_, ec);
-        }
-
-        // We need to check if on_disconnected handler changed the state
-        if (config_.reconnect.enabled() && is_disconnected())
-        {
-            reconnect();
+            reconnect_executor_->retry();
         }
     }
 
     void reconnect()
     {
-        LUX_ASSERT(config_.reconnect.enabled(), "Reconnection is not enabled in the configuration");
+        LUX_ASSERT(config_.reconnect.enabled, "Reconnection is not enabled in the configuration");
         LUX_ASSERT(is_disconnected(), "Cannot reconnect if not disconnected");
 
         state_ = state::reconnecting;
+
+        auto reconnect_func = [&](const auto& endpoint) {
+            if (const auto ec = connect(endpoint); ec)
+            {
+                // If connection fails immediately, retry using the reconnect executor
+                disconnect_immediately(ec);
+                reconnect_executor_->retry();
+            }
+        };
+
+        auto overload = lux::overload{lux::move(reconnect_func),
+                                      [](const std::monostate&) { LUX_ASSERT(false, "invalid target"); }};
+
+        std::visit(lux::move(overload), connect_target_);
     }
 
     void read()
@@ -379,21 +414,25 @@ private:
 
         if (ec)
         {
-            if (handler_)
-            {
-                LUX_ASSERT(parent_, "TCP socket parent must not be null");
-                handler_->on_disconnected(*parent_, ec);
-            }
+            handle_disconnect(ec);
             return;
         }
 
         state_ = state::connected;
+
+        if (reconnect_executor_)
+        {
+            // If we successfully connected, reset the reconnect executor
+            reconnect_executor_->reset();
+        }
 
         if (handler_)
         {
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
             handler_->on_connected(*parent_);
         }
+
+        read(); // Start reading data after successful connection
     }
 
     void on_read(const boost::system::error_code& ec, std::size_t size)
@@ -469,9 +508,11 @@ private:
     boost::asio::ip::tcp::socket socket_;
     lux::net::base::tcp_socket* parent_{nullptr};
     lux::net::base::tcp_socket_handler* handler_{nullptr};
-    const lux::net::base::tcp_socket_config config_;
+    const lux::net::tcp_socket_config config_;
+    std::optional<lux::time::delayed_retry_executor> reconnect_executor_;
 
 private:
+    std::variant<lux::net::base::endpoint, lux::net::base::host_endpoint, std::monostate> connect_target_;
     std::optional<lux::net::base::endpoint> local_endpoint_;
     std::optional<lux::net::base::endpoint> remote_endpoint_;
 
@@ -485,8 +526,9 @@ private:
 
 tcp_socket::tcp_socket(boost::asio::any_io_executor exe,
                        lux::net::base::tcp_socket_handler& handler,
-                       const lux::net::base::tcp_socket_config& config)
-    : impl_{std::make_shared<impl>(*this, exe, handler, config)}
+                       const lux::net::tcp_socket_config& config,
+                       lux::time::base::timer_factory& timer_factory)
+    : impl_{std::make_shared<impl>(*this, exe, handler, config, timer_factory)}
 {
 }
 
@@ -499,7 +541,7 @@ tcp_socket::~tcp_socket()
 std::error_code tcp_socket::connect(const lux::net::base::endpoint& endpoint)
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
-    return impl_->connect(lux::net::to_boost_endpoint<boost::asio::ip::tcp>(endpoint));
+    return impl_->connect(endpoint);
 }
 
 std::error_code tcp_socket::connect(const lux::net::base::host_endpoint& host_endpoint)
@@ -522,10 +564,10 @@ std::error_code tcp_socket::disconnect(bool send_pending)
     }
 }
 
-void tcp_socket::send(const std::span<const std::byte>& data)
+std::error_code tcp_socket::send(const std::span<const std::byte>& data)
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
-    impl_->send(data);
+    return impl_->send(data);
 }
 
 bool tcp_socket::is_connected() const

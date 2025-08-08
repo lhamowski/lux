@@ -25,3 +25,14 @@ namespace lux::net {
 class udp_socket;
 class socket_factory;
 } // namespace lux::net
+
+namespace lux::time::base {
+class timer_factory;
+class interval_timer;
+} // namespace lux::time::base
+
+namespace lux::time {
+struct delayed_retry_config;
+
+class delayed_retry_executor;
+} // namespace lux::time
