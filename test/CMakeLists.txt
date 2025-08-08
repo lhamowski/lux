@@ -24,6 +24,9 @@ if(LUX_ENABLE_IO)
         io/net/endpoint_test.cpp
         io/net/udp_socket_test.cpp
         io/net/socket_factory_test.cpp
+
+        io/time/interval_timer_test.cpp
+        io/time/timer_factory_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 
