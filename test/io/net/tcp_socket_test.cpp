@@ -207,6 +207,118 @@ TEST_CASE("Connect to localhost with existing server succeeds", "[io][net][tcp]"
     acceptor.close();
 }
 
+TEST_CASE("Connect using host endpoint with echo server", "[io][net][tcp]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
+
+    // Create echo server
+    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
+    const auto server_port = acceptor.local_endpoint().port();
+
+    boost::asio::ip::tcp::socket server_socket{io_context};
+    std::array<char, 1024> server_buffer{};
+
+    bool connected = false;
+    bool data_sent = false;
+    bool data_received = false;
+
+    handler.on_connected_callback = [&]() {
+        connected = true;
+
+        // Send test data after connection
+        const std::array<std::byte, 8> test_data{std::byte{'h'},
+                                                 std::byte{'o'},
+                                                 std::byte{'s'},
+                                                 std::byte{'t'},
+                                                 std::byte{'n'},
+                                                 std::byte{'a'},
+                                                 std::byte{'m'},
+                                                 std::byte{'e'}};
+        socket.send(std::span<const std::byte>{test_data});
+    };
+
+    handler.on_data_sent_callback = [&](const std::span<const std::byte>& sent_data) {
+        CHECK(sent_data.size() == 8); // "hostname"
+        data_sent = true;
+    };
+
+    handler.on_data_read_callback = [&](const std::span<const std::byte>& received_data) {
+        CHECK(received_data.size() == 8); // Echo back "hostname"
+        CHECK(received_data[0] == std::byte{'h'});
+        CHECK(received_data[1] == std::byte{'o'});
+        CHECK(received_data[2] == std::byte{'s'});
+        CHECK(received_data[3] == std::byte{'t'});
+        CHECK(received_data[4] == std::byte{'n'});
+        CHECK(received_data[5] == std::byte{'a'});
+        CHECK(received_data[6] == std::byte{'m'});
+        CHECK(received_data[7] == std::byte{'e'});
+        data_received = true;
+        io_context.stop();
+    };
+
+    // Echo server setup
+    acceptor.async_accept(server_socket, [&](const boost::system::error_code& ec) {
+        if (!ec)
+        {
+            server_socket.async_read_some(boost::asio::buffer(server_buffer),
+                                          [&](const boost::system::error_code& read_ec, std::size_t bytes_read) {
+                                              if (!read_ec && bytes_read > 0)
+                                              {
+                                                  boost::asio::async_write(
+                                                      server_socket,
+                                                      boost::asio::buffer(server_buffer.data(), bytes_read),
+                                                      [](const boost::system::error_code&, std::size_t) {});
+                                              }
+                                          });
+        }
+    });
+
+    // Connect using hostname instead of IP
+    const lux::net::base::host_endpoint host_ep{"127.0.0.1", server_port}; // Use IP as hostname for testing
+    const auto result = socket.connect(host_ep);
+    CHECK_FALSE(result);
+
+    io_context.run_for(std::chrono::milliseconds{300});
+
+    CHECK(connected);
+    CHECK(data_sent);
+    CHECK(data_received);
+
+    // Clean up
+    socket.disconnect(false);
+    server_socket.close();
+    acceptor.close();
+}
+
+TEST_CASE("Connect using host endpoint to invalid hostname fails", "[io][net][tcp]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
+
+    bool disconnected_called = false;
+    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+        CHECK(ec); // Should have an error (DNS resolution failure)
+        disconnected_called = true;
+        io_context.stop();
+    };
+
+    // Use non-existent hostname
+    const lux::net::base::host_endpoint invalid_host{"255.255.255.255", 80};
+    const auto result = socket.connect(invalid_host);
+    CHECK_FALSE(result); // Should not return error immediately (async operation)
+
+    io_context.run_for(std::chrono::milliseconds{300}); // Give more time for DNS resolution failure
+    CHECK(disconnected_called);
+    CHECK_FALSE(socket.is_connected());
+}
+
 TEST_CASE("Send and receive data with server", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
@@ -229,11 +341,11 @@ TEST_CASE("Send and receive data with server", "[io][net][tcp]")
         // Send data once connected
         const std::array<std::byte, 5> test_data{
             std::byte{'h'}, std::byte{'e'}, std::byte{'l'}, std::byte{'l'}, std::byte{'o'}};
-        
+
         const auto ec1 = socket.send(std::span<const std::byte>{test_data});
         CHECK_FALSE(ec1); // Should not return an error
 
-        const auto ec2 = socket.send(std::span<const std::byte>{}); 
+        const auto ec2 = socket.send(std::span<const std::byte>{});
         CHECK(ec2); // Sending empty data should return error
     };
 
