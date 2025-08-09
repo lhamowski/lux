@@ -40,20 +40,25 @@ lux_source_group(lux TREE ${lux_SOURCE_DIR})
 
 if(LUX_ENABLE_IO)
     cflex_add_library(lux-io SOURCES 
+		# io/net files
 		${lux_include_files_dir}/io/net/base/address_v4.hpp
 		${lux_include_files_dir}/io/net/base/endpoint.hpp
 		${lux_include_files_dir}/io/net/base/socket_factory.hpp
 		${lux_include_files_dir}/io/net/base/udp_socket.hpp
 		${lux_include_files_dir}/io/net/base/tcp_socket.hpp
 
-		${lux_include_files_dir}/io/time/interval_timer.hpp
-		${lux_include_files_dir}/io/time/delayed_retry_executor.hpp ${lux_source_files_dir}/io/time/delayed_retry_executor.cpp
-		${lux_include_files_dir}/io/time/timer_factory.hpp
-
 		${lux_source_files_dir}/io/net/utils.hpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
         ${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
 		${lux_include_files_dir}/io/net/udp_socket.hpp ${lux_source_files_dir}/io/net/udp_socket.cpp
+
+		# io/time files
+		${lux_include_files_dir}/io/time/base/timer.hpp
+		${lux_include_files_dir}/io/time/base/retry_policy.hpp
+
+		${lux_include_files_dir}/io/time/interval_timer.hpp
+		${lux_include_files_dir}/io/time/retry_executor.hpp ${lux_source_files_dir}/io/time/retry_executor.cpp
+		${lux_include_files_dir}/io/time/timer_factory.hpp
     )
 	add_library(lux::io ALIAS lux-io)
 

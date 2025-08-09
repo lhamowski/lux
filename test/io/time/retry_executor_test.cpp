@@ -1,4 +1,4 @@
-#include <lux/io/time/delayed_retry_executor.hpp>
+#include <lux/io/time/retry_executor.hpp>
 
 #include "mocks/timer_factory_mock.hpp"
 #include "mocks/interval_timer_mock.hpp"
@@ -8,38 +8,39 @@
 #include <chrono>
 
 using namespace lux::time;
+using namespace lux::time::base;
 using namespace test;
 
 namespace {
 
-delayed_retry_config create_exponential_backoff_config()
+retry_policy create_exponential_backoff_policy()
 {
-    delayed_retry_config config;
-    config.strategy = delayed_retry_config::backoff_strategy::exponential_backoff;
-    config.max_attempts = 3;
-    config.base_delay = std::chrono::milliseconds{100};
-    config.max_delay = std::chrono::milliseconds{5000};
-    return config;
+    retry_policy policy;
+    policy.strategy = retry_policy::backoff_strategy::exponential_backoff;
+    policy.max_attempts = 3;
+    policy.base_delay = std::chrono::milliseconds{100};
+    policy.max_delay = std::chrono::milliseconds{5000};
+    return policy;
 }
 
-delayed_retry_config create_fixed_delay_config()
+retry_policy create_fixed_delay_policy()
 {
-    delayed_retry_config config;
-    config.strategy = delayed_retry_config::backoff_strategy::fixed_delay;
-    config.max_attempts = 3;
-    config.base_delay = std::chrono::milliseconds{100};
-    config.max_delay = std::chrono::milliseconds{5000};
-    return config;
+    retry_policy policy;
+    policy.strategy = retry_policy::backoff_strategy::fixed_delay;
+    policy.max_attempts = 3;
+    policy.base_delay = std::chrono::milliseconds{100};
+    policy.max_delay = std::chrono::milliseconds{5000};
+    return policy;
 }
 
-delayed_retry_config create_linear_backoff_config()
+retry_policy create_linear_backoff_policy()
 {
-    delayed_retry_config config;
-    config.strategy = delayed_retry_config::backoff_strategy::linear_backoff;
-    config.max_attempts = 3;
-    config.base_delay = std::chrono::milliseconds{100};
-    config.max_delay = std::chrono::milliseconds{5000};
-    return config;
+    retry_policy policy;
+    policy.strategy = retry_policy::backoff_strategy::linear_backoff;
+    policy.max_attempts = 3;
+    policy.base_delay = std::chrono::milliseconds{100};
+    policy.max_delay = std::chrono::milliseconds{5000};
+    return policy;
 }
 
 } // namespace
@@ -49,9 +50,9 @@ TEST_CASE("Delayed retry executor - Basic functionality", "[io][time]")
     SECTION("Should create timer on construction")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
+        auto policy = create_exponential_backoff_policy();
 
-        delayed_retry_executor executor{factory, config};
+        retry_executor executor{factory, policy};
 
         CHECK(factory.created_timers_.size() == 1);
         auto* timer_mock = factory.created_timers_[0];
@@ -61,8 +62,8 @@ TEST_CASE("Delayed retry executor - Basic functionality", "[io][time]")
     SECTION("Should schedule timer with correct delay on first retry")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        retry_executor executor{factory, policy};
 
         bool retry_called = false;
         bool exhausted_called = false;
@@ -88,8 +89,8 @@ TEST_CASE("Delayed retry executor - Fixed delay strategy", "[io][time]")
     SECTION("Should use same delay for all attempts")
     {
         timer_factory_mock factory;
-        auto config = create_fixed_delay_config();
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_fixed_delay_policy();
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -116,8 +117,8 @@ TEST_CASE("Delayed retry executor - Linear backoff strategy", "[io][time]")
     SECTION("Should increase delay linearly")
     {
         timer_factory_mock factory;
-        auto config = create_linear_backoff_config();
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_linear_backoff_policy();
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -143,10 +144,10 @@ TEST_CASE("Delayed retry executor - Linear backoff strategy", "[io][time]")
     SECTION("Should cap delay at max_delay")
     {
         timer_factory_mock factory;
-        auto config = create_linear_backoff_config();
-        config.base_delay = std::chrono::milliseconds{1000};
-        config.max_delay = std::chrono::milliseconds{1500};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_linear_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{1000};
+        policy.max_delay = std::chrono::milliseconds{1500};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -166,9 +167,9 @@ TEST_CASE("Delayed retry executor - Exponential backoff strategy", "[io][time]")
     SECTION("Should increase delay exponentially")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.base_delay = std::chrono::milliseconds{100};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{100};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -198,10 +199,10 @@ TEST_CASE("Delayed retry executor - Exponential backoff strategy", "[io][time]")
     SECTION("Should cap delay at max_delay")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.base_delay = std::chrono::milliseconds{1000};
-        config.max_delay = std::chrono::milliseconds{2500};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{1000};
+        policy.max_delay = std::chrono::milliseconds{2500};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -221,9 +222,9 @@ TEST_CASE("Delayed retry executor - Max attempts behavior", "[io][time]")
     SECTION("Should call retry action up to max_attempts")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.max_attempts = 3;
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.max_attempts = 3;
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -261,9 +262,9 @@ TEST_CASE("Delayed retry executor - Max attempts behavior", "[io][time]")
     SECTION("Should handle max_attempts = 0 (infinite retries)")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.max_attempts = 0;
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.max_attempts = 0;
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -290,8 +291,8 @@ TEST_CASE("Delayed retry executor - Reset functionality", "[io][time]")
     SECTION("Should reset attempts counter and cancel timer")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -319,9 +320,9 @@ TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
     SECTION("Should handle zero base delay")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.base_delay = std::chrono::milliseconds{0};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{0};
+        retry_executor executor{factory, policy};
 
         std::size_t retry_call_count = 0;
         bool exhausted_called = false;
@@ -343,10 +344,10 @@ TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
     SECTION("Should handle base_delay greater than max_delay")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.base_delay = std::chrono::milliseconds{1000};
-        config.max_delay = std::chrono::milliseconds{500};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{1000};
+        policy.max_delay = std::chrono::milliseconds{500};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -357,10 +358,10 @@ TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
     SECTION("Should handle overflow in exponential backoff")
     {
         timer_factory_mock factory;
-        auto config = create_exponential_backoff_config();
-        config.base_delay = std::chrono::milliseconds{1000};
-        config.max_delay = std::chrono::milliseconds{5000};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_exponential_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{1000};
+        policy.max_delay = std::chrono::milliseconds{5000};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 
@@ -377,10 +378,10 @@ TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
     SECTION("Should handle overflow in linear backoff")
     {
         timer_factory_mock factory;
-        auto config = create_linear_backoff_config();
-        config.base_delay = std::chrono::milliseconds{1000};
-        config.max_delay = std::chrono::milliseconds{3000};
-        delayed_retry_executor executor{factory, config};
+        auto policy = create_linear_backoff_policy();
+        policy.base_delay = std::chrono::milliseconds{1000};
+        policy.max_delay = std::chrono::milliseconds{3000};
+        retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
 

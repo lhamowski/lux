@@ -1,7 +1,7 @@
 #pragma once
 
 #include <lux/io/net/base/endpoint.hpp>
-#include <lux/io/time/delayed_retry_executor.hpp>
+#include <lux/io/time/base/retry_policy.hpp>
 
 #include <memory>
 #include <optional>
@@ -28,11 +28,10 @@ struct tcp_socket_config
         bool enabled{true};
 
         /**
-         * Configuration for the retry mechanism used during reconnection attempts.
-         * This defines how the retry mechanism will behave in terms of delay between attempts.
+         * Retry policy configuration for reconnection attempts.
          */
-        lux::time::delayed_retry_config retry_config{
-            .strategy = lux::time::delayed_retry_config::backoff_strategy::exponential_backoff,
+        lux::time::base::retry_policy reconnect_policy{
+            .strategy = lux::time::base::retry_policy::backoff_strategy::exponential_backoff,
             .max_attempts = 5,
             .base_delay = std::chrono::milliseconds{1000},
             .max_delay = std::chrono::milliseconds{30000}};

@@ -3,7 +3,7 @@
 
 #include <lux/io/net/base/endpoint.hpp>
 #include <lux/io/time/base/timer.hpp>
-#include <lux/io/time/delayed_retry_executor.hpp>
+#include <lux/io/time/retry_executor.hpp>
 
 #include <lux/support/assert.hpp>
 #include <lux/support/finally.hpp>
@@ -47,7 +47,7 @@ public:
     {
         if (config_.reconnect.enabled)
         {
-            reconnect_executor_.emplace(timer_factory, config_.reconnect.retry_config);
+            reconnect_executor_.emplace(timer_factory, config_.reconnect.reconnect_policy);
             reconnect_executor_->set_retry_action([this] {
                 LUX_ASSERT(is_disconnected(), "Cannot reconnect when socket is not disconnected");
                 reconnect();
@@ -518,7 +518,7 @@ private:
     lux::net::base::tcp_socket* parent_{nullptr};
     lux::net::base::tcp_socket_handler* handler_{nullptr};
     const lux::net::base::tcp_socket_config config_;
-    std::optional<lux::time::delayed_retry_executor> reconnect_executor_;
+    std::optional<lux::time::retry_executor> reconnect_executor_;
 
 private:
     std::variant<lux::net::base::endpoint, lux::net::base::host_endpoint, std::monostate> connect_target_;
