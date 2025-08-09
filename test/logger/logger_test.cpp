@@ -6,9 +6,9 @@
 #include <catch2/catch_all.hpp>
 
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/details/os.h>
 #include <spdlog/logger.h>
 
-#include <chrono>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -210,10 +210,9 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         daily_config.rotation_minute = 59; // Rotate at 59 minutes past the hour
         config.file = daily_config;
 
-        namespace chrono = std::chrono;
-        const auto now = chrono::ceil<chrono::days>(chrono::system_clock::now());
-        const auto ymd = chrono::year_month_day{now};
-        const auto expected_filename = std::format("daily_test_{:%Y-%m-%d}.log", ymd);
+        const auto tm = spdlog::details::os::localtime();
+        const auto expected_filename = std::format("daily_test_{:04d}-{:02d}-{:02d}.log",
+            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove(expected_filename);
