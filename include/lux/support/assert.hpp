@@ -15,7 +15,5 @@
 #define LUX_UNREACHABLE()                                                                                                        \
     do                                                                                                                           \
     {                                                                                                                            \
-        LUX_ASSERT(false, "Unreachable code reached!");                                                                          \
         LUX_BUILTIN_UNREACHABLE();                                                                                               \
-                                                                                                                                 \
     } while (false)
