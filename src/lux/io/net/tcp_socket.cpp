@@ -11,7 +11,6 @@
 #include <lux/support/overload.hpp>
 #include <lux/utils/memory_arena.hpp>
 
-#include <boost/asio/ip/basic_resolver.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/connect.hpp>
@@ -35,7 +34,7 @@ public:
     impl(lux::net::base::tcp_socket& parent,
          boost::asio::any_io_executor exe,
          lux::net::base::tcp_socket_handler& handler,
-         const lux::net::tcp_socket_config& config,
+         const lux::net::base::tcp_socket_config& config,
          lux::time::base::timer_factory& timer_factory)
         : socket_{exe},
           resolver_{exe},
@@ -98,11 +97,6 @@ public:
     bool is_connecting() const
     {
         return state_ == state::connecting;
-    }
-
-    bool is_reconnecting() const
-    {
-        return state_ == state::reconnecting;
     }
 
 public:
@@ -216,7 +210,6 @@ public:
             state_ = state::disconnecting;
             return shutdown_receive(); // Shutdown receive to stop reading data
         case state::connecting:
-        case state::reconnecting:
             return disconnect_immediately();
         }
 
@@ -358,8 +351,6 @@ private:
         LUX_ASSERT(config_.reconnect.enabled, "Reconnection is not enabled in the configuration");
         LUX_ASSERT(is_disconnected(), "Cannot reconnect if not disconnected");
 
-        state_ = state::reconnecting;
-
         auto reconnect_func = [&](const auto& endpoint) {
             if (const auto ec = connect(endpoint); ec)
             {
@@ -420,7 +411,7 @@ private:
 
     void on_connected(const boost::system::error_code& ec)
     {
-        if (!is_connecting() && !is_reconnecting())
+        if (!is_connecting())
         {
             return; // Ignore if not in connecting state
         }
@@ -527,7 +518,7 @@ private:
     boost::asio::ip::tcp::resolver resolver_;
     lux::net::base::tcp_socket* parent_{nullptr};
     lux::net::base::tcp_socket_handler* handler_{nullptr};
-    const lux::net::tcp_socket_config config_;
+    const lux::net::base::tcp_socket_config config_;
     std::optional<lux::time::delayed_retry_executor> reconnect_executor_;
 
 private:
@@ -545,7 +536,7 @@ private:
 
 tcp_socket::tcp_socket(boost::asio::any_io_executor exe,
                        lux::net::base::tcp_socket_handler& handler,
-                       const lux::net::tcp_socket_config& config,
+                       const lux::net::base::tcp_socket_config& config,
                        lux::time::base::timer_factory& timer_factory)
     : impl_{std::make_shared<impl>(*this, exe, handler, config, timer_factory)}
 {

@@ -1,7 +1,10 @@
 #pragma once
 
-#include <lux/io/net/base/udp_socket.hpp>
 #include <lux/io/net/base/socket_factory.hpp>
+#include <lux/io/net/base/tcp_socket.hpp>
+#include <lux/io/net/base/udp_socket.hpp>
+
+#include <lux/io/time/timer_factory.hpp>
 
 #include <boost/asio/any_io_executor.hpp>
 
@@ -13,11 +16,16 @@ public:
     socket_factory(boost::asio::any_io_executor exe);
 
 public:
-    std::unique_ptr<lux::net::base::udp_socket> create_udp_socket(const lux::net::base::udp_socket_config& config,
-                                                                  lux::net::base::udp_socket_handler& handler) override;
+    // lux::net::base::socket_factory implementation
+    lux::net::base::udp_socket_ptr create_udp_socket(const lux::net::base::udp_socket_config& config,
+                                                     lux::net::base::udp_socket_handler& handler) override;
+
+    lux::net::base::tcp_socket_ptr create_tcp_socket(const lux::net::base::tcp_socket_config& config,
+                                                     lux::net::base::tcp_socket_handler& handler) override;
 
 private:
     boost::asio::any_io_executor executor_;
+    lux::time::timer_factory timer_factory_;
 };
 
 } // namespace lux::net

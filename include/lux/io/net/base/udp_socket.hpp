@@ -2,6 +2,7 @@
 
 #include <lux/io/net/base/endpoint.hpp>
 
+#include <memory>
 #include <span>
 #include <system_error>
 
@@ -92,5 +93,7 @@ public:
      */
     virtual bool is_open() const = 0;
 };
+
+using udp_socket_ptr = std::unique_ptr<udp_socket>;
 
 } // namespace lux::net::base

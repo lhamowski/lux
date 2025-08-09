@@ -70,9 +70,9 @@ public:
     std::function<void(const std::span<const std::byte>&)> on_data_sent_callback;
 };
 
-lux::net::tcp_socket_config create_default_config()
+lux::net::base::tcp_socket_config create_default_config()
 {
-    lux::net::tcp_socket_config config{};
+    lux::net::base::tcp_socket_config config{};
     config.reconnect.enabled = false;
     return config;
 }

@@ -1,4 +1,5 @@
 #include <lux/io/net/socket_factory.hpp>
+#include <lux/io/net/tcp_socket.hpp>
 #include <lux/io/net/udp_socket.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -35,6 +36,30 @@ public:
     }
 };
 
+class test_tcp_socket_handler : public lux::net::base::tcp_socket_handler
+{
+public:
+    void on_connected(lux::net::base::tcp_socket& socket) override
+    {
+        (void)socket;
+    }
+    void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec) override
+    {
+        (void)socket;
+        (void)ec;
+    }
+    void on_data_read(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
+    {
+        (void)socket;
+        (void)data;
+    }
+    void on_data_sent(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
+    {
+        (void)socket;
+        (void)data;
+    }
+};
+
 } // namespace
 
 TEST_CASE("Socket factory creates UDP socket", "[io][net]")
@@ -46,5 +71,17 @@ TEST_CASE("Socket factory creates UDP socket", "[io][net]")
     lux::net::socket_factory factory{io_context.get_executor()};
 
     auto socket = factory.create_udp_socket(config, handler);
+    REQUIRE(socket != nullptr);
+}
+
+TEST_CASE("Socket factory creates TCP socket", "[io][net]")
+{
+    boost::asio::io_context io_context;
+
+    test_tcp_socket_handler handler;
+    lux::net::base::tcp_socket_config config{};
+    lux::net::socket_factory factory{io_context.get_executor()};
+
+    auto socket = factory.create_tcp_socket(config, handler);
     REQUIRE(socket != nullptr);
 }

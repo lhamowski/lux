@@ -1,7 +1,9 @@
 #pragma once
 
 #include <lux/io/net/base/endpoint.hpp>
+#include <lux/io/time/delayed_retry_executor.hpp>
 
+#include <memory>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -9,8 +11,59 @@
 
 namespace lux::net::base {
 
+struct tcp_socket_config
+{
+    /**
+     * Keep-alive settings
+     * If true, enables TCP keep-alive to maintain the connection.
+     */
+    bool keep_alive{false};
+
+    struct reconnect_config
+    {
+        /**
+         * If true, enables automatic reconnection attempts.
+         * If false, the socket will not attempt to reconnect after disconnection.
+         */
+        bool enabled{true};
+
+        /**
+         * Configuration for the retry mechanism used during reconnection attempts.
+         * This defines how the retry mechanism will behave in terms of delay between attempts.
+         */
+        lux::time::delayed_retry_config retry_config{
+            .strategy = lux::time::delayed_retry_config::backoff_strategy::exponential_backoff,
+            .max_attempts = 5,
+            .base_delay = std::chrono::milliseconds{1000},
+            .max_delay = std::chrono::milliseconds{30000}};
+
+    } reconnect{};
+
+    struct buffer_config
+    {
+        /**
+         * Size of each allocated buffer chunk in bytes.
+         */
+        std::size_t initial_send_chunk_size{1024};
+
+        /**
+         * Number of buffer chunks to preallocate.
+         */
+        std::size_t initial_send_chunk_count{4};
+
+        /**
+         * Size of read buffer to preallocate for reading data.
+         */
+        std::size_t read_buffer_size{8 * 1024}; // 8 KB
+
+    } buffer{};
+};
+
 class tcp_socket
 {
+public:
+    virtual ~tcp_socket() = default;
+
 public:
     /**
      * Opens the TCP socket.
@@ -55,10 +108,9 @@ public:
      * @return The remote endpoint if connected, otherwise std::nullopt.
      */
     virtual std::optional<lux::net::base::endpoint> remote_endpoint() const = 0;
-
-protected:
-    virtual ~tcp_socket() = default;
 };
+
+using tcp_socket_ptr = std::unique_ptr<tcp_socket>;
 
 class tcp_socket_handler
 {

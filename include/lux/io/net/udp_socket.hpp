@@ -17,7 +17,6 @@ public:
     udp_socket(boost::asio::any_io_executor exe,
                lux::net::base::udp_socket_handler& handler,
                const lux::net::base::udp_socket_config& config);
-
     ~udp_socket();
 
     udp_socket(const udp_socket&) = delete;
