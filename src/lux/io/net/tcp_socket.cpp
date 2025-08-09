@@ -74,7 +74,6 @@ public:
         connected,
         disconnecting,
         connecting,
-        reconnecting,
     };
 
     state state_{state::disconnected};
