@@ -22,6 +22,8 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string>
+#include <system_error>
 #include <variant>
 #include <vector>
 
@@ -36,6 +38,7 @@ public:
          const lux::net::tcp_socket_config& config,
          lux::time::base::timer_factory& timer_factory)
         : socket_{exe},
+          resolver_{exe},
           parent_{&parent},
           handler_{&handler},
           config_{config},
@@ -126,34 +129,32 @@ public:
 
     std::error_code connect(const lux::net::base::host_endpoint& host_endpoint)
     {
-        // TODO: Implement host resolution and connection logic
         if (!is_disconnected())
         {
             return std::make_error_code(std::errc::operation_in_progress);
         }
 
         connect_target_ = host_endpoint;
-        return std::make_error_code(std::errc::not_supported);
+
+        if (const auto ec = initialize_socket(); ec)
+        {
+            return ec;
+        }
+
+        state_ = state::connecting;
+
+        // First, resolve the host and service
+        resolver_.async_resolve(
+            host_endpoint.host(),
+            std::to_string(host_endpoint.port()),
+            boost::asio::ip::resolver_base::numeric_service,
+            [self = shared_from_this()](const boost::system::error_code& ec,
+                                        const boost::asio::ip::tcp::resolver::results_type& results) {
+                self->on_resolved(ec, results);
+            });
+
+        return {};
     }
-
-    // std::error_code connect(const boost::asio::ip::tcp::resolver::results_type& endpoints)
-    //{
-    //  if (!is_disconnected())
-    //{
-    //      return std::make_error_code(std::errc::already_connected);
-    //  }
-
-    // if (const auto ec = initialize_socket(); ec)
-    //{
-    //     return ec;
-    // }
-
-    // boost::asio::async_connect(
-    //     socket_, endpoints, [self = shared_from_this()](const auto& ec, const boost::asio::ip::tcp::endpoint& ep)
-    //     {
-    //         self->on_connected(ec, ep);
-    //     });
-    //}
 
     std::error_code disconnect(bool send_pending)
     {
@@ -400,6 +401,23 @@ private:
                                  [self = shared_from_this()](const auto& ec, auto size) { self->on_sent(ec, size); });
     }
 
+    void on_resolved(const boost::system::error_code& ec, const boost::asio::ip::tcp::resolver::results_type& results)
+    {
+        if (ec)
+        {
+            handle_disconnect(ec);
+            return;
+        }
+
+        boost::asio::async_connect(
+            socket_,
+            results,
+            [self = shared_from_this()](const boost::system::error_code& ec, const boost::asio::ip::tcp::endpoint& ep) {
+                (void)ep; // Ignore the endpoint, we only care about the error code
+                self->on_connected(ec);
+            });
+    }
+
     void on_connected(const boost::system::error_code& ec)
     {
         if (!is_connecting() && !is_reconnecting())
@@ -506,6 +524,7 @@ private:
 
 private:
     boost::asio::ip::tcp::socket socket_;
+    boost::asio::ip::tcp::resolver resolver_;
     lux::net::base::tcp_socket* parent_{nullptr};
     lux::net::base::tcp_socket_handler* handler_{nullptr};
     const lux::net::tcp_socket_config config_;
