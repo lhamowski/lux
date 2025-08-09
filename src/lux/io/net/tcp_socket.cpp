@@ -464,7 +464,7 @@ private:
 
         if (size > 0 && handler_)
         {
-            std::span<const std::byte> data(read_buffer_);
+            std::span<const std::byte> data{read_buffer_.data(), size};
 
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
             handler_->on_data_read(*parent_, data);
