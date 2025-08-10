@@ -3,6 +3,8 @@
 #include <catch2/catch_all.hpp>
 
 #include <array>
+#include <string>
+#include <string_view>
 #include <vector>
 
 TEST_CASE("buffer_writer basic functionality", "[utils][buffer_writer]")
