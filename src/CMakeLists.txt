@@ -9,12 +9,14 @@ cflex_add_library(lux SOURCES
 
 	# Support files
 	${lux_include_files_dir}/support/assert.hpp
+	${lux_include_files_dir}/support/concepts.hpp
 	${lux_include_files_dir}/support/move.hpp
 	${lux_include_files_dir}/support/overload.hpp
 	${lux_include_files_dir}/support/path.hpp ${lux_source_files_dir}/support/path.cpp
 	${lux_include_files_dir}/support/strong_typedef.hpp
 
 	# Utils files
+	${lux_include_files_dir}/utils/buffer_writer.hpp
 	${lux_include_files_dir}/utils/memory_arena.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp
 
