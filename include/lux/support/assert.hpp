@@ -2,7 +2,11 @@
 
 #include <cassert>
 
-#define LUX_ASSERT(condition, message) assert((condition) && (message))
+#ifdef NDEBUG
+    #define LUX_ASSERT(condition, message) ((void)(condition))
+#else
+    #define LUX_ASSERT(condition, message) assert((condition) && (message))
+#endif
 
 #if defined(__GNUC__) || defined(__clang__)
     #define LUX_BUILTIN_UNREACHABLE() __builtin_unreachable()
