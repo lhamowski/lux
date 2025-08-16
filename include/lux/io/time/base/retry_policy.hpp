@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <optional>
 
 namespace lux::time::base {
 
@@ -25,9 +26,9 @@ struct retry_policy
 
     /**
      * @brief Maximum number of retry attempts.
-     * If set to 0, it will retry indefinitely.
+     * If set to std::nullopt, the retry mechanism will continue indefinitely until successful or stopped.
      */
-    std::size_t max_attempts{5};
+    std::optional<std::size_t> max_attempts;
 
     /**
      * @brief Base delay before the first retry attempt.

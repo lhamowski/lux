@@ -48,8 +48,8 @@ void retry_executor::on_timer_expired()
 {
     ++attempts_;
 
-    // If max_attempts is set to 0, it means infinite attempts are allowed.
-    if (policy_.max_attempts != 0 && attempts_ > policy_.max_attempts)
+    // If max_attempts is set to std::nullopt, it means infinite attempts are allowed.
+    if (policy_.max_attempts && attempts_ > *policy_.max_attempts)
     {
         if (exhausted_callback_)
         {

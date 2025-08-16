@@ -32,7 +32,7 @@ struct tcp_socket_config
          */
         lux::time::base::retry_policy reconnect_policy{
             .strategy = lux::time::base::retry_policy::backoff_strategy::exponential_backoff,
-            .max_attempts = 5,
+            .max_attempts = std::nullopt,
             .base_delay = std::chrono::milliseconds{1000},
             .max_delay = std::chrono::milliseconds{30000}};
 

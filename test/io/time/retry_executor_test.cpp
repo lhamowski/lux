@@ -259,11 +259,11 @@ TEST_CASE("Delayed retry executor - Max attempts behavior", "[io][time]")
         CHECK(exhausted_call_count == 1);
     }
 
-    SECTION("Should handle max_attempts = 0 (infinite retries)")
+    SECTION("Should handle max_attempts = std::nullopt (infinite retries)")
     {
         timer_factory_mock factory;
         auto policy = create_exponential_backoff_policy();
-        policy.max_attempts = 0;
+        policy.max_attempts = std::nullopt; // Infinite retries
         retry_executor executor{factory, policy};
 
         auto* timer_mock = factory.created_timers_[0];
