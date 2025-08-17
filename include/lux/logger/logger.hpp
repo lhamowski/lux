@@ -7,6 +7,9 @@
 #include <lux/support/move.hpp>
 
 #include <spdlog/logger.h>
+#include <spdlog/fmt/bin_to_hex.h>
+
+#include <fmt/ranges.h>
 
 #include <format>
 #include <memory>
@@ -18,6 +21,12 @@ namespace lux {
 inline auto runtime(std::string_view s)
 {
     return fmt::runtime(s);
+}
+
+template <typename T>
+auto to_hex(const T& value)
+{
+    return spdlog::to_hex(value);
 }
 
 class logger

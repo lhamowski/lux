@@ -9,6 +9,7 @@
 #include <spdlog/details/os.h>
 #include <spdlog/logger.h>
 
+#include <cstddef>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -120,6 +121,26 @@ TEST_CASE("Logger basic functionality", "[logger]")
 
         const std::string output = oss.str();
         CHECK(output.find("Color: green") != std::string::npos);
+    }
+
+    SECTION("Logger supports std::span arguments")
+    {
+        std::ostringstream oss;
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+        auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
+        spd_logger->set_level(spdlog::level::trace);
+        spd_logger->set_pattern("%v");
+
+        lux::logger logger{spd_logger};
+        std::array<std::byte, 3> bytes{std::byte{0x01}, std::byte{0x02}, std::byte{0xFF}};
+        std::span bytes_view{bytes};
+
+        logger.log(lux::log_level::info, "Bytes: {:X}", lux::to_hex(bytes_view));
+        spd_logger->flush();
+
+        const std::string output = oss.str();
+        CHECK(output.find("Bytes:") != std::string::npos);
+        CHECK(output.find("0000: 01 02 FF") != std::string::npos);
     }
 
     SECTION("Logger supports all log levels")
