@@ -10,6 +10,7 @@
 
 #include <format>
 #include <memory>
+#include <ranges>
 #include <string_view>
 
 namespace lux {
@@ -33,31 +34,16 @@ public:
     logger& operator=(logger&&) = default;
 
 private:
-    template <lux::enumeration T>
-    static auto stringify_enum(T arg)
-    {
-        static_assert(std::is_enum_v<std::decay_t<T>>, "Argument must be an enum");
-        return lux::to_string_view(arg);
-    }
-
-    template <typename T>
-    static auto stringify_arg_if_needed(T&& arg)
-    {
-        if constexpr (lux::enumeration<T>)
-        {
-            return stringify_enum(arg);
-        }
-        else
-        {
-            return std::forward<T>(arg);
-        }
-    }
-
     template <typename T>
     static auto preprocess_argument(T&& arg)
     {
-        // Maybe in the future we can add more preprocessing steps here
-        return stringify_arg_if_needed(std::forward<T>(arg));
+        return std::forward<T>(arg);
+    }
+
+    template <lux::enumeration T>
+    static auto preprocess_argument(T&& arg)
+    {
+        return lux::to_string_view(arg);
     }
 
     template <typename T>
