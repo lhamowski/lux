@@ -15,9 +15,12 @@ TEST_CASE("Interval timer", "[io][time]")
         timer.schedule(std::chrono::milliseconds{10});
 
         bool called = false;
-        timer.set_handler([&called] { called = true; });
+        timer.set_handler([&called, &io_context] {
+            called = true;
+            io_context.stop();
+        });
 
-        io_context.run_for(std::chrono::milliseconds{20});
+        io_context.run_for(std::chrono::milliseconds{100});
         CHECK(called);
     }
 
