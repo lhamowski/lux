@@ -9,6 +9,7 @@ cflex_add_executable(lux-test SOURCES
     support/strong_typedef_test.cpp
 
     utils/buffer_writer_test.cpp
+    utils/buffer_reader_test.cpp
     utils/memory_arena_test.cpp
     utils/stopwatch_test.cpp
 )

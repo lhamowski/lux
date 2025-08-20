@@ -272,6 +272,12 @@ lux::buffer_reader& operator>>(lux::buffer_reader& reader, test_point& p)
     return reader >> p.x >> dummy >> p.y >> dummy >> p.z;
 }
 
+lux::buffer_writer& operator<<(lux::buffer_writer& writer, const test_point& p)
+{
+    float dummy{10.f};
+    return writer << p.x << dummy << p.y << dummy << p.z;
+}
+
 } // namespace
 
 TEST_CASE("buffer_reader user-defined types", "[utils][buffer_reader]")
@@ -282,11 +288,11 @@ TEST_CASE("buffer_reader user-defined types", "[utils][buffer_reader]")
         lux::buffer_writer writer{buffer};
 
         test_point original{1.0f, 2.0f, 3.0f};
-        writer << original; // Uses the writer's operator<<
+        writer << original; 
 
         lux::buffer_reader reader{writer.written_data()};
         test_point read_point;
-        reader >> read_point; // Uses the reader's operator>>
+        reader >> read_point;
 
         CHECK(read_point.x == Catch::Approx(1.0f));
         CHECK(read_point.y == Catch::Approx(2.0f));
