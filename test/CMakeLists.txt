@@ -34,9 +34,10 @@ if(LUX_ENABLE_IO)
         io/time/interval_timer_test.cpp
         io/time/timer_factory_test.cpp
 
-        # io/time mock files
         io/time/mocks/interval_timer_mock.hpp
         io/time/mocks/timer_factory_mock.hpp
+
+        io/coro_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 

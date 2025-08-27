@@ -63,6 +63,9 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/time/interval_timer.hpp
 		${lux_include_files_dir}/io/time/retry_executor.hpp ${lux_source_files_dir}/io/time/retry_executor.cpp
 		${lux_include_files_dir}/io/time/timer_factory.hpp
+
+		# io files
+		${lux_include_files_dir}/io/coro.hpp
     )
 	add_library(lux::io ALIAS lux-io)
 

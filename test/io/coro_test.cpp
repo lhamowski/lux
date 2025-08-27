@@ -1,0 +1,42 @@
+#include <lux/io/coro.hpp>
+#include <lux/support/move.hpp>
+
+#include <catch2/catch_all.hpp>
+
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_future.hpp>
+
+#include <vector>
+
+TEST_CASE("when_any coro utility", "[io][coro]")
+{
+    boost::asio::io_context io_context;
+
+    SECTION("when_any returns true if any awaitable satisfies the predicate")
+    {
+        std::vector<lux::coro::awaitable<int>> tasks;
+        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 1; }());
+        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 2; }());
+
+        auto result = lux::coro::co_spawn(io_context.get_executor(),
+                                            lux::coro::when_any(lux::move(tasks), [](int value) { return value == 2; }),
+                                            boost::asio::use_future);
+
+        io_context.run();
+        CHECK(result.get() == true);
+    }
+
+    SECTION("when_any returns false if no awaitable satisfies the predicate")
+    {
+        std::vector<lux::coro::awaitable<int>> tasks;
+        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 1; }());
+        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 2; }());
+        auto result = lux::coro::co_spawn(io_context.get_executor(),
+                                            lux::coro::when_any(lux::move(tasks), [](int value) { return value == 3; }),
+                                            boost::asio::use_future);
+        io_context.run();
+        CHECK(result.get() == false);
+    }
+}
