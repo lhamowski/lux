@@ -21,6 +21,30 @@ inline constexpr auto detached = boost::asio::detached;
 inline constexpr auto use_awaitable = boost::asio::use_awaitable;
 
 /**
+ * @brief Creates a vector of awaitables by applying a generator functor to each element.
+ *
+ * @tparam Container  Range of elements (rvalue).
+ * @tparam Generator  Functor taking element and returning lux::coro::awaitable<T>.
+ * @param elements    Rvalue container of elements.
+ * @param gen         Functor generating awaitable from element.
+ * @return std::vector<lux::coro::awaitable<T>>  Vector of awaitables ready to co_await.
+ */
+template <typename Container, typename Generator>
+auto make_tasks(Container&& elements, Generator&& gen)
+{
+    using task_t = decltype(gen(*std::begin(elements)));
+    std::vector<task_t> tasks;
+    tasks.reserve(elements.size());
+
+    for (auto&& elem : elements)
+    {
+        tasks.push_back(gen(std::forward<decltype(elem)>(elem)));
+    }
+
+    return tasks;
+}
+
+/**
  * @brief Execute multiple awaitables concurrently and return when any predicate succeeds.
  *
  * Spawns all awaitables from the given range, evaluates each result with the provided

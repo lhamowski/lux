@@ -16,13 +16,12 @@ TEST_CASE("when_any coro utility", "[io][coro]")
 
     SECTION("when_any returns true if any awaitable satisfies the predicate")
     {
-        std::vector<lux::coro::awaitable<int>> tasks;
-        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 1; }());
-        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 2; }());
+        auto tasks = lux::coro::make_tasks(std::vector<int>{1, 2, 3},
+                                           [](int value) -> lux::coro::awaitable<int> { co_return value; });
 
         auto result = lux::coro::co_spawn(io_context.get_executor(),
-                                            lux::coro::when_any(lux::move(tasks), [](int value) { return value == 2; }),
-                                            boost::asio::use_future);
+                                          lux::coro::when_any(lux::move(tasks), [](int value) { return value == 2; }),
+                                          boost::asio::use_future);
 
         io_context.run();
         CHECK(result.get() == true);
@@ -30,12 +29,12 @@ TEST_CASE("when_any coro utility", "[io][coro]")
 
     SECTION("when_any returns false if no awaitable satisfies the predicate")
     {
-        std::vector<lux::coro::awaitable<int>> tasks;
-        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 1; }());
-        tasks.emplace_back([]() -> lux::coro::awaitable<int> { co_return 2; }());
+        auto tasks = lux::coro::make_tasks(std::vector<int>{1, 2, 3},
+                                           [](int value) -> lux::coro::awaitable<int> { co_return value; });
+
         auto result = lux::coro::co_spawn(io_context.get_executor(),
-                                            lux::coro::when_any(lux::move(tasks), [](int value) { return value == 3; }),
-                                            boost::asio::use_future);
+                                          lux::coro::when_any(lux::move(tasks), [](int value) { return value == 4; }),
+                                          boost::asio::use_future);
         io_context.run();
         CHECK(result.get() == false);
     }
