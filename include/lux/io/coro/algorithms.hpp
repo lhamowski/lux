@@ -1,25 +1,16 @@
 #pragma once
 
+#include <lux/io/coro/common.hpp>
+
 #include <lux/support/concepts.hpp>
 #include <lux/support/move.hpp>
 
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/co_spawn.hpp>
-#include <boost/asio/detached.hpp>
 #include <boost/asio/this_coro.hpp>
-#include <boost/asio/use_awaitable.hpp>
 #include <boost/asio/experimental/channel.hpp>
 
+#include <vector>
+
 namespace lux::coro {
-
-template <typename T>
-using awaitable = boost::asio::awaitable<T>;
-
-using boost::asio::co_spawn;
-
-inline constexpr auto detached = boost::asio::detached;
-inline constexpr auto use_awaitable = boost::asio::use_awaitable;
-
 /**
  * @brief Creates a vector of awaitables by applying a generator functor to each element.
  *
@@ -49,6 +40,9 @@ auto make_tasks(Container&& elements, Generator&& gen)
  *
  * Spawns all awaitables from the given range, evaluates each result with the provided
  * predicate, and completes once one of them returns true. If none succeed, returns false.
+ *
+ * @note Tasks are not cancelled once one completes, they will continue to run in the background, so the
+ *       caller must ensure they are properly managed.
  *
  * @tparam Range Rvalue range of awaitables (must be passed as rvalue).
  * @tparam Pred  Predicate taking the result of each awaitable and returning bool.

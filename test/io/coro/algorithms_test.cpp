@@ -1,4 +1,4 @@
-#include <lux/io/coro.hpp>
+#include <lux/io/coro/algorithms.hpp>
 #include <lux/support/move.hpp>
 
 #include <catch2/catch_all.hpp>
