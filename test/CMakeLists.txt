@@ -38,7 +38,7 @@ if(LUX_ENABLE_IO)
         io/time/mocks/timer_factory_mock.hpp
 
         io/coro/algorithms_test.cpp
-        io/coro/timeout_awaitable_test.cpp
+        io/coro/awaitable_deadline_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 

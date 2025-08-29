@@ -1,4 +1,4 @@
-#include <lux/io/coro/timeout_awaitable.hpp>
+#include <lux/io/coro/awaitable_deadline.hpp>
 #include <lux/io/coro/common.hpp>
 #include <lux/support/move.hpp>
 
@@ -31,14 +31,15 @@ lux::coro::awaitable<int> slow_task()
 
 } // namespace
 
-TEST_CASE("Timeout awaitable basic tests", "[io][coro][timeout]")
+TEST_CASE("Timeout awaitable basic tests", "[io][coro]")
 {
     boost::asio::io_context io_context;
 
     SECTION("Task completes before timeout")
     {
-        auto task = lux::coro::timeout_awaitable{immediate_task(), 50ms};
-        auto future = lux::coro::co_spawn(io_context.get_executor(), lux::move(task).as_awaitable(), boost::asio::use_future);
+        auto task = lux::coro::awaitable_deadline{immediate_task(), 50ms};
+        auto future =
+            lux::coro::co_spawn(io_context.get_executor(), lux::move(task).as_awaitable(), boost::asio::use_future);
 
         io_context.run();
         auto result = future.get();
@@ -49,9 +50,9 @@ TEST_CASE("Timeout awaitable basic tests", "[io][coro][timeout]")
 
     SECTION("Task times out")
     {
-        auto task = lux::coro::timeout_awaitable{slow_task(), 10ms};
-
-        auto future = boost::asio::co_spawn(io_context.get_executor(), lux::move(task).as_awaitable(), boost::asio::use_future);
+        auto task = lux::coro::awaitable_deadline{slow_task(), 10ms};
+        auto future =
+            lux::coro::co_spawn(io_context.get_executor(), lux::move(task).as_awaitable(), boost::asio::use_future);
 
         io_context.run();
         auto result = future.get();

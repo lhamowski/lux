@@ -16,18 +16,18 @@ namespace lux::coro {
 /**
  * @brief An awaitable wrapper that adds timeout functionality to any awaitable task.
  *
- * The timeout_awaitable class wraps an existing awaitable and ensures it completes
+ * The awaitable_deadline class wraps an existing awaitable and ensures it completes
  * within a specified time limit. If the wrapped task completes in time, the result
  * is returned as a success. If the timeout expires first, a timeout_tag failure is returned.
  *
  * @tparam T The return type of the wrapped awaitable.
  */
 template <typename T>
-class timeout_awaitable
+class awaitable_deadline
 {
 public:
     /**
-     * @brief Constructs a timeout_awaitable with the given task and timeout duration.
+     * @brief Constructs a awaitable_deadline with the given task and timeout duration.
      *
      * @tparam Rep Duration representation type.
      * @tparam Period Duration period type.
@@ -35,7 +35,7 @@ public:
      * @param timeout The timeout duration (converted to nanoseconds).
      */
     template <typename Rep, typename Period>
-    timeout_awaitable(lux::coro::awaitable<T>&& task, std::chrono::duration<Rep, Period> timeout)
+    awaitable_deadline(lux::coro::awaitable<T>&& task, std::chrono::duration<Rep, Period> timeout)
         : task_{lux::move(task)}, timeout_{std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)}
     {
     }
@@ -43,7 +43,7 @@ public:
     /**
      * @brief Returns an awaitable that can be used with co_spawn and other async operations.
      *
-     * This method explicitly converts the timeout_awaitable to a standard awaitable,
+     * This method explicitly converts the awaitable_deadline to a standard awaitable,
      * making it compatible with boost::asio::co_spawn and similar functions.
      *
      * @return An awaitable that produces a std::optional<T>.
