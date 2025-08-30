@@ -43,10 +43,11 @@ public:
     {
         (void)socket;
     }
-    void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec) override
+    void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) override
     {
         (void)socket;
         (void)ec;
+        (void)will_reconnect;
     }
     void on_data_read(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
     {

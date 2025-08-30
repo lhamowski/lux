@@ -215,7 +215,7 @@ public:
         LUX_UNREACHABLE();
     }
 
-    std::error_code disconnect_immediately(const std::error_code& ec = {})
+    std::error_code disconnect_immediately(const std::error_code& ec = {}, bool will_reconnect = false)
     {
         if (is_disconnected())
         {
@@ -229,7 +229,7 @@ public:
         if (handler_)
         {
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
-            handler_->on_disconnected(*parent_, ec);
+            handler_->on_disconnected(*parent_, ec, will_reconnect);
         }
 
         return close_ec;
@@ -337,7 +337,8 @@ private:
      */
     void handle_disconnect(const std::error_code& ec)
     {
-        disconnect_immediately(ec);
+        const bool will_reconnect = reconnect_executor_.has_value();
+        disconnect_immediately(ec, will_reconnect);
 
         if (reconnect_executor_)
         {
@@ -354,7 +355,7 @@ private:
             if (const auto ec = connect(endpoint); ec)
             {
                 // If connection fails immediately, retry using the reconnect executor
-                disconnect_immediately(ec);
+                disconnect_immediately(ec, true);
                 reconnect_executor_->retry();
             }
         };

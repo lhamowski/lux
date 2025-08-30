@@ -124,8 +124,10 @@ public:
      * Called when a connection is disconnected from a specific endpoint.
      * @param socket The socket that was disconnected.
      * @param ec The error code indicating the reason for disconnection.
+     * @param will_reconnect True if the socket will attempt to reconnect, false otherwise.
      */
-    virtual void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec) = 0;
+    virtual void
+        on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) = 0;
 
     /**
      * Called when data is received from a specific endpoint.

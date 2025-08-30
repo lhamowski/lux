@@ -30,9 +30,10 @@ public:
         }
     }
 
-    void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec) override
+    void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) override
     {
         (void)socket; // Suppress unused parameter warning
+        (void)will_reconnect; // Suppress unused parameter warning
         disconnected_calls.emplace_back(ec);
         if (on_disconnected_callback)
         {
