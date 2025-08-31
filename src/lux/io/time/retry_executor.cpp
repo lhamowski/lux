@@ -26,6 +26,12 @@ void retry_executor::set_exhausted_callback(retry_exhausted_callback exhausted_c
 
 void retry_executor::retry()
 {
+    if (max_attempts_reached())
+    {
+        // If we've reached the maximum attempts, we do not schedule further retries.
+        return;
+    }
+
     const auto next_delay = calculate_next_delay();
     if (next_delay == std::chrono::milliseconds::zero())
     {
@@ -48,19 +54,17 @@ void retry_executor::on_timer_expired()
 {
     ++attempts_;
 
-    // If max_attempts is set to std::nullopt, it means infinite attempts are allowed.
-    if (policy_.max_attempts && attempts_ > *policy_.max_attempts)
+    if (retry_action_)
+    {
+        retry_action_();
+    }
+
+    if (max_attempts_reached())
     {
         if (exhausted_callback_)
         {
             exhausted_callback_();
         }
-        return;
-    }
-
-    if (retry_action_)
-    {
-        retry_action_();
     }
 }
 
@@ -148,6 +152,12 @@ std::chrono::milliseconds retry_executor::calculate_exponential_backoff_delay() 
     const auto calculated_delay = std::chrono::milliseconds{base_ms * multiplier};
     const auto final_delay = std::min(calculated_delay, policy_.max_delay);
     return final_delay;
+}
+
+bool retry_executor::max_attempts_reached() const
+{
+    // If max_attempts is set to std::nullopt, it means infinite attempts are allowed.
+    return policy_.max_attempts && attempts_ >= *policy_.max_attempts;
 }
 
 } // namespace lux::time

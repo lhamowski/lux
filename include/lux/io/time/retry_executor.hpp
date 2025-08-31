@@ -43,6 +43,7 @@ private:
     std::chrono::milliseconds calculate_next_delay() const;
     std::chrono::milliseconds calculate_linear_backoff_delay() const;
     std::chrono::milliseconds calculate_exponential_backoff_delay() const;
+    bool max_attempts_reached() const;
 
 private:
     const lux::time::base::retry_policy policy_;

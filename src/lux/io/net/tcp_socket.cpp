@@ -53,7 +53,6 @@ public:
                 reconnect();
             });
             reconnect_executor_->set_exhausted_callback([this] {
-                LUX_ASSERT(is_disconnected(), "Reconnect exhausted, but socket is not disconnected");
                 reconnect_executor_.reset();
             });
         }
