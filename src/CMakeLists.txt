@@ -66,7 +66,6 @@ if(LUX_ENABLE_IO)
 
 		# io/coro files
 		${lux_include_files_dir}/io/coro/algorithms.hpp
-		${lux_include_files_dir}/io/coro/awaitable_deadline.hpp
 		${lux_include_files_dir}/io/coro/awaitable_event.hpp
 		${lux_include_files_dir}/io/coro/common.hpp
     )
