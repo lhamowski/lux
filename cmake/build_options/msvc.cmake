@@ -8,8 +8,9 @@ cflex_set_cxx_flags(
         /DWIN32_LEAN_AND_MEAN # Exclude rarely-used Windows headers
         /D_WIN32_WINNT=0x0A00 # Set minimum Windows version to Windows 10
     PRIVATE
-        /W4 # Enable all warnings
+        /W4 # Enable level 4 warnings
         /WX # Treat warnings as errors
+        /w45038 # Set level 4 to warning: "data member 'member1' will be initialized after data member 'member2'"
         /permissive- # Enable conformance mode
         /volatile:iso # Enable ISO volatile semantics
 )
