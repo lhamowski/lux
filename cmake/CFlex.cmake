@@ -78,6 +78,7 @@ macro(_cflex_set_build_options flag_name)
                 ${arg_${scope}}
                 CACHE STRING
                 "${flag_name} for ${build_type_upper} (${scope})"
+                FORCE
             )
             mark_as_advanced(${var_name})
         endif()
