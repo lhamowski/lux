@@ -92,7 +92,7 @@ jobs:
     name: Build, test and generate coverage report (unixlike-clang-coverage)
     runs-on: ubuntu-latest
     container:
-      image: lhamowski/devops:ubuntu-24.04-cpp-clang-18-boost-1.87-latest
+      image: lhamowski/devops:ubuntu-24.04-cpp-clang-19-boost-1.87-latest
 
     steps:
       - name: Checkout repo
@@ -112,10 +112,10 @@ jobs:
           echo "=== Profile files in test directory ==="
           ls -la test/*.profraw || echo "No .profraw files found in test/"
           echo "=== Merging profile files ==="
-          llvm-profdata-18 merge --sparse test/*.profraw -o coverage.profdata
+          llvm-profdata-19 merge --sparse test/*.profraw -o coverage.profdata
           echo "=== Generating coverage report ==="
           find ./src -name '*.o' | xargs -I{} echo "-object={}" > object_list.txt
-          llvm-cov-18 export ./test/lux-test \
+          llvm-cov-19 export ./test/lux-test \
               -instr-profile=coverage.profdata \
               -format=lcov \
               -ignore-filename-regex=".*test/.*" \
