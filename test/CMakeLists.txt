@@ -6,6 +6,7 @@ cflex_add_executable(lux-test SOURCES
     support/finally_test.cpp
     support/move_test.cpp
     support/path_test.cpp
+    support/result_test.cpp
     support/strong_typedef_test.cpp
 
     utils/buffer_writer_test.cpp
