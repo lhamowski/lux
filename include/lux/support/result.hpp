@@ -3,6 +3,7 @@
 #include <lux/support/move.hpp>
 
 #include <expected>
+#include <format>
 #include <string>
 #include <utility>
 #include <type_traits>
@@ -34,6 +35,12 @@ inline constexpr auto ok(T&& value)
 inline constexpr auto ok()
 {
     return status{};
+}
+
+template <typename... Args>
+inline auto err(std::format_string<Args...> fmt, Args&&... args)
+{
+    return std::unexpected<std::string>{std::format(fmt, std::forward<Args>(args)...)};
 }
 
 inline constexpr auto err(std::string message)

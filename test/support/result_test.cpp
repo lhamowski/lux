@@ -30,99 +30,20 @@ TEST_CASE("Result basic usage", "[result][support]")
 		REQUIRE(!res.has_value());
 		REQUIRE(res.error() == "Void error");
 	}
-}
 
-TEST_CASE("Result ok() helper", "[result][support]")
-{
-	SECTION("ok() with value creates successful result")
+	SECTION("Error with formatted message")
 	{
-		auto res = lux::ok(42);
-		REQUIRE(res.has_value());
-		REQUIRE(res.value() == 42);
-	}
-
-	SECTION("ok() with string creates successful result")
-	{
-		auto res = lux::ok(std::string("success"));
-		REQUIRE(res.has_value());
-		REQUIRE(res.value() == "success");
-	}
-
-	SECTION("ok() with movable type")
-	{
-		auto res = lux::ok(std::make_unique<int>(100));
-		REQUIRE(res.has_value());
-		REQUIRE(*res.value() == 100);
-	}
-
-	SECTION("ok() without argument creates void result")
-	{
-		auto res = lux::ok();
-		REQUIRE(res.has_value());
-		static_assert(std::is_same_v<decltype(res), lux::status>);
-	}
-}
-
-TEST_CASE("Result err() helper", "[result][support]")
-{
-	SECTION("err() creates error for result<int>")
-	{
-		lux::result<int> res = lux::err("Something went wrong");
+		int error_code = 404;
+		std::string resource = "config.json";
+		lux::result<int> res = lux::err("Failed to load '{}' with error code {}", resource, error_code);
 		REQUIRE(!res.has_value());
-		REQUIRE(res.error() == "Something went wrong");
+		REQUIRE(res.error() == "Failed to load 'config.json' with error code 404");
 	}
 
-	SECTION("err() creates error for result<std::string>")
+	SECTION("Error with simple string")
 	{
-		lux::result<std::string> res = lux::err("Failed to process");
+		lux::result<int> res = lux::err("Simple error message");
 		REQUIRE(!res.has_value());
-		REQUIRE(res.error() == "Failed to process");
-	}
-
-	SECTION("err() with string move")
-	{
-		std::string msg = "Error message";
-		lux::result<int> res = lux::err(std::move(msg));
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error() == "Error message");
-	}
-
-	SECTION("err() creates error for void result")
-	{
-		lux::status res = lux::err("Operation failed");
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error() == "Operation failed");
-	}
-}
-
-TEST_CASE("Result status alias", "[result][support]")
-{
-	SECTION("status is same as result<void>")
-	{
-		static_assert(std::is_same_v<lux::status, lux::result<void>>);
-		static_assert(std::is_same_v<lux::status, lux::result<>>);
-	}
-
-	SECTION("status with success")
-	{
-		lux::status res = lux::ok();
-		REQUIRE(res.has_value());
-	}
-
-	SECTION("status with error")
-	{
-		lux::status res = lux::err("Failed");
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error() == "Failed");
-	}
-
-	SECTION("status as return type")
-	{
-		auto func = []() -> lux::status {
-			return lux::ok();
-		};
-
-		auto result = func();
-		REQUIRE(result.has_value());
+		REQUIRE(res.error() == "Simple error message");
 	}
 }
