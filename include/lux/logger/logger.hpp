@@ -5,6 +5,7 @@
 #include <lux/support/assert.hpp>
 #include <lux/support/enum.hpp>
 #include <lux/support/move.hpp>
+#include <lux/support/result.hpp>
 
 #include <spdlog/logger.h>
 #include <spdlog/fmt/bin_to_hex.h>
@@ -73,7 +74,6 @@ private:
 
 } // namespace lux
 
-
 #define LUX_LOG(logger, level, ...) (logger).log(level, __VA_ARGS__)
 #define LUX_LOG_TRACE(logger, ...) LUX_LOG(logger, lux::log_level::trace, __VA_ARGS__)
 #define LUX_LOG_DEBUG(logger, ...) LUX_LOG(logger, lux::log_level::debug, __VA_ARGS__)
@@ -81,3 +81,36 @@ private:
 #define LUX_LOG_WARN(logger, ...) LUX_LOG(logger, lux::log_level::warn, __VA_ARGS__)
 #define LUX_LOG_ERROR(logger, ...) LUX_LOG(logger, lux::log_level::error, __VA_ARGS__)
 #define LUX_LOG_CRITICAL(logger, ...) LUX_LOG(logger, lux::log_level::critical, __VA_ARGS__)
+
+namespace lux {
+
+/**
+ * @brief Creates an error result and logs it at ERROR level.
+ *
+ * @tparam T The result type
+ * @tparam Args Format arguments types
+ * @param logger Logger instance to log the error
+ * @param fmt Format string
+ * @param args Format arguments
+ * @return lux::result<T> Error result with formatted message
+ */
+template <typename T, typename... Args>
+[[nodiscard]] lux::result<T> log_err(logger& logger_, std::string_view fmt, Args&&... args)
+{
+    auto error_msg = std::vformat(fmt, std::make_format_args(args...));
+    LUX_LOG_ERROR(logger_, "{}", error_msg);
+    return std::unexpected<std::string>{lux::move(error_msg)};
+}
+
+/**
+* @brief Creates an error status and logs it at ERROR level.
+*
+* Convenience alias for log_err<void>
+*/
+template <typename... Args>
+[[nodiscard]] lux::status log_err(logger& logger, std::string_view fmt, Args&&... args)
+{
+    return log_err<void>(logger, fmt, std::forward<Args>(args)...);
+}
+
+} // namespace lux

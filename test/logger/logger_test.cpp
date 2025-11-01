@@ -169,6 +169,27 @@ TEST_CASE("Logger basic functionality", "[logger]")
         CHECK(output.find("error") != std::string::npos);
         CHECK(output.find("critical") != std::string::npos);
     }
+
+    SECTION("log_err creates error result and logs message")
+    {
+        std::ostringstream oss;
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(oss);
+        auto spd_logger = std::make_shared<spdlog::logger>("test_logger", sink);
+        spd_logger->set_level(spdlog::level::err);
+        spd_logger->set_pattern("%v");
+
+        lux::logger logger{spd_logger};
+
+        auto result = lux::log_err(logger, "Failed to connect to {}:{}", "localhost", 8080);
+
+        spd_logger->flush();
+
+        REQUIRE(!result.has_value());
+        REQUIRE(result.error() == "Failed to connect to localhost:8080");
+
+        const std::string output = oss.str();
+        CHECK(output.find("Failed to connect to localhost:8080") != std::string::npos);
+    }
 }
 
 TEST_CASE("Logger manager basic functionality", "[logger_manager]")
