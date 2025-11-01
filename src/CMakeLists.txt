@@ -33,7 +33,7 @@ target_link_libraries(lux
 		fmt::fmt
 )
 
-target_compile_features(lux PUBLIC cxx_std_20)
+target_compile_features(lux PUBLIC cxx_std_23)
 target_include_directories(lux 
 	PUBLIC 
 		${lux_SOURCE_DIR}/include

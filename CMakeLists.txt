@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.30)
 project(lux LANGUAGES CXX VERSION 0.1)
 
-list(APPEND CMAKE_MODULE_PATH ${lux_SOURCE_DIR};${CMAKE_MODULE_PATH})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(CMakeDependentOption)
-include(cmake/LuxSourceGroup)
-
-# Force local inclusion of CFlex to avoid conflicts with external projects
-# that might also provide a CFlex module. By using a relative path instead
-# of relying on CMAKE_MODULE_PATH, we ensure that lux always uses its own
-# version of CFlex, maintaining consistent behavior regardless of how
-# the project is integrated as a dependency.
-include(cmake/CFlex)
+include(CFlex)
+include(LuxSourceGroup)
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     set(lux_master_project ON)
@@ -20,7 +14,7 @@ else()
 endif()
 
 if(lux_master_project)
-    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD 23)
     set(CMAKE_CXX_EXTENSIONS OFF)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
