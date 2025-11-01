@@ -11,7 +11,6 @@
 
 #include <fmt/ranges.h>
 
-#include <format>
 #include <memory>
 #include <ranges>
 #include <string_view>
@@ -65,14 +64,16 @@ public:
         spd_logger_->log(detail::to_spdlog_level(level), fmt, preprocess_argument(std::forward<Args>(args))...);
     }
 
-    void flush() { spd_logger_->flush(); }
+    void flush()
+    {
+        spd_logger_->flush();
+    }
 
 private:
     std::shared_ptr<spdlog::logger> spd_logger_;
 };
 
 } // namespace lux
-
 
 #define LUX_LOG(logger, level, ...) (logger).log(level, __VA_ARGS__)
 #define LUX_LOG_TRACE(logger, ...) LUX_LOG(logger, lux::log_level::trace, __VA_ARGS__)

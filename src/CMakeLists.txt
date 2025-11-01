@@ -22,6 +22,7 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/utils/memory_arena.hpp
 	${lux_include_files_dir}/utils/lifetime_guard.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp
+	${lux_include_files_dir}/utils/string_chain.hpp
 
 	${lux_include_files_dir}/fwd.hpp
 )

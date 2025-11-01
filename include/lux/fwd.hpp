@@ -7,6 +7,8 @@ class logger_manager;
 class logger;
 
 class memory_arena;
+class string_chain;
+
 } // namespace lux
 
 namespace lux::net::base {
