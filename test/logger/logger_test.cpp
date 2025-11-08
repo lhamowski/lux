@@ -38,7 +38,8 @@ TEST_CASE("Logger basic functionality", "[logger]")
 
         lux::logger logger{spd_logger};
 
-        logger.log(lux::log_level::info, "Test message");
+        const char* message = "Test message";
+        logger.log(lux::log_level::info, message);
         spd_logger->flush();
 
         const std::string output = oss.str();
@@ -74,10 +75,19 @@ TEST_CASE("Logger basic functionality", "[logger]")
 
         std::string format_string = "Number: {}, String: {}";
         logger.log(lux::log_level::info, lux::runtime(format_string), 42, "test");
+
+        std::string msg = "Test string";
+        logger.log(lux::log_level::info, msg);
+
+        std::string msg2 = "Lorem ipsum";
+        logger.log(lux::log_level::critical, lux::move(msg2));
+
         spd_logger->flush();
 
         const std::string output = oss.str();
         CHECK(output.find("Number: 42, String: test") != std::string::npos);
+        CHECK(output.find("Test string") != std::string::npos);
+        CHECK(output.find("Lorem ipsum") != std::string::npos);
     }
 
     SECTION("Logger logs formatted messages with runtime format std::string_view")

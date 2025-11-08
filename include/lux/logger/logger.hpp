@@ -64,6 +64,12 @@ public:
         spd_logger_->log(detail::to_spdlog_level(level), fmt, preprocess_argument(std::forward<Args>(args))...);
     }
 
+    template <std::convertible_to<std::string> T>
+    void log(log_level level, T&& msg)
+    {
+        spd_logger_->log(detail::to_spdlog_level(level), std::forward<T>(msg));
+    }
+
     void flush()
     {
         spd_logger_->flush();
