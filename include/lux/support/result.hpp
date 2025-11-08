@@ -23,15 +23,17 @@ public:
     }
 
 public:
-    error_message& append(std::string str)
+    template <std::convertible_to<std::string> T>
+    error_message& append(T&& str)
     {
-        errors_.append(std::format("{}\n", str));
+        errors_.append(std::format("{}\n", std::forward<T>(str)));
         return *this;
     }
 
-    error_message& prepend(std::string str)
+    template <std::convertible_to<std::string> T>
+    error_message& prepend(T&& str)
     {
-        errors_ = std::format("{}\n{}", str, errors_);
+        errors_ = std::format("{}\n{}", std::forward<T>(str), errors_);
         return *this;
     }
 
@@ -89,3 +91,21 @@ inline constexpr auto err(std::string message)
 }
 
 } // namespace lux
+
+namespace std {
+
+template <>
+struct formatter<lux::error_message>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(const lux::error_message& msg, std::format_context& ctx) const
+    {
+        return std::format_to(ctx.out(), "{}", msg.str());
+    }
+};
+
+} // namespace std

@@ -72,6 +72,10 @@ TEST_CASE("Error message construction", "[result][support]")
         lux::error_message msg;
         msg.append("Error 1").append("Error 2").append("Error 3");
         CHECK(msg.str() == "Error 1\nError 2\nError 3\n");
+
+        lux::error_message msg2{msg};
+        msg2.append(lux::move(msg));
+        CHECK(msg2.str() == "Error 1\nError 2\nError 3\nError 1\nError 2\nError 3\n\n");
     }
 
     SECTION("Error message string conversion")
