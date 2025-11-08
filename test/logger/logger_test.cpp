@@ -243,8 +243,10 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         config.file = daily_config;
 
         const auto tm = spdlog::details::os::localtime();
-        const auto expected_filename =
-            std::format("daily_test_{:04d}-{:02d}-{:02d}.log", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+        const auto expected_filename = std::format("daily_test_{:04d}-{:02d}-{:02d}.log",
+                                                   tm.tm_year + 1900,
+                                                   tm.tm_mon + 1,
+                                                   tm.tm_mday);
 
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove(expected_filename);
