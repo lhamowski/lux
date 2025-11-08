@@ -184,8 +184,9 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
     SECTION("Logger manager can be created with basic file config")
     {
         lux::log_config config;
-        config.file = lux::basic_file_log_config{
-            .level = lux::log_level::info, .filename = "test_log.log", .pattern = "[%Y-%m-%d %H:%M:%S] %v"};
+        config.file = lux::basic_file_log_config{.level = lux::log_level::info,
+                                                 .filename = "test_log.log",
+                                                 .pattern = "[%Y-%m-%d %H:%M:%S] %v"};
 
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove("test_log.log");
@@ -232,8 +233,8 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
         config.file = daily_config;
 
         const auto tm = spdlog::details::os::localtime();
-        const auto expected_filename = std::format("daily_test_{:04d}-{:02d}-{:02d}.log",
-            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+        const auto expected_filename =
+            std::format("daily_test_{:04d}-{:02d}-{:02d}.log", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
 
         // Ensure the file does not exist before creating the logger manager
         std::filesystem::remove(expected_filename);

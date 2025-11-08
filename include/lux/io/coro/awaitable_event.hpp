@@ -33,7 +33,8 @@ public:
     lux::coro::awaitable<T> async_wait()
     {
         return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void(T)>(
-            [&](auto h) { handler_ = lux::move(h); }, lux::coro::use_awaitable);
+            [&](auto h) { handler_ = lux::move(h); },
+            lux::coro::use_awaitable);
     }
 
     /**
@@ -80,7 +81,8 @@ public:
     lux::coro::awaitable<void> async_wait()
     {
         return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void()>(
-            [&](auto h) { handler_ = lux::move(h); }, lux::coro::use_awaitable);
+            [&](auto h) { handler_ = lux::move(h); },
+            lux::coro::use_awaitable);
     }
 
     /**

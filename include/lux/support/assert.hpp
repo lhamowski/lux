@@ -3,21 +3,21 @@
 #include <cassert>
 
 #ifdef NDEBUG
-    #define LUX_ASSERT(condition, message) ((void)(condition))
+#define LUX_ASSERT(condition, message) ((void)(condition))
 #else
-    #define LUX_ASSERT(condition, message) assert((condition) && (message))
+#define LUX_ASSERT(condition, message) assert((condition) && (message))
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-    #define LUX_BUILTIN_UNREACHABLE() __builtin_unreachable()
+#define LUX_BUILTIN_UNREACHABLE() __builtin_unreachable()
 #elif defined(_MSC_VER)
-    #define LUX_BUILTIN_UNREACHABLE() __assume(false)
+#define LUX_BUILTIN_UNREACHABLE() __assume(false)
 #else
-    #define LUX_BUILTIN_UNREACHABLE() ((void)0)
+#define LUX_BUILTIN_UNREACHABLE() ((void)0)
 #endif
 
-#define LUX_UNREACHABLE()                                                                                                        \
-    do                                                                                                                           \
-    {                                                                                                                            \
-        LUX_BUILTIN_UNREACHABLE();                                                                                               \
+#define LUX_UNREACHABLE()                                                                                              \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        LUX_BUILTIN_UNREACHABLE();                                                                                     \
     } while (false)

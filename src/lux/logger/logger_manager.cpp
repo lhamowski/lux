@@ -17,17 +17,17 @@
 
 namespace lux {
 
-logger_manager::logger_manager(const log_config& config) 
+logger_manager::logger_manager(const log_config& config)
 {
     configure_sinks(config);
 }
 
-logger_manager::~logger_manager() 
+logger_manager::~logger_manager()
 {
     spdlog::shutdown();
 }
 
-logger& logger_manager::get_logger(const char* name) 
+logger& logger_manager::get_logger(const char* name)
 {
     LUX_ASSERT(name, "Logger name must not be null");
 
@@ -62,7 +62,8 @@ void logger_manager::configure_sinks(const log_config& config)
     // Set the minimum log level across all sinks
     if (!sinks_.empty())
     {
-        const auto elem = std::ranges::min_element(sinks_, [](const auto& a, const auto& b) { return a->level() < b->level(); });
+        const auto elem =
+            std::ranges::min_element(sinks_, [](const auto& a, const auto& b) { return a->level() < b->level(); });
         if (elem == sinks_.end())
         {
             min_log_level_ = spdlog::level::off;
@@ -116,7 +117,8 @@ void logger_manager::configure_daily_file_sink(const daily_file_log_config& conf
 {
     using spdlog::sinks::daily_file_sink_mt;
 
-    auto daily_sink = std::make_shared<daily_file_sink_mt>(config.filename, config.rotation_hour, config.rotation_minute);
+    auto daily_sink =
+        std::make_shared<daily_file_sink_mt>(config.filename, config.rotation_hour, config.rotation_minute);
     daily_sink->set_pattern(config.pattern);
     daily_sink->set_level(detail::to_spdlog_level(config.level));
     sinks_.push_back(lux::move(daily_sink));

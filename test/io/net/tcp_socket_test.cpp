@@ -32,7 +32,7 @@ public:
 
     void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) override
     {
-        (void)socket; // Suppress unused parameter warning
+        (void)socket;         // Suppress unused parameter warning
         (void)will_reconnect; // Suppress unused parameter warning
         disconnected_calls.emplace_back(ec);
         if (on_disconnected_callback)
@@ -340,8 +340,11 @@ TEST_CASE("Send and receive data with server", "[io][net][tcp]")
 
     handler.on_connected_callback = [&]() {
         // Send data once connected
-        const std::array<std::byte, 5> test_data{
-            std::byte{'h'}, std::byte{'e'}, std::byte{'l'}, std::byte{'l'}, std::byte{'o'}};
+        const std::array<std::byte, 5> test_data{std::byte{'h'},
+                                                 std::byte{'e'},
+                                                 std::byte{'l'},
+                                                 std::byte{'l'},
+                                                 std::byte{'o'}};
 
         const auto ec1 = socket.send(std::span<const std::byte>{test_data});
         CHECK_FALSE(ec1); // Should not return an error

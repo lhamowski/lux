@@ -288,7 +288,7 @@ TEST_CASE("buffer_reader user-defined types", "[utils][buffer_reader]")
         lux::buffer_writer writer{buffer};
 
         test_point original{1.0f, 2.0f, 3.0f};
-        writer << original; 
+        writer << original;
 
         lux::buffer_reader reader{writer.written_data()};
         test_point read_point;

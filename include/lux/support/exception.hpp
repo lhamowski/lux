@@ -15,10 +15,15 @@ public:
     {
     }
 
-    explicit formatted_exception(const char* msg) : msg_{msg} {}
+    explicit formatted_exception(const char* msg) : msg_{msg}
+    {
+    }
 
 public:
-    const char* what() const noexcept override { return msg_.c_str(); }
+    const char* what() const noexcept override
+    {
+        return msg_.c_str();
+    }
 
 private:
     std::string msg_;

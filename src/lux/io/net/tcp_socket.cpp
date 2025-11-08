@@ -52,9 +52,7 @@ public:
                 LUX_ASSERT(is_disconnected(), "Cannot reconnect when socket is not disconnected");
                 reconnect();
             });
-            reconnect_executor_->set_exhausted_callback([this] {
-                reconnect_executor_.reset();
-            });
+            reconnect_executor_->set_exhausted_callback([this] { reconnect_executor_.reset(); });
         }
     }
 

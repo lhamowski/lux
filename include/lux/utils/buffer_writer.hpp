@@ -76,8 +76,9 @@ public:
     {
         if (remaining() < bytes)
         {
-            throw lux::formatted_exception(
-                "Buffer overflow: attempting to skip {} bytes, but only {} bytes remaining", bytes, remaining());
+            throw lux::formatted_exception("Buffer overflow: attempting to skip {} bytes, but only {} bytes remaining",
+                                           bytes,
+                                           remaining());
         }
 
         position_ += bytes;
@@ -96,8 +97,9 @@ public:
     {
         if (remaining() < data.size())
         {
-            throw lux::formatted_exception(
-                "Buffer overflow: attempting to write {} bytes, but only {} bytes remaining", data.size(), remaining());
+            throw lux::formatted_exception("Buffer overflow: attempting to write {} bytes, but only {} bytes remaining",
+                                           data.size(),
+                                           remaining());
         }
 
         std::memcpy(buffer_.data() + position_, data.data(), data.size());

@@ -76,8 +76,9 @@ public:
     {
         if (remaining() < bytes)
         {
-            throw lux::formatted_exception(
-                "Buffer underflow: attempting to skip {} bytes, but only {} bytes remaining", bytes, remaining());
+            throw lux::formatted_exception("Buffer underflow: attempting to skip {} bytes, but only {} bytes remaining",
+                                           bytes,
+                                           remaining());
         }
 
         position_ += bytes;
@@ -95,8 +96,9 @@ public:
     {
         if (remaining() < sizeof(T))
         {
-            throw lux::formatted_exception(
-                "Buffer underflow: attempting to read {} bytes, but only {} bytes remaining", sizeof(T), remaining());
+            throw lux::formatted_exception("Buffer underflow: attempting to read {} bytes, but only {} bytes remaining",
+                                           sizeof(T),
+                                           remaining());
         }
 
         std::memcpy(&value, buffer_.data() + position_, sizeof(T));

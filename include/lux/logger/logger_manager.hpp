@@ -68,8 +68,14 @@ public:
     lux::logger& get_logger(const char* name) override;
 
 public:
-    const auto& sinks() const { return sinks_; }
-    const auto& loggers() const { return loggers_; }
+    const auto& sinks() const
+    {
+        return sinks_;
+    }
+    const auto& loggers() const
+    {
+        return loggers_;
+    }
 
 private:
     void configure_sinks(const log_config& config);

@@ -10,9 +10,14 @@ template <typename F>
 class finally_guard
 {
 public:
-    explicit finally_guard(F&& f) : func_(std::forward<F>(f)) {}
+    explicit finally_guard(F&& f) : func_(std::forward<F>(f))
+    {
+    }
 
-    ~finally_guard() { func_(); }
+    ~finally_guard()
+    {
+        func_();
+    }
 
     finally_guard(const finally_guard&) = delete;
     finally_guard& operator=(const finally_guard&) = delete;
