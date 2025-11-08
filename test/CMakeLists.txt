@@ -14,7 +14,6 @@ cflex_add_executable(lux-test SOURCES
     utils/lifetime_guard_test.cpp
     utils/memory_arena_test.cpp
     utils/stopwatch_test.cpp
-    utils/string_chain_test.cpp
 )
 
 target_link_libraries(lux-test 

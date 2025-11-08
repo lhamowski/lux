@@ -4,46 +4,80 @@
 
 TEST_CASE("Result basic usage", "[result][support]")
 {
-	SECTION("Successful result with value")
-	{
-		lux::result<int> res = 42;
-		REQUIRE(res.has_value());
-		REQUIRE(res.value() == 42);
-	}
+    SECTION("Successful result with value")
+    {
+        lux::result<int> res = 42;
+        REQUIRE(res.has_value());
+        REQUIRE(res.value() == 42);
+    }
 
-	SECTION("Successful result with void type")
-	{
-		lux::status res = {};
-		REQUIRE(res.has_value());
-	}
+    SECTION("Successful result with void type")
+    {
+        lux::status res = {};
+        REQUIRE(res.has_value());
+    }
 
-	SECTION("Error result with message")
-	{
-		lux::result<int> res = std::unexpected<std::string>("An error occurred");
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error().join() == "An error occurred");
-	}
+    SECTION("Status with error message")
+    {
+        lux::status res = lux::err("Operation failed");
+        REQUIRE_FALSE(res.has_value());
+        REQUIRE(res.error().str() == "Operation failed\n");
+    }
 
-	SECTION("Error result with void type")
-	{
-		lux::result<> res = std::unexpected<std::string>("Void error");
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error().join() == "Void error");
-	}
+    SECTION("Status with formatted error message")
+    {
+        lux::status res = lux::err("Failed with code: {}", 404);
+        REQUIRE_FALSE(res.has_value());
+        REQUIRE(res.error().str() == "Failed with code: 404\n");
+    }
 
-	SECTION("Error with formatted message")
-	{
-		int error_code = 404;
-		std::string resource = "config.json";
-		lux::result<int> res = lux::err("Failed to load '{}' with error code {}", resource, error_code);
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error().join() == "Failed to load 'config.json' with error code 404");
-	}
+    SECTION("Result with ok() helper")
+    {
+        lux::status res = lux::ok();
+        REQUIRE(res.has_value());
+    }
 
-	SECTION("Error with simple string")
-	{
-		lux::result<int> res = lux::err("Simple error message");
-		REQUIRE(!res.has_value());
-		REQUIRE(res.error().join() == "Simple error message");
-	}
+    SECTION("Result with ok(value) helper")
+    {
+        auto res = lux::ok(123);
+        REQUIRE(res.has_value());
+        REQUIRE(res.value() == 123);
+    }
+}
+
+TEST_CASE("Error message construction", "[result][support]")
+{
+    SECTION("Error message from string")
+    {
+        lux::error_message msg{"First error"};
+        REQUIRE(msg.str() == "First error\n");
+    }
+
+    SECTION("Error message with append")
+    {
+        lux::error_message msg{"First error"};
+        msg.append("Second error");
+        REQUIRE(msg.str() == "First error\nSecond error\n");
+    }
+
+    SECTION("Error message with prepend")
+    {
+        lux::error_message msg{"Original error"};
+        msg.prepend("Context");
+        REQUIRE(msg.str() == "Context\nOriginal error\n");
+    }
+
+    SECTION("Error message chaining")
+    {
+        lux::error_message msg;
+        msg.append("Error 1").append("Error 2").append("Error 3");
+        REQUIRE(msg.str() == "Error 1\nError 2\nError 3\n");
+    }
+
+    SECTION("Error message string conversion")
+    {
+        lux::error_message msg{"Test error"};
+        std::string str = msg;
+        REQUIRE(str == "Test error\n");
+    }
 }
