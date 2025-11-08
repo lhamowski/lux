@@ -45,6 +45,11 @@ public:
         return errors_;
     }
 
+    bool empty() const
+    {
+        return errors_.empty();
+    }
+
 private:
     std::string errors_;
 };

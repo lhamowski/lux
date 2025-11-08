@@ -8,27 +8,27 @@ TEST_CASE("Result basic usage", "[result][support]")
     {
         lux::result<int> res = 42;
         REQUIRE(res.has_value());
-        REQUIRE(res.value() == 42);
+        CHECK(res.value() == 42);
     }
 
     SECTION("Successful result with void type")
     {
         lux::status res = {};
-        REQUIRE(res.has_value());
+        CHECK(res.has_value());
     }
 
     SECTION("Status with error message")
     {
         lux::status res = lux::err("Operation failed");
         REQUIRE_FALSE(res.has_value());
-        REQUIRE(res.error().str() == "Operation failed\n");
+        CHECK(res.error().str() == "Operation failed\n");
     }
 
     SECTION("Status with formatted error message")
     {
         lux::status res = lux::err("Failed with code: {}", 404);
         REQUIRE_FALSE(res.has_value());
-        REQUIRE(res.error().str() == "Failed with code: 404\n");
+        CHECK(res.error().str() == "Failed with code: 404\n");
     }
 
     SECTION("Result with ok() helper")
@@ -41,7 +41,7 @@ TEST_CASE("Result basic usage", "[result][support]")
     {
         auto res = lux::ok(123);
         REQUIRE(res.has_value());
-        REQUIRE(res.value() == 123);
+        CHECK(res.value() == 123);
     }
 }
 
@@ -50,34 +50,43 @@ TEST_CASE("Error message construction", "[result][support]")
     SECTION("Error message from string")
     {
         lux::error_message msg{"First error"};
-        REQUIRE(msg.str() == "First error\n");
+        CHECK(msg.str() == "First error\n");
     }
 
     SECTION("Error message with append")
     {
         lux::error_message msg{"First error"};
         msg.append("Second error");
-        REQUIRE(msg.str() == "First error\nSecond error\n");
+        CHECK(msg.str() == "First error\nSecond error\n");
     }
 
     SECTION("Error message with prepend")
     {
         lux::error_message msg{"Original error"};
         msg.prepend("Context");
-        REQUIRE(msg.str() == "Context\nOriginal error\n");
+        CHECK(msg.str() == "Context\nOriginal error\n");
     }
 
     SECTION("Error message chaining")
     {
         lux::error_message msg;
         msg.append("Error 1").append("Error 2").append("Error 3");
-        REQUIRE(msg.str() == "Error 1\nError 2\nError 3\n");
+        CHECK(msg.str() == "Error 1\nError 2\nError 3\n");
     }
 
     SECTION("Error message string conversion")
     {
         lux::error_message msg{"Test error"};
         std::string str = msg;
-        REQUIRE(str == "Test error\n");
+        CHECK(str == "Test error\n");
+    }
+
+    SECTION("Empty error message")
+    {
+        lux::error_message msg;
+        CHECK(msg.empty());
+
+        msg.append("Not empty anymore");
+        CHECK_FALSE(msg.empty());
     }
 }
