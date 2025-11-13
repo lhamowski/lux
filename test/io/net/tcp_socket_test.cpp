@@ -111,7 +111,7 @@ TEST_CASE("Connect to invalid endpoint fails", "[io][net][tcp]")
         io_context.stop();
     };
 
-    const lux::net::base::endpoint invalid_endpoint{lux::net::base::address_v4{"255.255.255.255"}, 1};
+    const lux::net::base::endpoint invalid_endpoint{*lux::net::base::make_address_v4("255.255.255.255"), 1};
     const auto result = socket.connect(invalid_endpoint);
 
     CHECK_FALSE(result); // connect() should return no error (async operation started)

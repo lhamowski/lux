@@ -255,7 +255,7 @@ TEST_CASE("Send error callback is called on network error", "[io][net]")
 
     socket.open();
 
-    const lux::net::base::endpoint invalid_endpoint{lux::net::base::address_v4{"255.255.255.255"}, 1};
+    const lux::net::base::endpoint invalid_endpoint{*lux::net::base::make_address_v4("255.255.255.255"), 1};
     const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
 
     bool error_callback_called = false;

@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -29,10 +30,6 @@ public:
         addr_[1] = static_cast<std::byte>((addr >> 16) & 0xFF);
         addr_[2] = static_cast<std::byte>((addr >> 8) & 0xFF);
         addr_[3] = static_cast<std::byte>(addr & 0xFF);
-    }
-
-    explicit address_v4(std::string_view addr) : address_v4{boost::asio::ip::make_address_v4(addr).to_uint()}
-    {
     }
 
 public:
@@ -65,5 +62,17 @@ private:
 inline address_v4 localhost = address_v4{0x7F000001};
 inline address_v4 any_address = address_v4{0x00000000};
 inline address_v4 broadcast_address = address_v4{0xFFFFFFFF};
+
+inline std::optional<address_v4> make_address_v4(std::string_view address)
+{
+    try
+    {
+        return lux::net::base::address_v4{boost::asio::ip::make_address_v4(address).to_uint()};
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+}
 
 } // namespace lux::net::base
