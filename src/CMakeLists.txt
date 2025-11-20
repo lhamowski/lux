@@ -10,10 +10,15 @@ cflex_add_library(lux SOURCES
 	# Support files
 	${lux_include_files_dir}/support/assert.hpp
 	${lux_include_files_dir}/support/concepts.hpp
+	${lux_include_files_dir}/support/exception.hpp
+	${lux_include_files_dir}/support/enum.hpp
+	${lux_include_files_dir}/support/finally.hpp
+	${lux_include_files_dir}/support/macros.hpp
 	${lux_include_files_dir}/support/move.hpp
 	${lux_include_files_dir}/support/overload.hpp
 	${lux_include_files_dir}/support/path.hpp ${lux_source_files_dir}/support/path.cpp
 	${lux_include_files_dir}/support/result.hpp
+	${lux_include_files_dir}/support/scoped_value.hpp
 	${lux_include_files_dir}/support/strong_typedef.hpp
 
 	# Utils files

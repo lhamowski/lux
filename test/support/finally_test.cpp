@@ -16,7 +16,13 @@ TEST_CASE("Finally macro basic functionality", "[finally][support]")
             CHECK_FALSE(executed); // Should not be executed yet
         }
 
-        CHECK(executed); // Should be executed after scope exit
+        {
+            // Be careful with multiple finally blocks - they execute in reverse order (stack-like)
+            LUX_FINALLY(executed = false); LUX_FINALLY(executed = true);
+            CHECK(executed); // Should not be executed yet
+        }
+
+        CHECK_FALSE(executed); // Should be executed after scope exit
     }
 
     SECTION("Finally executes even when exception is thrown")

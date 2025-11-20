@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lux/support/macros.hpp>
+
 #include <functional>
 #include <utility>
 
@@ -37,7 +39,4 @@ finally_guard<F> make_finally(F&& f)
 } // namespace detail
 } // namespace lux
 
-#define LUX_CONCAT_IMPL(x, y) x##y
-#define LUX_CONCAT(x, y) LUX_CONCAT_IMPL(x, y)
-
-#define LUX_FINALLY(code) auto LUX_CONCAT(finally_, __LINE__) = ::lux::detail::make_finally([&]() { code; })
+#define LUX_FINALLY(code) [[maybe_unused]] auto LUX_UNIQUE_NAME(finally_) = ::lux::detail::make_finally([&]() { code; })
