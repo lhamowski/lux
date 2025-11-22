@@ -33,9 +33,9 @@ public:
      */
     auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_promise), void(T)>(
+        return boost::asio::async_initiate<decltype(lux::coro::use_base_promise), void(T)>(
             [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_promise);
+            lux::coro::use_base_promise);
     }
 
     /**
@@ -81,9 +81,9 @@ public:
      */
     auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_promise), void()>(
+        return boost::asio::async_initiate<decltype(lux::coro::use_base_promise), void()>(
             [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_promise);
+            lux::coro::use_base_promise);
     }
 
     /**

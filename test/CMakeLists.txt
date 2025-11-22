@@ -41,6 +41,8 @@ if(LUX_ENABLE_IO)
 
         io/coro/algorithms_test.cpp
         io/coro/awaitable_event_test.cpp
+
+        io/promise_test.cpp
     )
     target_link_libraries(lux-test 
         PRIVATE 
