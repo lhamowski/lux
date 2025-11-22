@@ -19,10 +19,14 @@ TEST_CASE("awaitable_event<T> basic behavior", "[io][coro]")
     SECTION("Completes with delivered value")
     {
         lux::coro::awaitable_event<int> ev;
+        int value_from_promise_handler = 0;
 
         auto fut = boost::asio::co_spawn(
             io.get_executor(),
-            [&]() -> lux::coro::awaitable<int> { co_return co_await ev.async_wait(); },
+            [&]() -> lux::coro::awaitable<void> {
+                auto promise = ev.async_wait();
+                co_return promise([&](int value) { value_from_promise_handler = value; });
+            },
             boost::asio::use_future);
 
         boost::asio::steady_timer t{io};
@@ -32,7 +36,7 @@ TEST_CASE("awaitable_event<T> basic behavior", "[io][coro]")
         io.run();
         io.restart();
 
-        CHECK(fut.get() == 123);
+        CHECK(value_from_promise_handler == 123);
     }
 
     SECTION("Trigger without waiter is a no-op, later wait gets later trigger")

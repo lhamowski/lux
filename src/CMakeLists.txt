@@ -74,6 +74,9 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/coro/algorithms.hpp
 		${lux_include_files_dir}/io/coro/awaitable_event.hpp
 		${lux_include_files_dir}/io/coro/common.hpp
+
+		# general io files
+		${lux_include_files_dir}/io/promise.hpp
     )
 	add_library(lux::io ALIAS lux-io)
 

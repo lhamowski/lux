@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lux/io/coro/common.hpp>
+#include <lux/io/promise.hpp>
 #include <lux/support/move.hpp>
 
 #include <boost/asio/any_completion_handler.hpp>
@@ -26,15 +27,15 @@ public:
      * Stores the completion handler and returns an awaitable that completes when
      * trigger(T) is called. This is a single-shot wait; after invocation the handler is reset.
      *
-     * @return lux::coro::awaitable<T> awaitable that yields the delivered value.
+     * @return lux::promise<void(T)> awaitable that completes on trigger().
      *
      * Completion signature: void(T)
      */
-    lux::coro::awaitable<T> async_wait()
+    auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void(T)>(
+        return boost::asio::async_initiate<decltype(lux::coro::use_promise), void(T)>(
             [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_awaitable);
+            lux::coro::use_promise);
     }
 
     /**
@@ -74,15 +75,15 @@ public:
      * Stores the completion handler and returns an awaitable that completes when trigger() is called.
      * Single-shot; the handler is cleared after invocation.
      *
-     * @return lux::coro::awaitable<void> awaitable that completes on trigger().
+     * @return lux::promise<void> awaitable that completes on trigger().
      *
      * Completion signature: void()
      */
-    lux::coro::awaitable<void> async_wait()
+    auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void()>(
+        return boost::asio::async_initiate<decltype(lux::coro::use_promise), void()>(
             [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_awaitable);
+            lux::coro::use_promise);
     }
 
     /**
