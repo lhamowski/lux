@@ -17,7 +17,8 @@ TEST_CASE("lux::promise<T> behavior", "[io][promise]")
             lux::coro::use_promise);
 
         int value_from_promise_handler = 0;
-        promise.async_wait([&](int value) { value_from_promise_handler = value; });
+        promise.then([&](int value) { value_from_promise_handler = value; });
+        CHECK_FALSE(promise.resolved());
 
         io.run();
         io.restart();
@@ -32,7 +33,18 @@ TEST_CASE("lux::promise<T> behavior", "[io][promise]")
             [&]() -> lux::coro::awaitable<int> { throw std::runtime_error("Test exception"); },
             lux::coro::use_promise);
 
-        promise.async_wait([&](int) { CHECK(false); });
+        promise.then([&](int) { CHECK(false); });
+        CHECK_FALSE(promise.resolved());
         CHECK_THROWS_WITH(io.run(), "Test exception");
+    }
+
+    SECTION("Make resolved promise")
+    {
+        auto promise = lux::promise<int>{10};
+        CHECK(promise.resolved());
+
+        int value_from_handler = 0;
+        promise.then([&value_from_handler](int val) { value_from_handler = val; });
+        CHECK(value_from_handler == 10);
     }
 }

@@ -7,7 +7,6 @@
 #include <boost/asio/detached.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/asio/use_future.hpp>
-#include <boost/asio/experimental/promise.hpp>
 #include <boost/asio/experimental/use_promise.hpp>
 
 #include <concepts>

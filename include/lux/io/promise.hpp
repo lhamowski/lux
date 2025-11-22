@@ -1,13 +1,15 @@
 #pragma once
 
 #include <lux/support/move.hpp>
+#include <lux/support/overload.hpp>
 
 #include <boost/asio/experimental/promise.hpp>
 #include <boost/asio/any_io_executor.hpp>
-#include <boost/asio/async_result.hpp>
 
 #include <exception>
 #include <memory>
+#include <utility>
+#include <variant>
 
 namespace lux {
 
@@ -28,40 +30,59 @@ template <typename T, typename Executor = boost::asio::any_io_executor, typename
 class promise
 {
 public:
-    promise(lux::base_promise<T, Executor, Allocator>&& base) : promise_{lux::move(base)}
+    using base_promise_type = lux::base_promise<T, Executor, Allocator>;
+
+    promise(base_promise_type&& base) : promise_holder_{lux::move(base)}
     {
     }
 
-    // Wait for the promise to become ready.
-    template <BOOST_ASIO_COMPLETION_TOKEN_FOR(void(T)) CompletionToken>
-    auto async_wait(CompletionToken&& token)
+    template <typename U>
+    promise(U&& ready_value) : promise_holder_{std::forward<U>(ready_value)}
     {
-        auto initiation = [this](auto&& handler) {
-            return promise_([h = std::forward<decltype(handler)>(handler)](std::exception_ptr ep, T value) {
-                if (ep)
-                {
-                    std::rethrow_exception(ep);
-                }
-
-                h(value);
-            });
-        };
-
-        return boost::asio::async_initiate<CompletionToken, void(T)>(initiation, token);
     }
 
-    void cancel()
+    // Wait for the promise to become ready and invoke the handler with the result.
+    template <typename Handler>
+    void then(Handler&& handler)
     {
-        promise_.cancel();
+        if (auto* base = std::get_if<base_promise_type>(&promise_holder_))
+        {
+            then_impl(*base, std::forward<Handler>(handler));
+        }
+        else if (auto* value = std::get_if<T>(&promise_holder_))
+        {
+            then_impl(*value, std::forward<Handler>(handler));
+        }
     }
 
-    bool completed() const
+    bool resolved() const noexcept
     {
-        return promise_.completed();
+        return std::holds_alternative<T>(promise_holder_);
     }
 
 private:
-    base_promise<T, Executor, Allocator> promise_;
+    template <typename Handler>
+    auto then_impl(base_promise_type& base, Handler&& handler)
+    {
+        base([handler = std::forward<Handler>(handler)](std::exception_ptr eptr, T value) mutable {
+            if (eptr)
+            {
+                std::rethrow_exception(eptr);
+            }
+            handler(lux::move(value));
+        });
+    }
+
+    template <typename Handler>
+    void then_impl(T& value, Handler&& handler)
+    {
+        handler(lux::move(value));
+    }
+
+private:
+    std::variant<base_promise_type, T> promise_holder_;
 };
+
+
 
 } // namespace lux
