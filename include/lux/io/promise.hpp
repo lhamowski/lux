@@ -55,6 +55,13 @@ public:
         }
     }
 
+    T get()
+    {
+        T value;
+        then([&value](T v) mutable { value = lux::move(v); });
+        return value;
+    }
+
     bool resolved() const noexcept
     {
         return std::holds_alternative<T>(promise_holder_);

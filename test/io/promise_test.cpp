@@ -42,6 +42,7 @@ TEST_CASE("lux::promise<T> behavior", "[io][promise]")
     {
         auto promise = lux::promise<int>{10};
         CHECK(promise.resolved());
+        CHECK(promise.get() == 10);
 
         int value_from_handler = 0;
         promise.then([&value_from_handler](int val) { value_from_handler = val; });
