@@ -1,6 +1,10 @@
 include(../cmake/CPM.cmake)
 
-if (NOT LUX_FMT_EXTERNAL)
+option(LUX_FETCH_FMT "Fetch fmt library" ON)
+option(LUX_FETCH_SPDLOG "Fetch spdlog library" ON)
+option(LUX_FETCH_BORINGSSL "Fetch BoringSSL library (only if LUX_ENABLE_IO is ON)" ON)
+
+if (LUX_FETCH_FMT)
     CPMAddPackage(
         NAME fmt
         URL https://github.com/fmtlib/fmt/archive/11.2.0.zip
@@ -10,12 +14,29 @@ else()
     message(STATUS "Using external fmt library")
 endif()
 
-CPMAddPackage(
-    NAME spdlog
-    URL https://github.com/gabime/spdlog/archive/v1.15.3.zip
-    URL_HASH SHA256=b74274c32c8be5dba70b7006c1d41b7d3e5ff0dff8390c8b6390c1189424e094
-    OPTIONS "SPDLOG_FMT_EXTERNAL ON"
-)
+if (LUX_FETCH_SPDLOG)
+    CPMAddPackage(
+        NAME spdlog
+        URL https://github.com/gabime/spdlog/archive/v1.15.3.zip
+        URL_HASH SHA256=b74274c32c8be5dba70b7006c1d41b7d3e5ff0dff8390c8b6390c1189424e094
+        OPTIONS "SPDLOG_FMT_EXTERNAL ON"
+    )
+else()
+    message(STATUS "Using external spdlog library")
+endif()
+
+if (LUX_ENABLE_IO AND LUX_FETCH_BORINGSSL)
+    CPMAddPackage(
+        NAME boringssl
+        GITHUB_REPOSITORY google/boringssl
+        GIT_TAG 0.20251124.0
+        OPTIONS
+            "OPENSSL_NO_ASM ON" # TODO: Download NASM and enable assembly optimizations
+            "BUILD_TESTING OFF"
+    )
+else()
+    message(STATUS "Using external OpenSSL library")
+endif()
 
 CPMAddPackage(
     NAME magic_enum

@@ -57,6 +57,7 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/net/base/udp_socket.hpp
 		${lux_include_files_dir}/io/net/base/tcp_socket.hpp
 
+		${lux_source_files_dir}/io/net/asio_impl.cpp
 		${lux_source_files_dir}/io/net/utils.hpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
         ${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
@@ -87,12 +88,19 @@ if(LUX_ENABLE_IO)
     target_link_libraries(lux-io
 		PUBLIC
 			lux::lux
+			ssl
+			crypto
 			Boost::boost
     )
 
 	target_include_directories(lux-io
 		PRIVATE
 			${lux_SOURCE_DIR}/src
+	)
+
+	target_compile_definitions(lux-io
+		PUBLIC
+			BOOST_ASIO_SEPARATE_COMPILATION
 	)
 
     lux_source_group(lux TREE ${lux_SOURCE_DIR})
