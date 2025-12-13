@@ -10,6 +10,15 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  CPM_SOURCE_CACHE: ~/cpm-cache
+  CCACHE_VERSION: 4.7.3
+  CCACHE_BASEDIR: ${GITHUB_WORKSPACE}
+  CCACHE_DIR: ${GITHUB_WORKSPACE}/.ccache
+  CCACHE_COMPRESS: true
+  CCACHE_COMPRESSLEVEL: 6
+  CCACHE_MAXSIZE: 400M
+
 jobs:
   build-and-test-linux-gcc-release:
     name: Build and test (linux-gcc-release)
@@ -21,10 +30,39 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Download ccache
+        id: ccache
+        shell: cmake -P {0}
+        run: |
+          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v$ENV{CCACHE_VERSION}/${{ runner.os }}.tar.xz")
+          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+
+      - name: Add ccache to PATH
+        run: echo "$(pwd)" >> $GITHUB_PATH
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-linux-gcc-release-${{ github.sha }}
+          restore-keys: ccache-linux-gcc-release-
+
+      - name: Cache CPM packages
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-sources
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: ${{ env.cache-name }}-${{ hashFiles('external/**') }}
+          restore-keys: ${{ env.cache-name }}-
+
       - name: Configure
         run: |
           cmake --preset=linux-gcc-release \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
         run: cmake --build build/linux-gcc-release
@@ -46,10 +84,40 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+              
+      - name: Download ccache
+        id: ccache
+        shell: cmake -P {0}
+        run: |
+          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v$ENV{CCACHE_VERSION}/${{ runner.os }}.tar.xz")
+          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+
+      - name: Add ccache to PATH
+        run: echo "$(pwd)" >> $GITHUB_PATH
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.preset }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.preset }}-
+
+      - name: Cache CPM packages
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-sources
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: ${{ env.cache-name }}-${{ hashFiles('external/**') }}
+          restore-keys: ${{ env.cache-name }}-
+
       - name: Configure
         run: |
           cmake --preset=${{ matrix.preset }} \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
         run: cmake --build build/${{ matrix.preset }}
@@ -101,11 +169,40 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Download ccache
+        id: ccache
+        shell: cmake -P {0}
+        run: |
+          set(ccache_url "https://github.com/cristianadam/ccache/releases/download/v$ENV{CCACHE_VERSION}/${{ runner.os }}.tar.xz")
+          file(DOWNLOAD "${ccache_url}" ./ccache.tar.xz)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ccache.tar.xz)
+
+      - name: Add ccache to PATH
+        run: echo "$(pwd)" >> $GITHUB_PATH
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: .ccache
+          key: ccache-linux-clang-coverage-${{ github.sha }}
+          restore-keys: ccache-linux-clang-coverage-
+
+      - name: Cache CPM packages
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-cmake-dependency-sources
+        with:
+          path: ${{ env.CPM_SOURCE_CACHE }}
+          key: ${{ env.cache-name }}-${{ hashFiles('external/**') }}
+          restore-keys: ${{ env.cache-name }}-
 
       - name: Configure
         run: |
           cmake --preset=linux-clang-coverage \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
 
       - name: Build
         run: cmake --build build/linux-clang-coverage
