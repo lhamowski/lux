@@ -290,9 +290,10 @@ TEST_CASE("Connect using host endpoint with echo server", "[io][net][tcp]")
     CHECK(data_received);
 
     // Clean up
-    socket.disconnect(false);
     server_socket.close();
     acceptor.close();
+
+    // We don't need to explicitly disconnect the socket here since destructors will handle it
 }
 
 TEST_CASE("Connect using host endpoint to invalid hostname fails", "[io][net][tcp]")
