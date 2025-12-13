@@ -99,6 +99,13 @@ public:
 
         state_ = state::connecting;
 
+        if (reconnect_executor_ && reconnect_executor_->is_retry_exhausted())
+        {
+            // This means that previous reconnect attempts have failed, but now we are doing a manual connect, so reset
+            // the reconnect executor
+            reconnect_executor_->reset();
+        }
+
         const auto boost_ep = lux::net::to_boost_endpoint<boost::asio::ip::tcp>(endpoint);
         socket().async_connect(boost_ep, [self = this->shared_from_this()](const auto& ec) { self->on_connected(ec); });
         return {};
@@ -120,6 +127,13 @@ public:
 
         state_ = state::connecting;
 
+        if (reconnect_executor_ && reconnect_executor_->is_retry_exhausted())
+        {
+            // This means that previous reconnect attempts have failed, but now we are doing a manual connect, so reset
+            // the reconnect executor
+            reconnect_executor_->reset();
+        }
+
         // First, resolve the host and service
         resolver_.async_resolve(
             host_endpoint.host(),
@@ -137,8 +151,8 @@ public:
     {
         if (reconnect_executor_)
         {
-            // Manual disconnection, reset the reconnect executor
-            reconnect_executor_->reset();
+            // Manual disconnection, cancel any pending reconnect attempts
+            reconnect_executor_->cancel();
         }
 
         if (send_pending)
@@ -233,16 +247,16 @@ private:
           config_{config},
           memory_arena_{lux::make_growable_memory_arena(config_.buffer.initial_send_chunk_size,
                                                         config_.buffer.initial_send_chunk_count)},
-          read_buffer_{config_.buffer.read_buffer_size}
+          read_buffer_{config_.buffer.read_buffer_size},
+          timer_factory_{timer_factory}
     {
         if (config_.reconnect.enabled)
         {
-            reconnect_executor_.emplace(timer_factory, config_.reconnect.reconnect_policy);
+            reconnect_executor_.emplace(timer_factory_, config_.reconnect.reconnect_policy);
             reconnect_executor_->set_retry_action([this] {
                 LUX_ASSERT(is_disconnected(), "Cannot reconnect when socket is not disconnected");
                 reconnect();
             });
-            reconnect_executor_->set_exhausted_callback([this] { reconnect_executor_.reset(); });
         }
     }
 
@@ -353,10 +367,14 @@ private:
      */
     void handle_disconnect(const std::error_code& ec)
     {
-        const bool will_reconnect = reconnect_executor_.has_value();
+        const bool will_reconnect = reconnect_executor_.has_value() && !reconnect_executor_->is_retry_exhausted();
         disconnect_immediately(ec, will_reconnect);
 
-        if (reconnect_executor_)
+        // we need to check again if we will reconnect, as the disconnect_immediately call may have cancelled the
+        // reconnect executor
+        const bool will_reconnect_after_callback = reconnect_executor_.has_value() &&
+                                                   !reconnect_executor_->is_retry_exhausted();
+        if (will_reconnect_after_callback)
         {
             reconnect_executor_->retry();
         }
@@ -549,6 +567,9 @@ private:
     arena_ptr memory_arena_;
     std::deque<arena_element> pending_data_to_send_;
     std::vector<std::byte> read_buffer_;
+
+private:
+    lux::time::base::timer_factory& timer_factory_;
 };
 
 class tcp_socket::impl : public base_tcp_socket<tcp_socket::impl>
