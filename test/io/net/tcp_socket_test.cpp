@@ -91,6 +91,74 @@ boost::asio::ssl::context create_ssl_context(boost::asio::ssl::context::method m
     return ctx;
 }
 
+boost::asio::ssl::context create_ssl_server_context()
+{
+    boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_server};
+    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 |
+                    boost::asio::ssl::context::single_dh_use);
+
+    EVP_PKEY* pkey = EVP_PKEY_new();
+    REQUIRE(pkey != nullptr);
+
+    RSA* rsa = RSA_new();
+    BIGNUM* e = BN_new();
+    BN_set_word(e, RSA_F4); // 65537
+    REQUIRE(RSA_generate_key_ex(rsa, 2048, e, nullptr));
+    BN_free(e);
+
+    REQUIRE(EVP_PKEY_assign_RSA(pkey, rsa));
+
+    X509* x509 = X509_new();
+    REQUIRE(x509 != nullptr);
+
+    ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
+
+    X509_gmtime_adj(X509_get_notBefore(x509), 0);
+    X509_gmtime_adj(X509_get_notAfter(x509), 31536000L);
+
+    X509_set_pubkey(x509, pkey);
+
+    X509_NAME* name = X509_get_subject_name(x509);
+    X509_NAME_add_entry_by_txt(name,
+                               "CN",
+                               MBSTRING_ASC,
+                               reinterpret_cast<const unsigned char*>("localhost"),
+                               -1,
+                               -1,
+                               0);
+    X509_set_issuer_name(x509, name);
+
+    REQUIRE(X509_sign(x509, pkey, EVP_sha256()));
+
+    BIO* cert_bio = BIO_new(BIO_s_mem());
+    PEM_write_bio_X509(cert_bio, x509);
+    BUF_MEM* cert_mem;
+    BIO_get_mem_ptr(cert_bio, &cert_mem);
+
+    BIO* key_bio = BIO_new(BIO_s_mem());
+    PEM_write_bio_PrivateKey(key_bio, pkey, nullptr, nullptr, 0, nullptr, nullptr);
+    BUF_MEM* key_mem;
+    BIO_get_mem_ptr(key_bio, &key_mem);
+
+    ctx.use_certificate_chain(boost::asio::buffer(cert_mem->data, cert_mem->length));
+    ctx.use_private_key(boost::asio::buffer(key_mem->data, key_mem->length), boost::asio::ssl::context::pem);
+
+    BIO_free(cert_bio);
+    BIO_free(key_bio);
+    X509_free(x509);
+    EVP_PKEY_free(pkey);
+
+    return ctx;
+}
+
+boost::asio::ssl::context create_ssl_client_context()
+{
+    boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_client};
+    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
+    ctx.set_verify_mode(boost::asio::ssl::verify_none); // For testing purposes only
+    return ctx;
+}
+
 } // namespace
 
 TEST_CASE("Construction succeeds with default config", "[io][net][tcp]")
@@ -917,4 +985,80 @@ TEST_CASE("SSL socket connect when already connecting returns error", "[io][net]
     const auto result2 = socket.connect(endpoint);
     CHECK(result2);
     CHECK(result2 == std::make_error_code(std::errc::operation_in_progress));
+}
+
+TEST_CASE("SSL socket handshake succeeds when certificate verification is disabled", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+
+    auto client_ssl_ctx = create_ssl_client_context();
+    auto server_ssl_ctx = create_ssl_server_context();
+
+    lux::net::ssl_tcp_socket client_socket{io_context.get_executor(),
+                                           handler,
+                                           config,
+                                           timer_factory,
+                                           client_ssl_ctx,
+                                           lux::net::ssl_mode::client};
+
+    // Create SSL server
+    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
+    const auto server_port = acceptor.local_endpoint().port();
+
+    boost::asio::ip::tcp::socket tcp_socket{io_context};
+    std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> ssl_server_stream;
+
+    bool client_connected = false;
+    bool handshake_failed = false;
+    bool handshake_completed = false;
+
+    handler.on_connected_callback = [&]() { client_connected = true; };
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
+        if (ec && !client_connected)
+        {
+            handshake_failed = true;
+        }
+    };
+
+    // SSL server accepts connection and performs handshake
+    acceptor.async_accept(tcp_socket, [&](const boost::system::error_code& ec) {
+        if (!ec)
+        {
+            ssl_server_stream.emplace(std::move(tcp_socket), server_ssl_ctx);
+            ssl_server_stream->async_handshake(boost::asio::ssl::stream_base::server,
+                                               [&](const boost::system::error_code& handshake_ec) {
+                                                   if (handshake_ec)
+                                                   {
+                                                       handshake_failed = true;
+                                                       io_context.stop();
+                                                   }
+                                                   else
+                                                   {
+                                                       handshake_completed = true;
+                                                   }
+                                               });
+        }
+    });
+
+    const lux::net::base::endpoint endpoint{lux::net::base::localhost, server_port};
+    const auto result = client_socket.connect(endpoint);
+    CHECK_FALSE(result);
+
+    io_context.run_for(std::chrono::seconds{10});
+
+    CHECK(client_connected);
+    CHECK_FALSE(handshake_failed);
+    CHECK(handshake_completed);
+    CHECK(client_socket.is_connected());
+
+    client_socket.disconnect(false);
+    if (ssl_server_stream)
+    {
+        boost::system::error_code ignored_ec;
+        ssl_server_stream->lowest_layer().close(ignored_ec);
+    }
+    acceptor.close();
 }
