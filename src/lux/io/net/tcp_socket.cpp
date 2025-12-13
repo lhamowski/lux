@@ -334,9 +334,8 @@ private:
             return {}; // No error, already disconnected
         }
 
-        state_ = state::disconnected;
-
         const auto close_ec = close_socket();
+        state_ = state::disconnected;
 
         if (handler_)
         {
