@@ -14,6 +14,7 @@
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <utility>
 
 namespace {
 
@@ -22,7 +23,7 @@ class test_tcp_socket_handler : public lux::net::base::tcp_socket_handler
 public:
     void on_connected(lux::net::base::tcp_socket& socket) override
     {
-        (void)socket; // Suppress unused parameter warning
+        std::ignore = socket; // Suppress unused parameter warning
         connected_calls++;
         if (on_connected_callback)
         {
@@ -32,18 +33,19 @@ public:
 
     void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) override
     {
-        (void)socket;         // Suppress unused parameter warning
-        (void)will_reconnect; // Suppress unused parameter warning
+        std::ignore = socket; // Suppress unused parameter warning
         disconnected_calls.emplace_back(ec);
+        will_reconnect_flags.emplace_back(will_reconnect);
+
         if (on_disconnected_callback)
         {
-            on_disconnected_callback(ec);
+            on_disconnected_callback(ec, will_reconnect);
         }
     }
 
     void on_data_read(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
     {
-        (void)socket; // Suppress unused parameter warning
+        std::ignore = socket; // Suppress unused parameter warning
         data_read_calls.emplace_back(std::vector<std::byte>{data.begin(), data.end()});
         if (on_data_read_callback)
         {
@@ -53,7 +55,7 @@ public:
 
     void on_data_sent(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
     {
-        (void)socket; // Suppress unused parameter warning
+        std::ignore = socket; // Suppress unused parameter warning
         data_sent_calls.emplace_back(std::vector<std::byte>{data.begin(), data.end()});
         if (on_data_sent_callback)
         {
@@ -63,11 +65,12 @@ public:
 
     std::size_t connected_calls{0};
     std::vector<std::error_code> disconnected_calls;
+    std::vector<bool> will_reconnect_flags;
     std::vector<std::vector<std::byte>> data_read_calls;
     std::vector<std::vector<std::byte>> data_sent_calls;
 
     std::function<void()> on_connected_callback;
-    std::function<void(const std::error_code&)> on_disconnected_callback;
+    std::function<void(const std::error_code&, bool)> on_disconnected_callback;
     std::function<void(const std::span<const std::byte>&)> on_data_read_callback;
     std::function<void(const std::span<const std::byte>&)> on_data_sent_callback;
 };
@@ -105,7 +108,7 @@ TEST_CASE("Connect to invalid endpoint fails", "[io][net][tcp]")
     lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
 
     bool disconnected_called = false;
-    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         CHECK(ec); // Should have an error
         disconnected_called = true;
         io_context.stop();
@@ -305,7 +308,7 @@ TEST_CASE("Connect using host endpoint to invalid hostname fails", "[io][net][tc
     lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
 
     bool disconnected_called = false;
-    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         CHECK(ec); // Should have an error (DNS resolution failure)
         disconnected_called = true;
         io_context.stop();
@@ -484,7 +487,7 @@ TEST_CASE("Disconnect gracefully sends pending data", "[io][net][tcp]")
 
     handler.on_data_sent_callback = [&](const std::span<const std::byte>&) { data_sent = true; };
 
-    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         CHECK_FALSE(ec); // Graceful disconnect should not have error
         disconnected = true;
         io_context.stop();
@@ -529,7 +532,7 @@ TEST_CASE("Disconnect immediately doesn't send pending data", "[io][net][tcp]")
         socket.disconnect(false); // Immediate disconnect - may not send pending data
     };
 
-    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         CHECK_FALSE(ec); // Manual disconnect should not have error
         disconnected = true;
         io_context.stop();
@@ -604,7 +607,7 @@ TEST_CASE("Complete lifecycle connect send receive disconnect", "[io][net][tcp]"
         socket.disconnect(true);
     };
 
-    handler.on_disconnected_callback = [&](const std::error_code& ec) {
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         CHECK_FALSE(ec);
         disconnected = true;
         CHECK_FALSE(socket.is_connected());
@@ -642,4 +645,149 @@ TEST_CASE("Complete lifecycle connect send receive disconnect", "[io][net][tcp]"
     // Clean up
     server_socket.close();
     acceptor.close();
+}
+
+TEST_CASE("Reconnect on connection failure with exponential backoff", "[io][net][tcp]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+
+    auto config = create_default_config();
+    config.reconnect.enabled = true;
+    config.reconnect.reconnect_policy.strategy = lux::time::base::retry_policy::backoff_strategy::exponential_backoff;
+    config.reconnect.reconnect_policy.max_attempts = 2;
+    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{50};
+    config.reconnect.reconnect_policy.max_delay = std::chrono::milliseconds{200};
+
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
+
+    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
+    const auto server_port = acceptor.local_endpoint().port();
+    acceptor.close();
+
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool will_reconnect) {
+        
+        CHECK(ec);
+        
+        if (handler.disconnected_calls.size() < 3) // 1 initial + 2 reconnect attempts
+        {
+            CHECK(will_reconnect);
+        }
+        else
+        {
+            CHECK_FALSE(will_reconnect);
+            io_context.stop();
+        }
+
+    };
+
+    const lux::net::base::endpoint endpoint{lux::net::base::localhost, server_port};
+    const auto ec = socket.connect(endpoint);
+    CHECK_FALSE(ec);
+
+    io_context.run_for(std::chrono::seconds{10});
+
+    CHECK(handler.disconnected_calls.size() == 3);
+    REQUIRE(handler.will_reconnect_flags.size() == 3);
+    CHECK(handler.will_reconnect_flags[0] == true);  // First reconnect attempt
+    CHECK(handler.will_reconnect_flags[1] == true);  // Second reconnect attempt
+    CHECK(handler.will_reconnect_flags[2] == false); // No more reconnect attempts
+}
+
+TEST_CASE("Reconnect succeeds after server becomes available", "[io][net][tcp]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+
+    auto config = create_default_config();
+    config.reconnect.enabled = true;
+    config.reconnect.reconnect_policy.max_attempts = 5;
+    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{100};
+
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
+
+    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
+    const auto server_port = acceptor.local_endpoint().port();
+    acceptor.close();
+
+    std::size_t disconnect_with_error = 0;
+    boost::asio::ip::tcp::socket server_socket{io_context};
+
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
+        if (ec)
+        {
+            ++disconnect_with_error;
+
+            if (disconnect_with_error == 1)
+            {
+                acceptor.open(boost::asio::ip::tcp::v4());
+                acceptor.bind(boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), server_port});
+                acceptor.listen();
+                acceptor.async_accept(server_socket, [](const boost::system::error_code&) {});
+            }
+        }
+    };
+
+    handler.on_connected_callback = [&]() { io_context.stop(); };
+
+    const lux::net::base::endpoint endpoint{lux::net::base::localhost, server_port};
+    const auto ec = socket.connect(endpoint);
+    CHECK_FALSE(ec);
+
+    io_context.run_for(std::chrono::seconds{10});
+
+    CHECK(handler.connected_calls == 1);
+    CHECK(socket.is_connected());
+
+    socket.disconnect(false);
+    server_socket.close();
+    acceptor.close();
+}
+
+TEST_CASE("Manual disconnect stops reconnection attempts", "[io][net][tcp]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+
+    auto config = create_default_config();
+    config.reconnect.enabled = true;
+    config.reconnect.reconnect_policy.max_attempts = std::nullopt;
+    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{50};
+
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
+
+    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
+    const auto server_port = acceptor.local_endpoint().port();
+    acceptor.close();
+
+    std::size_t disconnect_with_error = 0;
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool will_reconnect) {
+        if (ec)
+        {
+            CHECK(will_reconnect);
+            ++disconnect_with_error;
+
+            if (disconnect_with_error == 2)
+            {
+                socket.disconnect(false);
+                io_context.stop();
+            }
+        }
+    };
+
+    const lux::net::base::endpoint endpoint{lux::net::base::localhost, server_port};
+    const auto result = socket.connect(endpoint);
+    CHECK_FALSE(result);
+
+    io_context.run_for(std::chrono::seconds{10});
+
+    CHECK(disconnect_with_error == 2);
+    CHECK(handler.disconnected_calls.size() == 2);
+    REQUIRE(handler.will_reconnect_flags.size() == 2);
+    CHECK(handler.will_reconnect_flags[0] == true); // First reconnect attempt
+    CHECK(handler.will_reconnect_flags[1] == true); // Second reconnect attempt but then manual disconnect stops further
+                                                    // attempts with no more calls (already disconnected)
 }
