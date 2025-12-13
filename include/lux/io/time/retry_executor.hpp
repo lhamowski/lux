@@ -38,12 +38,23 @@ public:
      */
     void reset();
 
+    /**
+     * @brief Cancel any ongoing retry attempts.
+     * This will stop the retry timer and prevent further retries
+     */
+    void cancel();
+
+    /**
+     * @brief Check if the retry attempts have been exhausted.
+     * @return true if the maximum number of attempts has been reached or no more retries are allowed, false otherwise.
+     */
+    bool is_retry_exhausted() const;
+
 private:
     void on_timer_expired();
     std::chrono::milliseconds calculate_next_delay() const;
     std::chrono::milliseconds calculate_linear_backoff_delay() const;
     std::chrono::milliseconds calculate_exponential_backoff_delay() const;
-    bool max_attempts_reached() const;
 
 private:
     const lux::time::base::retry_policy policy_;
@@ -52,6 +63,7 @@ private:
 
 private:
     std::size_t attempts_{0};
+    bool canceled_{false};
     lux::time::base::interval_timer_ptr timer_;
 };
 

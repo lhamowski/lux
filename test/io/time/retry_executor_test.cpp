@@ -307,6 +307,31 @@ TEST_CASE("Delayed retry executor - Reset functionality", "[io][time]")
     }
 }
 
+TEST_CASE("Delayed retry executor - Cancel functionality", "[io][time]")
+{
+    SECTION("Should cancel ongoing retries")
+    {
+        timer_factory_mock factory;
+        auto policy = create_exponential_backoff_policy();
+        retry_executor executor{factory, policy};
+        auto* timer_mock = factory.created_timers_[0];
+
+        executor.retry();
+        CHECK(timer_mock->schedule_call_count() == 1);
+
+        executor.cancel();
+        CHECK(timer_mock->cancel_call_count() == 1);
+        // Further retries should not schedule the timer
+
+        executor.retry();
+        CHECK(timer_mock->schedule_call_count() == 1); // No new schedules
+
+        executor.reset(); // Reset should allow retries again
+        executor.retry();
+        CHECK(timer_mock->schedule_call_count() == 2); // Now it should schedule again
+    }
+}
+
 TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
 {
     SECTION("Should handle zero base delay")
