@@ -8,6 +8,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/ssl.hpp>
 
 #include <vector>
 #include <cstring>
@@ -80,6 +81,14 @@ lux::net::base::tcp_socket_config create_default_config()
     lux::net::base::tcp_socket_config config{};
     config.reconnect.enabled = false;
     return config;
+}
+
+boost::asio::ssl::context create_ssl_context(boost::asio::ssl::context::method method)
+{
+    boost::asio::ssl::context ctx{method};
+    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 |
+                    boost::asio::ssl::context::single_dh_use);
+    return ctx;
 }
 
 } // namespace
@@ -667,9 +676,8 @@ TEST_CASE("Reconnect on connection failure with exponential backoff", "[io][net]
     acceptor.close();
 
     handler.on_disconnected_callback = [&](const std::error_code& ec, bool will_reconnect) {
-        
         CHECK(ec);
-        
+
         if (handler.disconnected_calls.size() < 3) // 1 initial + 2 reconnect attempts
         {
             CHECK(will_reconnect);
@@ -679,7 +687,6 @@ TEST_CASE("Reconnect on connection failure with exponential backoff", "[io][net]
             CHECK_FALSE(will_reconnect);
             io_context.stop();
         }
-
     };
 
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, server_port};
@@ -790,4 +797,124 @@ TEST_CASE("Manual disconnect stops reconnection attempts", "[io][net][tcp]")
     CHECK(handler.will_reconnect_flags[0] == true); // First reconnect attempt
     CHECK(handler.will_reconnect_flags[1] == true); // Second reconnect attempt but then manual disconnect stops further
                                                     // attempts with no more calls (already disconnected)
+}
+
+TEST_CASE("SSL socket construction succeeds", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+
+    std::optional<lux::net::ssl_tcp_socket> socket;
+    REQUIRE_NOTHROW(
+        socket.emplace(io_context.get_executor(), handler, config, timer_factory, ssl_ctx, lux::net::ssl_mode::client));
+
+    CHECK_FALSE(socket->is_connected());
+    CHECK_FALSE(socket->local_endpoint().has_value());
+    CHECK_FALSE(socket->remote_endpoint().has_value());
+}
+
+TEST_CASE("SSL socket connect to invalid endpoint fails", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
+                                    handler,
+                                    config,
+                                    timer_factory,
+                                    ssl_ctx,
+                                    lux::net::ssl_mode::client};
+
+    bool disconnected_called = false;
+    handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
+        CHECK(ec);
+        disconnected_called = true;
+        io_context.stop();
+    };
+
+    const lux::net::base::endpoint invalid_endpoint{*lux::net::base::make_address_v4("255.255.255.255"), 1};
+    const auto result = socket.connect(invalid_endpoint);
+
+    CHECK_FALSE(result);
+
+    io_context.run_for(std::chrono::milliseconds{100});
+    CHECK(disconnected_called);
+}
+
+TEST_CASE("SSL socket send data when disconnected returns error", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
+                                    handler,
+                                    config,
+                                    timer_factory,
+                                    ssl_ctx,
+                                    lux::net::ssl_mode::client};
+
+    const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
+
+    const auto result = socket.send(std::span<const std::byte>{data});
+    CHECK(result);
+    CHECK(result == std::make_error_code(std::errc::not_connected));
+
+    io_context.run_for(std::chrono::milliseconds(50));
+    CHECK(handler.data_sent_calls.empty());
+}
+
+TEST_CASE("SSL socket disconnect when disconnected returns success", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
+                                    handler,
+                                    config,
+                                    timer_factory,
+                                    ssl_ctx,
+                                    lux::net::ssl_mode::client};
+
+    const auto result1 = socket.disconnect(false);
+    const auto result2 = socket.disconnect(true);
+
+    CHECK_FALSE(result1);
+    CHECK_FALSE(result2);
+}
+
+TEST_CASE("SSL socket connect when already connecting returns error", "[io][net][tcp][ssl]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+    const auto config = create_default_config();
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
+                                    handler,
+                                    config,
+                                    timer_factory,
+                                    ssl_ctx,
+                                    lux::net::ssl_mode::client};
+
+    const lux::net::base::endpoint endpoint{lux::net::base::localhost, 12345};
+
+    const auto result1 = socket.connect(endpoint);
+    CHECK_FALSE(result1);
+
+    const auto result2 = socket.connect(endpoint);
+    CHECK(result2);
+    CHECK(result2 == std::make_error_code(std::errc::operation_in_progress));
 }
