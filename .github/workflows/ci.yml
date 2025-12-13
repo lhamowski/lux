@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test-unixlike-gcc-release:
-    name: Build and test (unixlike-gcc-release)
+  build-and-test-linux-gcc-release:
+    name: Build and test (linux-gcc-release)
     runs-on: ubuntu-latest
     container:
       image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest
@@ -22,31 +22,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake --preset=unixlike-gcc-release -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
+        run: |
+          cmake --preset=linux-gcc-release \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
 
       - name: Build
-        run: cmake --build build/unixlike-gcc-release
+        run: cmake --build build/linux-gcc-release
 
       - name: Run tests
-        run: cd build/unixlike-gcc-release && ctest -VV --output-on-failure
+        run: cd build/linux-gcc-release && ctest -VV --output-on-failure
 
-  build-and-test-unixlike-gcc-sanitizers:
-    name: Build and test (unixlike-gcc-sanitizers)
+  build-and-test-linux-gcc-sanitizers:
+    name: Build and test (linux-gcc-sanitizers)
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     container:
       image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest
     strategy:
       matrix:
-        preset: [unixlike-gcc-asan, unixlike-gcc-tsan, unixlike-gcc-ubsan]
+        preset: [linux-gcc-asan, linux-gcc-tsan, linux-gcc-ubsan]
       fail-fast: false
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Configure
-        run: cmake --preset=${{ matrix.preset }} -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
+        run: |
+          cmake --preset=${{ matrix.preset }} \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 
 
       - name: Build
         run: cmake --build build/${{ matrix.preset }}
@@ -88,8 +91,8 @@ jobs:
       - name: Run tests
         run: cd build/windows-msvc-release && ctest -VV --output-on-failure
 
-  build-and-test-unixlike-clang-coverage:
-    name: Build, test and generate coverage report (unixlike-clang-coverage)
+  build-and-test-linux-clang-coverage:
+    name: Build, test and generate coverage report (linux-clang-coverage)
     runs-on: ubuntu-latest
     container:
       image: lhamowski/devops:ubuntu-24.04-cpp-clang-19-boost-1.87-latest
@@ -98,15 +101,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+
       - name: Configure
-        run: cmake --preset=unixlike-clang-coverage -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
+        run: |
+          cmake --preset=linux-clang-coverage \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0
 
       - name: Build
-        run: cmake --build build/unixlike-clang-coverage
+        run: cmake --build build/linux-clang-coverage
 
       - name: Run tests and generate coverage report
         run: |
-          cd build/unixlike-clang-coverage
+          cd build/linux-clang-coverage
           echo "=== Running tests with coverage ==="
           LLVM_PROFILE_FILE=coverage-%p.profraw ctest -VV --output-on-failure
           echo "=== Profile files in test directory ==="
@@ -126,8 +132,8 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
-          directory: build/unixlike-clang-coverage
-          files: build/unixlike-clang-coverage/coverage.info
+          directory: build/linux-clang-coverage
+          files: build/linux-clang-coverage/coverage.info
           flags: unittests
           name:  lux-coverage
           disable_search: true

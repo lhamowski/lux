@@ -33,8 +33,8 @@
             }
         },
         {
-            "name": "unixlike",
-            "description": "Unix-like OS settings for gcc and clang toolchains",
+            "name": "linux",
+            "description": "Linux OS settings for gcc and clang toolchains",
             "hidden": true,
             "inherits": "common",
             "condition": {
@@ -147,82 +147,82 @@
         },
 
         {
-            "name": "unixlike-gcc-debug",
-            "inherits": [ "unixlike", "gcc", "debug" ]
+            "name": "linux-gcc-debug",
+            "inherits": [ "linux", "gcc", "debug" ]
         },
         {
-            "name": "unixlike-gcc-release",
-            "inherits": [ "unixlike", "gcc", "release" ]
+            "name": "linux-gcc-release",
+            "inherits": [ "linux", "gcc", "release" ]
         },
         {
-            "name": "unixlike-gcc-coverage",
-            "inherits": [ "unixlike", "gcc", "coverage" ]
+            "name": "linux-gcc-coverage",
+            "inherits": [ "linux", "gcc", "coverage" ]
         },
         {
-            "name": "unixlike-gcc-asan",
-            "inherits": [ "unixlike", "gcc", "asan" ]
+            "name": "linux-gcc-asan",
+            "inherits": [ "linux", "gcc", "asan" ]
         },
         {
-            "name": "unixlike-gcc-tsan",
-            "inherits": [ "unixlike", "gcc", "tsan" ]
+            "name": "linux-gcc-tsan",
+            "inherits": [ "linux", "gcc", "tsan" ]
         },
         {
-            "name": "unixlike-gcc-ubsan",
-            "inherits": [ "unixlike", "gcc", "ubsan" ]
-        },
-
-        {
-            "name": "unixlike-gcc-arm64-cross-debug",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "debug" ]
-        },
-        {
-            "name": "unixlike-gcc-arm64-cross-release",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "release" ]
-        },
-        {
-            "name": "unixlike-gcc-arm64-cross-coverage",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "coverage" ]
-        },
-        {
-            "name": "unixlike-gcc-arm64-cross-asan",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "asan" ]
-        },
-        {
-            "name": "unixlike-gcc-arm64-cross-tsan",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "tsan" ]
-        },
-        {
-            "name": "unixlike-gcc-arm64-cross-ubsan",
-            "inherits": [ "unixlike", "gcc-arm64-cross", "ubsan" ]
+            "name": "linux-gcc-ubsan",
+            "inherits": [ "linux", "gcc", "ubsan" ]
         },
 
         {
-            "name": "unixlike-clang-debug",
-            "inherits": [ "unixlike", "clang", "debug" ]
+            "name": "linux-gcc-arm64-cross-debug",
+            "inherits": [ "linux", "gcc-arm64-cross", "debug" ]
         },
         {
-            "name": "unixlike-clang-release",
-            "inherits": [ "unixlike", "clang", "release" ]
+            "name": "linux-gcc-arm64-cross-release",
+            "inherits": [ "linux", "gcc-arm64-cross", "release" ]
         },
         {
-            "name": "unixlike-clang-coverage",
-            "inherits": [ "unixlike", "clang", "coverage" ]
+            "name": "linux-gcc-arm64-cross-coverage",
+            "inherits": [ "linux", "gcc-arm64-cross", "coverage" ]
         },
         {
-            "name": "unixlike-clang-asan",
-            "inherits": [ "unixlike", "clang", "asan" ]
+            "name": "linux-gcc-arm64-cross-asan",
+            "inherits": [ "linux", "gcc-arm64-cross", "asan" ]
         },
         {
-            "name": "unixlike-clang-tsan",
-            "inherits": [ "unixlike", "clang", "tsan" ]
+            "name": "linux-gcc-arm64-cross-tsan",
+            "inherits": [ "linux", "gcc-arm64-cross", "tsan" ]
         },
         {
-            "name": "unixlike-clang-ubsan",
-            "inherits": [ "unixlike", "clang", "ubsan" ]
+            "name": "linux-gcc-arm64-cross-ubsan",
+            "inherits": [ "linux", "gcc-arm64-cross", "ubsan" ]
+        },
+
+        {
+            "name": "linux-clang-debug",
+            "inherits": [ "linux", "clang", "debug" ]
         },
         {
-            "name": "unixlike-clang-msan",
-            "inherits": [ "unixlike", "clang", "msan" ]
+            "name": "linux-clang-release",
+            "inherits": [ "linux", "clang", "release" ]
+        },
+        {
+            "name": "linux-clang-coverage",
+            "inherits": [ "linux", "clang", "coverage" ]
+        },
+        {
+            "name": "linux-clang-asan",
+            "inherits": [ "linux", "clang", "asan" ]
+        },
+        {
+            "name": "linux-clang-tsan",
+            "inherits": [ "linux", "clang", "tsan" ]
+        },
+        {
+            "name": "linux-clang-ubsan",
+            "inherits": [ "linux", "clang", "ubsan" ]
+        },
+        {
+            "name": "linux-clang-msan",
+            "inherits": [ "linux", "clang", "msan" ]
         },
 
         {
