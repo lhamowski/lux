@@ -23,6 +23,11 @@ public:
     lux::net::base::tcp_socket_ptr create_tcp_socket(const lux::net::base::tcp_socket_config& config,
                                                      lux::net::base::tcp_socket_handler& handler) override;
 
+    lux::net::base::tcp_socket_ptr create_ssl_tcp_socket(const lux::net::base::tcp_socket_config& config,
+                                                         lux::net::base::ssl_context& ssl_context,
+                                                         lux::net::base::ssl_mode ssl_mode,
+                                                         lux::net::base::tcp_socket_handler& handler) override;
+
 private:
     boost::asio::any_io_executor executor_;
     lux::time::timer_factory timer_factory_;

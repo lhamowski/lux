@@ -37,12 +37,6 @@ private:
     std::shared_ptr<impl> impl_;
 };
 
-enum class ssl_mode
-{
-    client,
-    server,
-};
-
 class ssl_tcp_socket : public lux::net::base::tcp_socket
 {
 public:
@@ -50,8 +44,8 @@ public:
                    lux::net::base::tcp_socket_handler& handler,
                    const lux::net::base::tcp_socket_config& config,
                    lux::time::base::timer_factory& timer_factory,
-                   boost::asio::ssl::context& ssl_context,
-                   lux::net::ssl_mode ssl_mode);
+                   lux::net::base::ssl_context& ssl_context,
+                   lux::net::base::ssl_mode ssl_mode);
     ~ssl_tcp_socket();
 
     ssl_tcp_socket(const ssl_tcp_socket&) = delete;

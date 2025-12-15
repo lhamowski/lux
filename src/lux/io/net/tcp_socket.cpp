@@ -692,8 +692,8 @@ public:
          lux::net::base::tcp_socket_handler& handler,
          const lux::net::base::tcp_socket_config& config,
          lux::time::base::timer_factory& timer_factory,
-         boost::asio::ssl::context& ssl_context,
-         lux::net::ssl_mode ssl_mode)
+         lux::net::base::ssl_context& ssl_context,
+         lux::net::base::ssl_mode ssl_mode)
         : base_tcp_socket<ssl_tcp_socket::impl>(parent, exe, handler, config, timer_factory),
           stream_{exe, ssl_context},
           ssl_mode_{ssl_mode}
@@ -728,8 +728,9 @@ public:
 private:
     void handshake()
     {
-        const auto handshake_type = (ssl_mode_ == lux::net::ssl_mode::client) ? boost::asio::ssl::stream_base::client
-                                                                              : boost::asio::ssl::stream_base::server;
+        const auto handshake_type = (ssl_mode_ == lux::net::base::ssl_mode::client)
+                                        ? boost::asio::ssl::stream_base::client
+                                        : boost::asio::ssl::stream_base::server;
         stream_.async_handshake(handshake_type,
                                 [self = shared_from_base()](const auto& ec) { self->on_handshake_completed(ec); });
     }
@@ -762,15 +763,15 @@ private:
 
 private:
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> stream_;
-    lux::net::ssl_mode ssl_mode_;
+    lux::net::base::ssl_mode ssl_mode_;
 };
 
 ssl_tcp_socket::ssl_tcp_socket(boost::asio::any_io_executor exe,
                                lux::net::base::tcp_socket_handler& handler,
                                const lux::net::base::tcp_socket_config& config,
                                lux::time::base::timer_factory& timer_factory,
-                               boost::asio::ssl::context& ssl_context,
-                               lux::net::ssl_mode ssl_mode)
+                               lux::net::base::ssl_context& ssl_context,
+                               lux::net::base::ssl_mode ssl_mode)
     : impl_{std::make_shared<impl>(*this, exe, handler, config, timer_factory, ssl_context, ssl_mode)}
 {
 }

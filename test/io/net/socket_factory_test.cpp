@@ -86,3 +86,16 @@ TEST_CASE("Socket factory creates TCP socket", "[io][net]")
     auto socket = factory.create_tcp_socket(config, handler);
     REQUIRE(socket != nullptr);
 }
+
+TEST_CASE("Socket factory creates SSL TCP socket", "[io][net]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_socket_handler handler;
+
+    lux::net::base::tcp_socket_config config{};
+    lux::net::base::ssl_context ssl_context{boost::asio::ssl::context::sslv23};
+    lux::net::socket_factory factory{io_context.get_executor()};
+
+    auto socket = factory.create_ssl_tcp_socket(config, ssl_context, lux::net::base::ssl_mode::client, handler);
+    REQUIRE(socket != nullptr);
+}

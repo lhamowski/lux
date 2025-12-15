@@ -3,6 +3,8 @@
 #include <lux/io/net/base/endpoint.hpp>
 #include <lux/io/time/base/retry_policy.hpp>
 
+#include <boost/asio/ssl/context.hpp>
+
 #include <memory>
 #include <optional>
 #include <span>
@@ -10,6 +12,14 @@
 #include <system_error>
 
 namespace lux::net::base {
+
+enum class ssl_mode
+{
+    client,
+    server,
+};
+
+using ssl_context = boost::asio::ssl::context;
 
 struct tcp_socket_config
 {
