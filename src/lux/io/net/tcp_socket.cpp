@@ -386,6 +386,9 @@ private:
         LUX_ASSERT(is_disconnected(), "Cannot reconnect if not disconnected");
 
         auto reconnect_func = [&](const auto& endpoint) {
+            boost::system::error_code ignored_ec;
+            socket().close(ignored_ec); // Ensure socket is closed before reconnecting
+
             if (const auto ec = connect(endpoint); ec)
             {
                 // If connection fails immediately, retry using the reconnect executor
