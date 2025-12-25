@@ -85,7 +85,7 @@ public:
      * @param host The host endpoint to connect to.
      * @return An error code indicating success or failure.
      */
-    virtual std::error_code connect(const lux::net::base::host_endpoint& host_endpoint) = 0;
+    virtual std::error_code connect(const lux::net::base::hostname_endpoint& hostname_endpoint) = 0;
 
     /**
      * Closes the TCP socket.

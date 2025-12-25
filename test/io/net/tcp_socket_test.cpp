@@ -359,7 +359,7 @@ TEST_CASE("Connect using host endpoint with echo server", "[io][net][tcp]")
     });
 
     // Connect using hostname instead of IP
-    const lux::net::base::host_endpoint host_ep{"127.0.0.1", server_port}; // Use IP as hostname for testing
+    const lux::net::base::hostname_endpoint host_ep{"127.0.0.1", server_port}; // Use IP as hostname for testing
     const auto result = socket.connect(host_ep);
     CHECK_FALSE(result);
 
@@ -392,7 +392,7 @@ TEST_CASE("Connect using host endpoint to invalid hostname fails", "[io][net][tc
     };
 
     // Use non-existent hostname
-    const lux::net::base::host_endpoint invalid_host{"255.255.255.255", 80};
+    const lux::net::base::hostname_endpoint invalid_host{"255.255.255.255", 80};
     const auto result = socket.connect(invalid_host);
     CHECK_FALSE(result); // Should not return error immediately (async operation)
 

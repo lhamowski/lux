@@ -111,14 +111,14 @@ public:
         return {};
     }
 
-    std::error_code connect(const lux::net::base::host_endpoint& host_endpoint)
+    std::error_code connect(const lux::net::base::hostname_endpoint& hostname_endpoint)
     {
         if (!is_disconnected())
         {
             return std::make_error_code(std::errc::operation_in_progress);
         }
 
-        connect_target_ = host_endpoint;
+        connect_target_ = hostname_endpoint;
 
         if (const auto ec = initialize_socket(); ec)
         {
@@ -136,8 +136,8 @@ public:
 
         // First, resolve the host and service
         resolver_.async_resolve(
-            host_endpoint.host(),
-            std::to_string(host_endpoint.port()),
+            hostname_endpoint.host(),
+            std::to_string(hostname_endpoint.port()),
             boost::asio::ip::resolver_base::numeric_service,
             [self = this->shared_from_this()](const boost::system::error_code& ec,
                                               const boost::asio::ip::tcp::resolver::results_type& results) {
@@ -560,7 +560,7 @@ private:
     std::optional<lux::time::retry_executor> reconnect_executor_;
 
 private:
-    std::variant<lux::net::base::endpoint, lux::net::base::host_endpoint, std::monostate> connect_target_;
+    std::variant<lux::net::base::endpoint, lux::net::base::hostname_endpoint, std::monostate> connect_target_;
     std::optional<lux::net::base::endpoint> local_endpoint_;
     std::optional<lux::net::base::endpoint> remote_endpoint_;
 
@@ -651,10 +651,10 @@ std::error_code tcp_socket::connect(const lux::net::base::endpoint& endpoint)
     return impl_->connect(endpoint);
 }
 
-std::error_code tcp_socket::connect(const lux::net::base::host_endpoint& host_endpoint)
+std::error_code tcp_socket::connect(const lux::net::base::hostname_endpoint& hostname_endpoint)
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
-    return impl_->connect(host_endpoint);
+    return impl_->connect(hostname_endpoint);
 }
 
 std::error_code tcp_socket::disconnect(bool send_pending)
@@ -791,10 +791,10 @@ std::error_code ssl_tcp_socket::connect(const lux::net::base::endpoint& endpoint
     return impl_->connect(endpoint);
 }
 
-std::error_code ssl_tcp_socket::connect(const lux::net::base::host_endpoint& host_endpoint)
+std::error_code ssl_tcp_socket::connect(const lux::net::base::hostname_endpoint& hostname_endpoint)
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
-    return impl_->connect(host_endpoint);
+    return impl_->connect(hostname_endpoint);
 }
 
 std::error_code ssl_tcp_socket::disconnect(bool send_pending)

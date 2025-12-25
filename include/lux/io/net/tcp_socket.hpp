@@ -25,7 +25,7 @@ public:
 public:
     // lux::net::base::tcp_socket implementation
     std::error_code connect(const lux::net::base::endpoint& endpoint) override;
-    std::error_code connect(const lux::net::base::host_endpoint& host_endpoint) override;
+    std::error_code connect(const lux::net::base::hostname_endpoint& hostname_endpoint) override;
     std::error_code disconnect(bool send_pending) override;
     std::error_code send(const std::span<const std::byte>& data) override;
     bool is_connected() const override;
@@ -56,7 +56,7 @@ public:
 public:
     // lux::net::base::tcp_socket implementation
     std::error_code connect(const lux::net::base::endpoint& endpoint) override;
-    std::error_code connect(const lux::net::base::host_endpoint& host_endpoint) override;
+    std::error_code connect(const lux::net::base::hostname_endpoint& hostname_endpoint) override;
     std::error_code disconnect(bool send_pending) override;
     std::error_code send(const std::span<const std::byte>& data) override;
     bool is_connected() const override;

@@ -13,7 +13,7 @@ class error_message;
 namespace lux::net::base {
 
 class endpoint;
-class host_endpoint;
+class hostname_endpoint;
 
 class socket_factory;
 

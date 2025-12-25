@@ -44,14 +44,14 @@ private:
     std::uint16_t port_;
 };
 
-class host_endpoint
+class hostname_endpoint
 {
 public:
-    host_endpoint() : host_{}, port_{0}
+    hostname_endpoint() : host_{}, port_{0}
     {
     }
 
-    host_endpoint(std::string_view host, std::uint16_t port) : host_{host}, port_{port}
+    hostname_endpoint(std::string_view host, std::uint16_t port) : host_{host}, port_{port}
     {
     }
 
@@ -65,12 +65,12 @@ public:
         return port_;
     }
 
-    bool operator==(const host_endpoint& other) const noexcept
+    bool operator==(const hostname_endpoint& other) const noexcept
     {
         return host_ == other.host_ && port_ == other.port_;
     }
 
-    bool operator!=(const host_endpoint& other) const noexcept
+    bool operator!=(const hostname_endpoint& other) const noexcept
     {
         return !(*this == other);
     }
