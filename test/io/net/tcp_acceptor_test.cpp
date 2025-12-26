@@ -10,11 +10,9 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/steady_timer.hpp>
 
 #include <vector>
 #include <memory>
-#include <atomic>
 #include <chrono>
 
 namespace {
@@ -25,6 +23,10 @@ public:
     void on_accepted(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr) override
     {
         accepted_sockets.push_back(std::move(socket_ptr));
+        if (on_accepted_callback)
+        {
+            on_accepted_callback();
+        }
     }
 
     void on_accept_error(const std::error_code& ec) override
@@ -36,6 +38,7 @@ public:
     }
 
     std::vector<lux::net::base::tcp_inbound_socket_ptr> accepted_sockets;
+    std::function<void()> on_accepted_callback;
     std::function<void(const std::error_code&)> on_accept_error_callback;
 };
 
@@ -211,4 +214,87 @@ TEST_CASE("SSL tcp_acceptor listen succeeds", "[io][net][tcp][acceptor][ssl]")
     CHECK_FALSE(listen_error);
 
     acceptor.close();
+}
+
+TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor][ssl]")
+{
+    boost::asio::io_context io_context;
+
+    test_tcp_acceptor_handler acceptor_handler;
+    const auto acceptor_config = create_default_acceptor_config();
+    auto server_ssl_context = lux::test::net::create_ssl_server_context();
+    lux::net::ssl_tcp_acceptor acceptor{io_context.get_executor(), acceptor_handler, acceptor_config, server_ssl_context};
+
+    const lux::net::base::endpoint bind_endpoint{lux::net::base::localhost, 0};
+    const auto listen_error = acceptor.listen(bind_endpoint);
+    REQUIRE_FALSE(listen_error);
+
+    bool client_connected = false;
+    bool connection_accepted = false;
+
+    test_tcp_socket_handler socket_handler;
+    socket_handler.on_connected_callback = [&]() {
+        client_connected = true;
+        if (connection_accepted)
+        {
+            io_context.stop();
+        }
+    };
+
+    acceptor_handler.on_accepted_callback = [&]() {
+        connection_accepted = true;
+        if (client_connected)
+        {
+            io_context.stop();
+        }
+    };
+
+    lux::time::timer_factory timer_factory{io_context.get_executor()};
+    const auto socket_config = create_default_socket_config();
+    auto client_ssl_context = lux::test::net::create_ssl_client_context();
+    lux::net::ssl_tcp_socket client_socket{io_context.get_executor(),
+                                           socket_handler,
+                                           socket_config,
+                                           timer_factory,
+                                           client_ssl_context,
+                                           lux::net::base::ssl_mode::client};
+
+    const auto ep = acceptor.local_endpoint();
+    REQUIRE(ep.has_value());
+
+    const auto connect_error = client_socket.connect(*ep);
+    CHECK_FALSE(connect_error);
+
+    io_context.run_for(std::chrono::seconds{5});
+
+    CHECK(client_connected);
+    CHECK(connection_accepted);
+    REQUIRE(!acceptor_handler.accepted_sockets.empty());
+
+    const auto& accepted_socket = acceptor_handler.accepted_sockets[0];
+    CHECK(accepted_socket != nullptr);
+    CHECK(accepted_socket->is_connected());
+    CHECK(accepted_socket->local_endpoint().has_value());
+    CHECK(accepted_socket->remote_endpoint().has_value());
+    CHECK(client_socket.is_connected());
+
+    acceptor.close();
+
+    test_tcp_socket_handler second_socket_handler;
+    second_socket_handler.on_disconnected_callback = [&]() { io_context.stop(); };
+    lux::net::ssl_tcp_socket second_client_socket{io_context.get_executor(),
+                                                  second_socket_handler,
+                                                  socket_config,
+                                                  timer_factory,
+                                                  client_ssl_context,
+                                                  lux::net::base::ssl_mode::client};
+
+    const auto second_connect_error = second_client_socket.connect(*ep);
+    CHECK_FALSE(second_connect_error);
+
+    io_context.restart();
+    io_context.run_for(std::chrono::seconds{3});
+
+    CHECK(second_socket_handler.connected_calls == 0);
+    CHECK(second_socket_handler.disconnected_calls == 1);
 }
