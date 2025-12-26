@@ -1,10 +1,12 @@
 cflex_add_executable(lux-test SOURCES
     logger/logger_test.cpp
     
+    support/container_test.cpp
     support/enum_test.cpp
     support/exception_test.cpp
     support/finally_test.cpp
     support/move_test.cpp
+    support/hash_test.cpp
     support/path_test.cpp
     support/result_test.cpp
     support/scoped_value_test.cpp

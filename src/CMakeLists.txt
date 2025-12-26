@@ -10,9 +10,11 @@ cflex_add_library(lux SOURCES
 	# Support files
 	${lux_include_files_dir}/support/assert.hpp
 	${lux_include_files_dir}/support/concepts.hpp
+	${lux_include_files_dir}/support/container.hpp
 	${lux_include_files_dir}/support/exception.hpp
 	${lux_include_files_dir}/support/enum.hpp
 	${lux_include_files_dir}/support/finally.hpp
+	${lux_include_files_dir}/support/hash.hpp
 	${lux_include_files_dir}/support/macros.hpp
 	${lux_include_files_dir}/support/move.hpp
 	${lux_include_files_dir}/support/overload.hpp
