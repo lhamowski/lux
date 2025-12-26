@@ -30,7 +30,7 @@ public:
         if (ec)
         {
             boost::system::error_code ignored_ec;
-            acceptor_.close(ec);
+            acceptor_.close(ignored_ec);
             return ec;
         }
 

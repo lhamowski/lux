@@ -26,9 +26,13 @@ target_link_libraries(lux-test
 
 if(LUX_ENABLE_IO)
     target_sources(lux-test PRIVATE
+        io/net/test_utils.hpp
+
         io/net/address_v4_test.cpp
         io/net/endpoint_test.cpp
         io/net/socket_factory_test.cpp
+        io/net/tcp_acceptor_test.cpp
+        io/net/tcp_inbound_socket_test.cpp
         io/net/tcp_socket_test.cpp
         io/net/udp_socket_test.cpp
 
