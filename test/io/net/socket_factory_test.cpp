@@ -1,4 +1,5 @@
 #include <lux/io/net/socket_factory.hpp>
+#include <lux/io/net/tcp_acceptor.hpp>
 #include <lux/io/net/tcp_socket.hpp>
 #include <lux/io/net/udp_socket.hpp>
 
@@ -65,6 +66,19 @@ public:
     }
 };
 
+class test_tcp_acceptor_handler : public lux::net::base::tcp_acceptor_handler
+{
+public:
+    void on_accepted(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr) override
+    {
+        (void)socket_ptr;
+    }
+    void on_accept_error(const std::error_code& ec) override
+    {
+        (void)ec;
+    }
+};
+
 } // namespace
 
 TEST_CASE("Socket factory creates UDP socket", "[io][net]")
@@ -102,4 +116,29 @@ TEST_CASE("Socket factory creates SSL TCP socket", "[io][net]")
 
     auto socket = factory.create_ssl_tcp_socket(config, ssl_context, lux::net::base::ssl_mode::client, handler);
     REQUIRE(socket != nullptr);
+}
+
+TEST_CASE("Socket factory creates TCP acceptor", "[io][net]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_acceptor_handler handler;
+
+    lux::net::base::tcp_acceptor_config config{};
+    lux::net::socket_factory factory{io_context.get_executor()};
+
+    auto acceptor = factory.create_tcp_acceptor(config, handler);
+    REQUIRE(acceptor != nullptr);
+}
+
+TEST_CASE("Socket factory creates SSL TCP acceptor", "[io][net]")
+{
+    boost::asio::io_context io_context;
+    test_tcp_acceptor_handler handler;
+
+    lux::net::base::tcp_acceptor_config config{};
+    lux::net::base::ssl_context ssl_context{boost::asio::ssl::context::sslv23};
+    lux::net::socket_factory factory{io_context.get_executor()};
+
+    auto acceptor = factory.create_ssl_tcp_acceptor(config, ssl_context, handler);
+    REQUIRE(acceptor != nullptr);
 }

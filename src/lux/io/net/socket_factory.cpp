@@ -1,5 +1,6 @@
 #include <lux/io/net/socket_factory.hpp>
 
+#include <lux/io/net/tcp_acceptor.hpp>
 #include <lux/io/net/tcp_socket.hpp>
 #include <lux/io/net/udp_socket.hpp>
 
@@ -32,6 +33,20 @@ lux::net::base::tcp_socket_ptr socket_factory::create_ssl_tcp_socket(const lux::
                                                       timer_factory_,
                                                       ssl_context,
                                                       ssl_mode);
+}
+
+lux::net::base::tcp_acceptor_ptr socket_factory::create_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                                                     lux::net::base::tcp_acceptor_handler& handler)
+{
+    return std::make_unique<lux::net::tcp_acceptor>(executor_, handler, config);
+}
+
+lux::net::base::tcp_acceptor_ptr
+    socket_factory::create_ssl_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                            lux::net::base::ssl_context& ssl_context,
+                                            lux::net::base::tcp_acceptor_handler& handler)
+{
+    return std::make_unique<lux::net::ssl_tcp_acceptor>(executor_, handler, config, ssl_context);
 }
 
 } // namespace lux::net

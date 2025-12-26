@@ -1,3 +1,5 @@
+#include "test_utils.hpp"
+
 #include <lux/io/net/tcp_socket.hpp>
 #include <lux/io/net/base/endpoint.hpp>
 #include <lux/io/net/base/address_v4.hpp>
@@ -24,7 +26,7 @@ class test_tcp_socket_handler : public lux::net::base::tcp_socket_handler
 public:
     void on_connected(lux::net::base::tcp_socket& socket) override
     {
-        std::ignore = socket; // Suppress unused parameter warning
+        std::ignore = socket;
         connected_calls++;
         if (on_connected_callback)
         {
@@ -34,7 +36,7 @@ public:
 
     void on_disconnected(lux::net::base::tcp_socket& socket, const std::error_code& ec, bool will_reconnect) override
     {
-        std::ignore = socket; // Suppress unused parameter warning
+        std::ignore = socket;
         disconnected_calls.emplace_back(ec);
         will_reconnect_flags.emplace_back(will_reconnect);
 
@@ -46,7 +48,7 @@ public:
 
     void on_data_read(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
     {
-        std::ignore = socket; // Suppress unused parameter warning
+        std::ignore = socket;
         data_read_calls.emplace_back(std::vector<std::byte>{data.begin(), data.end()});
         if (on_data_read_callback)
         {
@@ -56,7 +58,7 @@ public:
 
     void on_data_sent(lux::net::base::tcp_socket& socket, const std::span<const std::byte>& data) override
     {
-        std::ignore = socket; // Suppress unused parameter warning
+        std::ignore = socket;
         data_sent_calls.emplace_back(std::vector<std::byte>{data.begin(), data.end()});
         if (on_data_sent_callback)
         {
@@ -81,82 +83,6 @@ lux::net::base::tcp_socket_config create_default_config()
     lux::net::base::tcp_socket_config config{};
     config.reconnect.enabled = false;
     return config;
-}
-
-boost::asio::ssl::context create_ssl_context(boost::asio::ssl::context::method method)
-{
-    boost::asio::ssl::context ctx{method};
-    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 |
-                    boost::asio::ssl::context::single_dh_use);
-    return ctx;
-}
-
-boost::asio::ssl::context create_ssl_server_context()
-{
-    boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_server};
-    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 |
-                    boost::asio::ssl::context::single_dh_use);
-
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    REQUIRE(pkey != nullptr);
-
-    RSA* rsa = RSA_new();
-    BIGNUM* e = BN_new();
-    BN_set_word(e, RSA_F4); // 65537
-    REQUIRE(RSA_generate_key_ex(rsa, 2048, e, nullptr));
-    BN_free(e);
-
-    REQUIRE(EVP_PKEY_assign_RSA(pkey, rsa));
-
-    X509* x509 = X509_new();
-    REQUIRE(x509 != nullptr);
-
-    ASN1_INTEGER_set(X509_get_serialNumber(x509), 1);
-
-    X509_gmtime_adj(X509_get_notBefore(x509), 0);
-    X509_gmtime_adj(X509_get_notAfter(x509), 31536000L);
-
-    X509_set_pubkey(x509, pkey);
-
-    X509_NAME* name = X509_get_subject_name(x509);
-    X509_NAME_add_entry_by_txt(name,
-                               "CN",
-                               MBSTRING_ASC,
-                               reinterpret_cast<const unsigned char*>("localhost"),
-                               -1,
-                               -1,
-                               0);
-    X509_set_issuer_name(x509, name);
-
-    REQUIRE(X509_sign(x509, pkey, EVP_sha256()));
-
-    BIO* cert_bio = BIO_new(BIO_s_mem());
-    PEM_write_bio_X509(cert_bio, x509);
-    BUF_MEM* cert_mem;
-    BIO_get_mem_ptr(cert_bio, &cert_mem);
-
-    BIO* key_bio = BIO_new(BIO_s_mem());
-    PEM_write_bio_PrivateKey(key_bio, pkey, nullptr, nullptr, 0, nullptr, nullptr);
-    BUF_MEM* key_mem;
-    BIO_get_mem_ptr(key_bio, &key_mem);
-
-    ctx.use_certificate_chain(boost::asio::buffer(cert_mem->data, cert_mem->length));
-    ctx.use_private_key(boost::asio::buffer(key_mem->data, key_mem->length), boost::asio::ssl::context::pem);
-
-    BIO_free(cert_bio);
-    BIO_free(key_bio);
-    X509_free(x509);
-    EVP_PKEY_free(pkey);
-
-    return ctx;
-}
-
-boost::asio::ssl::context create_ssl_client_context()
-{
-    boost::asio::ssl::context ctx{boost::asio::ssl::context::tlsv12_client};
-    ctx.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
-    ctx.set_verify_mode(boost::asio::ssl::verify_none); // For testing purposes only
-    return ctx;
 }
 
 } // namespace
@@ -455,7 +381,7 @@ TEST_CASE("Send and receive data with server", "[io][net][tcp]")
         io_context.stop();
     };
 
-    // Simple echo server logic
+    // Echo server logic
     acceptor.async_accept(server_socket, [&](const boost::system::error_code& ec) {
         if (!ec)
         {
@@ -873,7 +799,7 @@ TEST_CASE("SSL socket construction succeeds", "[io][net][tcp][ssl]")
     test_tcp_socket_handler handler;
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
-    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+    auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     std::optional<lux::net::ssl_tcp_socket> socket;
     REQUIRE_NOTHROW(socket.emplace(io_context.get_executor(),
@@ -894,7 +820,7 @@ TEST_CASE("SSL socket connect to invalid endpoint fails", "[io][net][tcp][ssl]")
     test_tcp_socket_handler handler;
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
-    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+    auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     lux::net::ssl_tcp_socket socket{io_context.get_executor(),
                                     handler,
@@ -925,7 +851,7 @@ TEST_CASE("SSL socket send data when disconnected returns error", "[io][net][tcp
     test_tcp_socket_handler handler;
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
-    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+    auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     lux::net::ssl_tcp_socket socket{io_context.get_executor(),
                                     handler,
@@ -950,7 +876,7 @@ TEST_CASE("SSL socket disconnect when disconnected returns success", "[io][net][
     test_tcp_socket_handler handler;
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
-    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+    auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     lux::net::ssl_tcp_socket socket{io_context.get_executor(),
                                     handler,
@@ -972,7 +898,7 @@ TEST_CASE("SSL socket connect when already connecting returns error", "[io][net]
     test_tcp_socket_handler handler;
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
-    auto ssl_ctx = create_ssl_context(boost::asio::ssl::context::tlsv12_client);
+    auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     lux::net::ssl_tcp_socket socket{io_context.get_executor(),
                                     handler,
@@ -984,10 +910,10 @@ TEST_CASE("SSL socket connect when already connecting returns error", "[io][net]
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, 12345};
 
     const auto result1 = socket.connect(endpoint);
-    CHECK_FALSE(result1);
+    CHECK_FALSE(result1); // First connect should succeed
 
     const auto result2 = socket.connect(endpoint);
-    CHECK(result2);
+    CHECK(result2); // Second connect should fail
     CHECK(result2 == std::make_error_code(std::errc::operation_in_progress));
 }
 
@@ -998,8 +924,8 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
     const auto config = create_default_config();
     lux::time::timer_factory timer_factory{io_context.get_executor()};
 
-    auto client_ssl_ctx = create_ssl_client_context();
-    auto server_ssl_ctx = create_ssl_server_context();
+    auto client_ssl_ctx = lux::test::net::create_ssl_client_context();
+    auto server_ssl_ctx = lux::test::net::create_ssl_server_context();
 
     lux::net::ssl_tcp_socket client_socket{io_context.get_executor(),
                                            handler,
