@@ -135,4 +135,93 @@ protected:
     virtual ~tcp_socket_handler() = default;
 };
 
+struct tcp_inbound_socket_config
+{
+    /**
+     * Buffer configuration for the TCP socket.
+     * This structure holds various buffer-related settings for the TCP socket.
+     */
+    socket_buffer_config buffer{};
+};
+
+class tcp_inbound_socket
+{
+public:
+    virtual ~tcp_inbound_socket() = default;
+
+public:
+    /**
+     * Sets the handler for inbound socket events.
+     * @param handler The handler to set.
+     */
+    virtual void set_handler(tcp_inbound_socket_handler& handler) = 0;
+
+    /**
+     * Sends data to the connected endpoint.
+     * @param data The data to send, represented as a span of bytes.
+     */
+    virtual std::error_code send(const std::span<const std::byte>& data) = 0;
+
+    /**
+     * Starts reading data from the TCP socket.
+     * This function initiates an asynchronous read operation.
+     */
+    virtual void read() = 0;
+
+    /**
+    * Closes the TCP socket.
+    * @param send_pending If true, sends any pending data before closing.
+    * @return An error code indicating success or failure.
+    */
+    virtual std::error_code disconnect(bool send_pending) = 0;
+
+    /**
+     * Checks if the socket is currently connected.
+     * @return true if the socket is connected, false otherwise.
+     */
+    virtual bool is_connected() const = 0;
+
+    /**
+     * Gets the local endpoint of the socket.
+     * @return The local endpoint if connected, otherwise std::nullopt.
+     */
+    virtual std::optional<lux::net::base::endpoint> local_endpoint() const = 0;
+
+    /**
+     * Gets the remote endpoint of the socket.
+     * @return The remote endpoint if connected, otherwise std::nullopt.
+     */
+    virtual std::optional<lux::net::base::endpoint> remote_endpoint() const = 0;
+};
+
+using tcp_inbound_socket_ptr = std::unique_ptr<tcp_inbound_socket>;
+
+class tcp_inbound_socket_handler
+{
+public:
+    /**
+     * Called when a connection is disconnected from a specific endpoint.
+     * @param socket The inbound socket that was disconnected.
+     * @param ec The error code indicating the reason for disconnection.
+     */
+    virtual void on_disconnected(lux::net::base::tcp_inbound_socket& socket, const std::error_code& ec) = 0;
+
+    /**
+     * Called when data is received from a specific endpoint.
+     * @param socket The socket that received the data.
+     * @param data The received data, represented as a span of bytes.
+     */
+    virtual void on_data_read(lux::net::base::tcp_inbound_socket& socket, const std::span<const std::byte>& data) = 0;
+
+    /**
+     * Called when data is successfully sent to a specific endpoint.
+     * @param socket The socket that sent the data.
+     * @param data The data that was sent, represented as a span of bytes.
+     */
+    virtual void on_data_sent(lux::net::base::tcp_inbound_socket& socket, const std::span<const std::byte>& data) = 0;
+
+protected:
+    virtual ~tcp_inbound_socket_handler() = default;
+};
+
 } // namespace lux::net::base

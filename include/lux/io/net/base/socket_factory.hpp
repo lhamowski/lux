@@ -1,10 +1,9 @@
 #pragma once
 
 #include <lux/io/net/base/ssl.hpp>
+#include <lux/io/net/base/tcp_acceptor.hpp>
 #include <lux/io/net/base/tcp_socket.hpp>
 #include <lux/io/net/base/udp_socket.hpp>
-
-#include <memory>
 
 namespace lux::net::base {
 
@@ -44,6 +43,26 @@ public:
                                                                  lux::net::base::ssl_context& ssl_context,
                                                                  lux::net::base::ssl_mode ssl_mode,
                                                                  lux::net::base::tcp_socket_handler& handler) = 0;
+
+    /**
+     * Creates a TCP acceptor with the specified configuration and handler.
+     * @param config The configuration for the TCP acceptor.
+     * @param handler The handler that will manage the TCP acceptor events.
+     * @return A unique pointer to the created TCP acceptor.
+     */
+    virtual lux::net::base::tcp_acceptor_ptr create_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                                                 lux::net::base::tcp_acceptor_handler& handler) = 0;
+
+    /**
+     * Creates a SSL TCP acceptor with the specified configuration, SSL context, and handler.
+     * @param config The configuration for the SSL TCP acceptor.
+     * @param ssl_context The SSL context to use for the SSL TCP acceptor.
+     * @param handler The handler that will manage the SSL TCP acceptor events.
+     * @return A unique pointer to the created SSL TCP acceptor.
+     */
+    virtual lux::net::base::tcp_acceptor_ptr create_ssl_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                                                     lux::net::base::ssl_context& ssl_context,
+                                                                     lux::net::base::tcp_acceptor_handler& handler) = 0;
 };
 
 } // namespace lux::net::base

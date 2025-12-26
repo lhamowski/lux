@@ -2,6 +2,7 @@
 
 #include <lux/io/net/base/socket_factory.hpp>
 #include <lux/io/net/base/ssl.hpp>
+#include <lux/io/net/base/tcp_acceptor.hpp>
 #include <lux/io/net/base/tcp_socket.hpp>
 #include <lux/io/net/base/udp_socket.hpp>
 
@@ -28,6 +29,13 @@ public:
                                                          lux::net::base::ssl_context& ssl_context,
                                                          lux::net::base::ssl_mode ssl_mode,
                                                          lux::net::base::tcp_socket_handler& handler) override;
+
+    lux::net::base::tcp_acceptor_ptr create_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                                         lux::net::base::tcp_acceptor_handler& handler) override;
+
+    lux::net::base::tcp_acceptor_ptr create_ssl_tcp_acceptor(const lux::net::base::tcp_acceptor_config& config,
+                                                             lux::net::base::ssl_context& ssl_context,
+                                                             lux::net::base::tcp_acceptor_handler& handler) override;
 
 private:
     boost::asio::any_io_executor executor_;
