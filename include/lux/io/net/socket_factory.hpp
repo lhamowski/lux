@@ -1,6 +1,7 @@
 #pragma once
 
 #include <lux/io/net/base/socket_factory.hpp>
+#include <lux/io/net/base/ssl.hpp>
 #include <lux/io/net/base/tcp_socket.hpp>
 #include <lux/io/net/base/udp_socket.hpp>
 

@@ -22,6 +22,7 @@ class tcp_acceptor_handler;
 
 class tcp_socket;
 class tcp_socket_handler;
+struct tcp_socket_config;
 
 class udp_socket;
 class udp_socket_handler;

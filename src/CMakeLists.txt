@@ -53,14 +53,16 @@ if(LUX_ENABLE_IO)
 		# io/net files
 		${lux_include_files_dir}/io/net/base/address_v4.hpp
 		${lux_include_files_dir}/io/net/base/endpoint.hpp
+		${lux_include_files_dir}/io/net/base/socket_config.hpp
 		${lux_include_files_dir}/io/net/base/socket_factory.hpp
-		${lux_include_files_dir}/io/net/base/udp_socket.hpp
+		${lux_include_files_dir}/io/net/base/ssl.hpp
 		${lux_include_files_dir}/io/net/base/tcp_socket.hpp
+		${lux_include_files_dir}/io/net/base/udp_socket.hpp
 
 		${lux_source_files_dir}/io/net/asio_impl.cpp
 		${lux_source_files_dir}/io/net/utils.hpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
-        ${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
+		${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
 		${lux_include_files_dir}/io/net/udp_socket.hpp ${lux_source_files_dir}/io/net/udp_socket.cpp
 
 		# io/time files

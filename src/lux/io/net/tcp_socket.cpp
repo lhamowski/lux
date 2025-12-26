@@ -6,7 +6,6 @@
 #include <lux/io/time/retry_executor.hpp>
 
 #include <lux/support/assert.hpp>
-#include <lux/support/finally.hpp>
 #include <lux/support/move.hpp>
 #include <lux/support/overload.hpp>
 #include <lux/utils/memory_arena.hpp>
@@ -31,13 +30,6 @@
 #include <vector>
 
 namespace lux::net {
-
-template <typename T>
-concept socket_like = requires(T t) {
-    { t.stream() };
-    { t.close() };
-    { t.on_successful_connect() };
-};
 
 template <typename Derived>
 class base_tcp_socket : public std::enable_shared_from_this<base_tcp_socket<Derived>>
@@ -466,21 +458,13 @@ private:
             return;
         }
 
-        state_ = state::connected;
-
         if (reconnect_executor_)
         {
             // If we successfully connected, reset the reconnect executor
             reconnect_executor_->reset();
         }
 
-        if (handler_)
-        {
-            LUX_ASSERT(parent_, "TCP socket parent must not be null");
-            handler_->on_connected(*parent_);
-        }
-
-        derived().on_successful_connect();
+        derived().on_connection_established();
     }
 
     void on_read(const boost::system::error_code& ec, std::size_t size)
@@ -622,8 +606,16 @@ public:
     }
 
 public:
-    void on_successful_connect()
+    void on_connection_established()
     {
+        state_ = state::connected;
+
+        if (handler_)
+        {
+            LUX_ASSERT(parent_, "TCP socket parent must not be null");
+            handler_->on_connected(*parent_);
+        }
+
         read();
     }
 
@@ -723,7 +715,7 @@ public:
     }
 
 public:
-    void on_successful_connect()
+    void on_connection_established()
     {
         handshake();
     }
@@ -746,6 +738,18 @@ private:
             handle_disconnect(ec);
             return;
         }
+
+        // We want to mark the socket as connected only after the handshake is complete, even though the underlying TCP
+        // connection is already established. This ensures that any data sent or received is properly
+        // encrypted/decrypted.
+        state_ = state::connected;
+
+        if (handler_)
+        {
+            LUX_ASSERT(parent_, "TCP socket parent must not be null");
+            handler_->on_connected(*parent_);
+        }
+
         read();
     }
 

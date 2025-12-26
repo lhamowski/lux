@@ -1,25 +1,16 @@
 #pragma once
 
+#include <lux/fwd.hpp>
 #include <lux/io/net/base/endpoint.hpp>
+#include <lux/io/net/base/socket_config.hpp>
 #include <lux/io/time/base/retry_policy.hpp>
-
-#include <boost/asio/ssl/context.hpp>
 
 #include <memory>
 #include <optional>
 #include <span>
-#include <string_view>
 #include <system_error>
 
 namespace lux::net::base {
-
-enum class ssl_mode
-{
-    client,
-    server,
-};
-
-using ssl_context = boost::asio::ssl::context;
 
 struct tcp_socket_config
 {
@@ -48,24 +39,11 @@ struct tcp_socket_config
 
     } reconnect{};
 
-    struct buffer_config
-    {
-        /**
-         * Size of each allocated buffer chunk in bytes.
-         */
-        std::size_t initial_send_chunk_size{1024};
-
-        /**
-         * Number of buffer chunks to preallocate.
-         */
-        std::size_t initial_send_chunk_count{4};
-
-        /**
-         * Size of read buffer to preallocate for reading data.
-         */
-        std::size_t read_buffer_size{8 * 1024}; // 8 KB
-
-    } buffer{};
+    /**
+     * Buffer configuration for the TCP socket.
+     * This structure holds various buffer-related settings for the TCP socket.
+     */
+    lux::net::base::socket_buffer_config buffer{};
 };
 
 class tcp_socket

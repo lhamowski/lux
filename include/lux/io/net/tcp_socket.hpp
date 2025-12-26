@@ -1,10 +1,10 @@
 #pragma once
 
 #include <lux/fwd.hpp>
+#include <lux/io/net/base/ssl.hpp>
 #include <lux/io/net/base/tcp_socket.hpp>
 
 #include <boost/asio/any_io_executor.hpp>
-#include <boost/asio/ssl/context.hpp>
 
 namespace lux::net {
 
