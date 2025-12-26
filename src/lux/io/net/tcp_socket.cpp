@@ -35,15 +35,6 @@ template <typename Derived>
 class base_tcp_socket : public std::enable_shared_from_this<base_tcp_socket<Derived>>
 {
 public:
-    ~base_tcp_socket()
-    {
-        if (is_connected())
-        {
-            disconnect_immediately();
-        }
-    }
-
-public:
     enum class state
     {
         disconnected,
@@ -635,6 +626,7 @@ tcp_socket::~tcp_socket()
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
     impl_->detach_external_references();
+    disconnect(false);
 }
 
 std::error_code tcp_socket::connect(const lux::net::base::endpoint& endpoint)
@@ -787,6 +779,7 @@ ssl_tcp_socket::~ssl_tcp_socket()
 {
     LUX_ASSERT(impl_, "TCP socket implementation must not be null");
     impl_->detach_external_references();
+    disconnect(false);
 }
 
 std::error_code ssl_tcp_socket::connect(const lux::net::base::endpoint& endpoint)
