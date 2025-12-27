@@ -806,8 +806,7 @@ TEST_CASE("SSL socket construction succeeds", "[io][net][tcp][ssl]")
                                    handler,
                                    config,
                                    timer_factory,
-                                   ssl_ctx,
-                                   lux::net::base::ssl_mode::client));
+                                   ssl_ctx));
 
     CHECK_FALSE(socket->is_connected());
     CHECK_FALSE(socket->local_endpoint().has_value());
@@ -826,8 +825,7 @@ TEST_CASE("SSL socket connect to invalid endpoint fails", "[io][net][tcp][ssl]")
                                     handler,
                                     config,
                                     timer_factory,
-                                    ssl_ctx,
-                                    lux::net::base::ssl_mode::client};
+                                    ssl_ctx};
 
     bool disconnected_called = false;
     handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
@@ -857,8 +855,7 @@ TEST_CASE("SSL socket send data when disconnected returns error", "[io][net][tcp
                                     handler,
                                     config,
                                     timer_factory,
-                                    ssl_ctx,
-                                    lux::net::base::ssl_mode::client};
+                                    ssl_ctx};
 
     const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
 
@@ -882,8 +879,7 @@ TEST_CASE("SSL socket disconnect when disconnected returns success", "[io][net][
                                     handler,
                                     config,
                                     timer_factory,
-                                    ssl_ctx,
-                                    lux::net::base::ssl_mode::client};
+                                    ssl_ctx};
 
     const auto result1 = socket.disconnect(false);
     const auto result2 = socket.disconnect(true);
@@ -904,8 +900,7 @@ TEST_CASE("SSL socket connect when already connecting returns error", "[io][net]
                                     handler,
                                     config,
                                     timer_factory,
-                                    ssl_ctx,
-                                    lux::net::base::ssl_mode::client};
+                                    ssl_ctx};
 
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, 12345};
 
@@ -931,8 +926,7 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
                                            handler,
                                            config,
                                            timer_factory,
-                                           client_ssl_ctx,
-                                           lux::net::base::ssl_mode::client};
+                                           client_ssl_ctx};
 
     // Create SSL server
     boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};

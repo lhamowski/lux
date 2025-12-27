@@ -256,8 +256,7 @@ TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor]
                                            socket_handler,
                                            socket_config,
                                            timer_factory,
-                                           client_ssl_context,
-                                           lux::net::base::ssl_mode::client};
+                                           client_ssl_context};
 
     const auto ep = acceptor.local_endpoint();
     REQUIRE(ep.has_value());
@@ -286,8 +285,7 @@ TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor]
                                                   second_socket_handler,
                                                   socket_config,
                                                   timer_factory,
-                                                  client_ssl_context,
-                                                  lux::net::base::ssl_mode::client};
+                                                  client_ssl_context};
 
     const auto second_connect_error = second_client_socket.connect(*ep);
     CHECK_FALSE(second_connect_error);

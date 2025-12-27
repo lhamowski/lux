@@ -44,8 +44,7 @@ public:
                    lux::net::base::tcp_socket_handler& handler,
                    const lux::net::base::tcp_socket_config& config,
                    lux::time::base::timer_factory& timer_factory,
-                   lux::net::base::ssl_context& ssl_context,
-                   lux::net::base::ssl_mode ssl_mode);
+                   lux::net::base::ssl_context& ssl_context);
     ~ssl_tcp_socket();
 
     ssl_tcp_socket(const ssl_tcp_socket&) = delete;
