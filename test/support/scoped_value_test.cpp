@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("Scoped Value Guard basic functionality", "[scoped_value][support]")
+TEST_CASE("scoped_value: guard basic functionality", "[scoped_value][support]")
 {
     SECTION("Scoped value changes variable within scope and restores it after")
     {

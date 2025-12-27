@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-TEST_CASE("buffer_reader basic functionality", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: basic functionality", "[utils][buffer_reader]")
 {
     SECTION("Construction and basic properties")
     {
@@ -76,7 +76,7 @@ TEST_CASE("buffer_reader basic functionality", "[utils][buffer_reader]")
     }
 }
 
-TEST_CASE("buffer_reader arrays", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: arrays", "[utils][buffer_reader]")
 {
     SECTION("Reading std::array with >> operator")
     {
@@ -146,7 +146,7 @@ TEST_CASE("buffer_reader arrays", "[utils][buffer_reader]")
     }
 }
 
-TEST_CASE("buffer_reader skip functionality", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: skip functionality", "[utils][buffer_reader]")
 {
     SECTION("Skip advances position")
     {
@@ -203,7 +203,7 @@ TEST_CASE("buffer_reader skip functionality", "[utils][buffer_reader]")
     }
 }
 
-TEST_CASE("buffer_reader error handling", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: error handling", "[utils][buffer_reader]")
 {
     SECTION("Buffer underflow throws exception")
     {
@@ -239,7 +239,7 @@ TEST_CASE("buffer_reader error handling", "[utils][buffer_reader]")
     }
 }
 
-TEST_CASE("buffer_reader remaining_data", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: remaining_data", "[utils][buffer_reader]")
 {
     SECTION("remaining_data reflects current position")
     {
@@ -280,7 +280,7 @@ lux::buffer_writer& operator<<(lux::buffer_writer& writer, const test_point& p)
 
 } // namespace
 
-TEST_CASE("buffer_reader user-defined types", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: user-defined types", "[utils][buffer_reader]")
 {
     SECTION("Reading user-defined types")
     {
@@ -300,7 +300,7 @@ TEST_CASE("buffer_reader user-defined types", "[utils][buffer_reader]")
     }
 }
 
-TEST_CASE("buffer_reader round-trip compatibility", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: round-trip compatibility", "[utils][buffer_reader]")
 {
     SECTION("Write and read back various types")
     {

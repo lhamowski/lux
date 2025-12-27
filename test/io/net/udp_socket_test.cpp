@@ -66,7 +66,7 @@ public:
 
 } // namespace
 
-TEST_CASE("Construction succeeds with default config", "[io][net]")
+TEST_CASE("udp_socket: construction succeeds with default config", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -75,7 +75,7 @@ TEST_CASE("Construction succeeds with default config", "[io][net]")
     REQUIRE_NOTHROW(lux::net::udp_socket{io_context.get_executor(), handler, config});
 }
 
-TEST_CASE("Construction succeeds with custom config", "[io][net]")
+TEST_CASE("udp_socket: construction succeeds with custom config", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -86,7 +86,7 @@ TEST_CASE("Construction succeeds with custom config", "[io][net]")
     REQUIRE_NOTHROW(lux::net::udp_socket{io_context.get_executor(), handler, config});
 }
 
-TEST_CASE("Socket opens successfully", "[io][net]")
+TEST_CASE("udp_socket: socket opens successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -97,7 +97,7 @@ TEST_CASE("Socket opens successfully", "[io][net]")
     CHECK_FALSE(result);
 }
 
-TEST_CASE("Opening already opened socket returns success", "[io][net]")
+TEST_CASE("udp_socket: opening already opened socket returns success", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -111,7 +111,7 @@ TEST_CASE("Opening already opened socket returns success", "[io][net]")
     CHECK_FALSE(result2);
 }
 
-TEST_CASE("Socket closes gracefully with send pending data", "[io][net]")
+TEST_CASE("udp_socket: closes gracefully with send pending data", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -129,7 +129,7 @@ TEST_CASE("Socket closes gracefully with send pending data", "[io][net]")
     INFO(err_msg);
 }
 
-TEST_CASE("Socket closes immediately without send pending data", "[io][net]")
+TEST_CASE("udp_socket: closes immediately without send pending data", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -141,7 +141,7 @@ TEST_CASE("Socket closes immediately without send pending data", "[io][net]")
     CHECK_FALSE(result);
 }
 
-TEST_CASE("Closing already closed socket returns success", "[io][net]")
+TEST_CASE("udp_socket: closing already closed socket returns success", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -156,7 +156,7 @@ TEST_CASE("Closing already closed socket returns success", "[io][net]")
     CHECK_FALSE(result2);
 }
 
-TEST_CASE("Bind to localhost succeeds", "[io][net]")
+TEST_CASE("udp_socket: bind to localhost succeeds", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -171,7 +171,7 @@ TEST_CASE("Bind to localhost succeeds", "[io][net]")
     CHECK_FALSE(result);
 }
 
-TEST_CASE("Bind to any address", "[io][net]")
+TEST_CASE("udp_socket: bind to any address", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -186,7 +186,7 @@ TEST_CASE("Bind to any address", "[io][net]")
     CHECK_FALSE(result);
 }
 
-TEST_CASE("Send data to endpoint", "[io][net]")
+TEST_CASE("udp_socket: send data to endpoint", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -213,7 +213,7 @@ TEST_CASE("Send data to endpoint", "[io][net]")
     io_context.run_for(std::chrono::milliseconds(100));
 }
 
-TEST_CASE("Multiple sends are queued properly", "[io][net]")
+TEST_CASE("udp_socket: multiple sends are queued properly", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -246,7 +246,7 @@ TEST_CASE("Multiple sends are queued properly", "[io][net]")
     io_context.run_for(std::chrono::milliseconds(300));
 }
 
-TEST_CASE("Send error callback is called on network error", "[io][net]")
+TEST_CASE("udp_socket: send error callback is called on network error", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -273,7 +273,7 @@ TEST_CASE("Send error callback is called on network error", "[io][net]")
     CHECK(error_callback_called);
 }
 
-TEST_CASE("Complete lifecycle open bind send close", "[io][net]")
+TEST_CASE("udp_socket: complete lifecycle open bind send close", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -297,7 +297,7 @@ TEST_CASE("Complete lifecycle open bind send close", "[io][net]")
     CHECK_FALSE(close_result);
 }
 
-TEST_CASE("Receive data from external sender", "[io][net]")
+TEST_CASE("udp_socket: receive data from external sender", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;
@@ -345,7 +345,7 @@ TEST_CASE("Receive data from external sender", "[io][net]")
     CHECK_FALSE(socket.is_open());
 }
 
-TEST_CASE("Receive multiple packets from external sender", "[io][net]")
+TEST_CASE("udp_socket: receive multiple packets from external sender", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_udp_socket_handler handler;

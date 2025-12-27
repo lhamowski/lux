@@ -18,7 +18,7 @@
 #include <regex>
 #include <sstream>
 
-TEST_CASE("Logger basic functionality", "[logger]")
+TEST_CASE("logger: basic functionality", "[logger]")
 {
     SECTION("Logger can be created with spdlog logger")
     {

@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-TEST_CASE("buffer_writer basic functionality", "[utils][buffer_writer]")
+TEST_CASE("buffer_writer: basic functionality", "[utils][buffer_writer]")
 {
     SECTION("Construction and basic properties")
     {
@@ -73,7 +73,7 @@ TEST_CASE("buffer_writer basic functionality", "[utils][buffer_writer]")
     }
 }
 
-TEST_CASE("buffer_writer containers", "[utils][buffer_writer]")
+TEST_CASE("buffer_writer: containers", "[utils][buffer_writer]")
 {
     SECTION("Writing std::array")
     {
@@ -157,7 +157,7 @@ TEST_CASE("buffer_writer containers", "[utils][buffer_writer]")
     }
 }
 
-TEST_CASE("buffer_writer skip functionality", "[utils][buffer_writer]")
+TEST_CASE("buffer_writer: skip functionality", "[utils][buffer_writer]")
 {
     SECTION("Skip advances position")
     {

@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("Formatted exception", "[exception][support]")
+TEST_CASE("formatted_exception: formatting behavior", "[exception][support]")
 {
     SECTION("Formatted exception with arguments")
     {

@@ -6,7 +6,7 @@
 #include <utility>
 #include <type_traits>
 
-TEST_CASE("Lifetime guard basic functionality", "[lux::lifetime_guard][utils]")
+TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
 {
     SECTION("Token is valid when guard exists")
     {

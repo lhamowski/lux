@@ -45,7 +45,7 @@ retry_policy create_linear_backoff_policy()
 
 } // namespace
 
-TEST_CASE("Delayed retry executor - Basic functionality", "[io][time]")
+TEST_CASE("retry_executor: basic functionality", "[io][time]")
 {
     SECTION("Should create timer on construction")
     {
@@ -84,7 +84,7 @@ TEST_CASE("Delayed retry executor - Basic functionality", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Fixed delay strategy", "[io][time]")
+TEST_CASE("retry_executor: fixed delay strategy", "[io][time]")
 {
     SECTION("Should use same delay for all attempts")
     {
@@ -112,7 +112,7 @@ TEST_CASE("Delayed retry executor - Fixed delay strategy", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Linear backoff strategy", "[io][time]")
+TEST_CASE("retry_executor: linear backoff strategy", "[io][time]")
 {
     SECTION("Should increase delay linearly")
     {
@@ -163,7 +163,7 @@ TEST_CASE("Delayed retry executor - Linear backoff strategy", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Exponential backoff strategy", "[io][time]")
+TEST_CASE("retry_executor: exponential backoff strategy", "[io][time]")
 {
     SECTION("Should increase delay exponentially")
     {
@@ -215,7 +215,7 @@ TEST_CASE("Delayed retry executor - Exponential backoff strategy", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Max attempts behavior", "[io][time]")
+TEST_CASE("retry_executor: max attempts behavior", "[io][time]")
 {
     SECTION("Should call retry action up to max_attempts")
     {
@@ -278,7 +278,7 @@ TEST_CASE("Delayed retry executor - Max attempts behavior", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Reset functionality", "[io][time]")
+TEST_CASE("retry_executor: reset functionality", "[io][time]")
 {
     SECTION("Should reset attempts counter and cancel timer")
     {
@@ -307,7 +307,7 @@ TEST_CASE("Delayed retry executor - Reset functionality", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Cancel functionality", "[io][time]")
+TEST_CASE("retry_executor: cancel functionality", "[io][time]")
 {
     SECTION("Should cancel ongoing retries")
     {
@@ -332,7 +332,7 @@ TEST_CASE("Delayed retry executor - Cancel functionality", "[io][time]")
     }
 }
 
-TEST_CASE("Delayed retry executor - Edge cases", "[io][time]")
+TEST_CASE("retry_executor: edge cases", "[io][time]")
 {
     SECTION("Should handle zero base delay")
     {

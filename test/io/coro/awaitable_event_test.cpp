@@ -12,7 +12,7 @@
 
 using namespace std::chrono_literals;
 
-TEST_CASE("awaitable_event<T> basic behavior", "[io][coro]")
+TEST_CASE("awaitable_event: value type behavior", "[io][coro]")
 {
     boost::asio::io_context io;
 
@@ -96,7 +96,7 @@ TEST_CASE("awaitable_event<T> basic behavior", "[io][coro]")
     }
 }
 
-TEST_CASE("awaitable_event<void> behavior", "[io][coro]")
+TEST_CASE("awaitable_event: void behavior", "[io][coro]")
 {
     boost::asio::io_context io;
 

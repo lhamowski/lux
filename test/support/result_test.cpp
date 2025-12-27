@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("Result basic usage", "[result][support]")
+TEST_CASE("result: basic usage", "[result][support]")
 {
     SECTION("Successful result with value")
     {
@@ -45,7 +45,7 @@ TEST_CASE("Result basic usage", "[result][support]")
     }
 }
 
-TEST_CASE("Error message construction", "[result][support]")
+TEST_CASE("result: error message construction", "[result][support]")
 {
     SECTION("Error message from string")
     {

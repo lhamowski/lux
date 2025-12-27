@@ -4,7 +4,7 @@
 
 #include <vector>
 
-TEST_CASE("memory_arena", "[utils][memory_arena]")
+TEST_CASE("memory_arena: growable arena", "[utils][memory_arena]")
 {
     SECTION("growable_memory_arena basic functionality")
     {

@@ -4,7 +4,7 @@
 
 using namespace lux::net::base;
 
-TEST_CASE("Endpoint basic functionality", "[io][net]")
+TEST_CASE("endpoint: basic functionality", "[io][net]")
 {
     SECTION("Default constructor")
     {

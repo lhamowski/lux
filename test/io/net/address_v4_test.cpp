@@ -4,7 +4,7 @@
 
 using namespace lux::net::base;
 
-TEST_CASE("address_v4 basic functionality", "[io][net]")
+TEST_CASE("address_v4: basic functionality", "[io][net]")
 {
     SECTION("Construct from bytes")
     {

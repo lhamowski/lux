@@ -23,7 +23,7 @@ public:
 };
 } // namespace
 
-TEST_CASE("Move utility", "[move][support]")
+TEST_CASE("move: utility", "[move][support]")
 {
     SECTION("Move a non-const lvalue")
     {

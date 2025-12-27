@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("Strong typedef basic functionality", "[strong_typedef][support]")
+TEST_CASE("strong_typedef: basic functionality", "[strong_typedef][support]")
 {
     LUX_STRONG_TYPEDEF(my_int, int);
 

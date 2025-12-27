@@ -70,7 +70,7 @@ lux::net::base::tcp_inbound_socket_config create_default_config()
 
 } // namespace
 
-TEST_CASE("Construction succeeds with accepted socket", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: construction succeeds with accepted socket", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -110,7 +110,7 @@ TEST_CASE("Construction succeeds with accepted socket", "[io][net][tcp]")
     acceptor.close();
 }
 
-TEST_CASE("Disconnect when connected returns success", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: disconnect when connected returns success", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -154,7 +154,7 @@ TEST_CASE("Disconnect when connected returns success", "[io][net][tcp]")
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket send data when disconnected returns error", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: send data when disconnected returns error", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -198,7 +198,7 @@ TEST_CASE("Inbound socket send data when disconnected returns error", "[io][net]
     acceptor.close();
 }
 
-TEST_CASE("Send and receive data with client", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: send and receive data with client", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -292,7 +292,7 @@ TEST_CASE("Send and receive data with client", "[io][net][tcp]")
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket multiple sends are queued properly", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: multiple sends are queued properly", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -351,7 +351,7 @@ TEST_CASE("Inbound socket multiple sends are queued properly", "[io][net][tcp]")
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket disconnect gracefully sends pending data", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: disconnect gracefully sends pending data", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -406,7 +406,7 @@ TEST_CASE("Inbound socket disconnect gracefully sends pending data", "[io][net][
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket disconnect immediately doesn't send pending data", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: disconnect immediately doesn't send pending data", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -461,7 +461,7 @@ TEST_CASE("Inbound socket disconnect immediately doesn't send pending data", "[i
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket remote disconnect triggers on_disconnected callback", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: remote disconnect triggers on_disconnected callback", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -512,7 +512,7 @@ TEST_CASE("Inbound socket remote disconnect triggers on_disconnected callback", 
     acceptor.close();
 }
 
-TEST_CASE("Inbound socket complete lifecycle send receive disconnect", "[io][net][tcp]")
+TEST_CASE("tcp_inbound_socket: complete lifecycle send receive disconnect", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -619,7 +619,7 @@ TEST_CASE("Inbound socket complete lifecycle send receive disconnect", "[io][net
     acceptor.close();
 }
 
-TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
+TEST_CASE("ssl_tcp_inbound_socket: construction succeeds", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -696,7 +696,7 @@ TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
     acceptor.close();
 }
 
-TEST_CASE("SSL inbound socket send returns error when disconnected", "[io][net][tcp][ssl]")
+TEST_CASE("ssl_tcp_inbound_socket: send returns error when disconnected", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;

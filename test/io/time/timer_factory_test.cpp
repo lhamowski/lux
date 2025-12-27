@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("Timer factory creates interval timer", "[io][time]")
+TEST_CASE("timer_factory: creates interval timer", "[io][time]")
 {
     boost::asio::io_context io_context;
 
