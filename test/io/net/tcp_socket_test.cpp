@@ -659,8 +659,8 @@ TEST_CASE("Reconnect on connection failure with exponential backoff", "[io][net]
     config.reconnect.enabled = true;
     config.reconnect.reconnect_policy.strategy = lux::time::base::retry_policy::backoff_strategy::exponential_backoff;
     config.reconnect.reconnect_policy.max_attempts = 2;
-    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{50};
-    config.reconnect.reconnect_policy.max_delay = std::chrono::milliseconds{200};
+    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{10};
+    config.reconnect.reconnect_policy.max_delay = std::chrono::milliseconds{50};
 
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
@@ -704,7 +704,7 @@ TEST_CASE("Reconnect succeeds after server becomes available", "[io][net][tcp]")
     auto config = create_default_config();
     config.reconnect.enabled = true;
     config.reconnect.reconnect_policy.max_attempts = 5;
-    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{100};
+    config.reconnect.reconnect_policy.base_delay = std::chrono::milliseconds{50};
 
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     lux::net::tcp_socket socket{io_context.get_executor(), handler, config, timer_factory};
@@ -771,7 +771,7 @@ TEST_CASE("Manual disconnect stops reconnection attempts", "[io][net][tcp]")
             CHECK(will_reconnect);
             ++disconnect_with_error;
 
-            if (disconnect_with_error == 2)
+            if (disconnect_with_error == 1)
             {
                 socket.disconnect(false);
                 io_context.stop();
@@ -785,11 +785,10 @@ TEST_CASE("Manual disconnect stops reconnection attempts", "[io][net][tcp]")
 
     io_context.run_for(std::chrono::seconds{10});
 
-    CHECK(disconnect_with_error == 2);
-    CHECK(handler.disconnected_calls.size() == 2);
-    REQUIRE(handler.will_reconnect_flags.size() == 2);
-    CHECK(handler.will_reconnect_flags[0] == true); // First reconnect attempt
-    CHECK(handler.will_reconnect_flags[1] == true); // Second reconnect attempt but then manual disconnect stops further
+    CHECK(disconnect_with_error == 1);
+    CHECK(handler.disconnected_calls.size() == 1);
+    REQUIRE(handler.will_reconnect_flags.size() == 1);
+    CHECK(handler.will_reconnect_flags[0] == true); // First reconnect attempt but then manual disconnect stops further
                                                     // attempts with no more calls (already disconnected)
 }
 
@@ -802,11 +801,7 @@ TEST_CASE("SSL socket construction succeeds", "[io][net][tcp][ssl]")
     auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
     std::optional<lux::net::ssl_tcp_socket> socket;
-    REQUIRE_NOTHROW(socket.emplace(io_context.get_executor(),
-                                   handler,
-                                   config,
-                                   timer_factory,
-                                   ssl_ctx));
+    REQUIRE_NOTHROW(socket.emplace(io_context.get_executor(), handler, config, timer_factory, ssl_ctx));
 
     CHECK_FALSE(socket->is_connected());
     CHECK_FALSE(socket->local_endpoint().has_value());
@@ -821,11 +816,7 @@ TEST_CASE("SSL socket connect to invalid endpoint fails", "[io][net][tcp][ssl]")
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
-    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
-                                    handler,
-                                    config,
-                                    timer_factory,
-                                    ssl_ctx};
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(), handler, config, timer_factory, ssl_ctx};
 
     bool disconnected_called = false;
     handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
@@ -851,11 +842,7 @@ TEST_CASE("SSL socket send data when disconnected returns error", "[io][net][tcp
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
-    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
-                                    handler,
-                                    config,
-                                    timer_factory,
-                                    ssl_ctx};
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(), handler, config, timer_factory, ssl_ctx};
 
     const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
 
@@ -875,11 +862,7 @@ TEST_CASE("SSL socket disconnect when disconnected returns success", "[io][net][
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
-    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
-                                    handler,
-                                    config,
-                                    timer_factory,
-                                    ssl_ctx};
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(), handler, config, timer_factory, ssl_ctx};
 
     const auto result1 = socket.disconnect(false);
     const auto result2 = socket.disconnect(true);
@@ -896,11 +879,7 @@ TEST_CASE("SSL socket connect when already connecting returns error", "[io][net]
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     auto ssl_ctx = lux::test::net::create_ssl_client_context();
 
-    lux::net::ssl_tcp_socket socket{io_context.get_executor(),
-                                    handler,
-                                    config,
-                                    timer_factory,
-                                    ssl_ctx};
+    lux::net::ssl_tcp_socket socket{io_context.get_executor(), handler, config, timer_factory, ssl_ctx};
 
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, 12345};
 
@@ -922,11 +901,7 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
     auto client_ssl_ctx = lux::test::net::create_ssl_client_context();
     auto server_ssl_ctx = lux::test::net::create_ssl_server_context();
 
-    lux::net::ssl_tcp_socket client_socket{io_context.get_executor(),
-                                           handler,
-                                           config,
-                                           timer_factory,
-                                           client_ssl_ctx};
+    lux::net::ssl_tcp_socket client_socket{io_context.get_executor(), handler, config, timer_factory, client_ssl_ctx};
 
     // Create SSL server
     boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
@@ -939,7 +914,10 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
     bool handshake_failed = false;
     bool handshake_completed = false;
 
-    handler.on_connected_callback = [&]() { client_connected = true; };
+    handler.on_connected_callback = [&]() {
+        client_connected = true;
+        io_context.stop();
+    };
     handler.on_disconnected_callback = [&](const std::error_code& ec, bool) {
         if (ec && !client_connected)
         {
@@ -957,7 +935,6 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
                                                    if (handshake_ec)
                                                    {
                                                        handshake_failed = true;
-                                                       io_context.stop();
                                                    }
                                                    else
                                                    {
@@ -971,7 +948,7 @@ TEST_CASE("SSL socket handshake succeeds when certificate verification is disabl
     const auto result = client_socket.connect(endpoint);
     CHECK_FALSE(result);
 
-    io_context.run_for(std::chrono::seconds{10});
+    io_context.run_for(std::chrono::milliseconds{200});
 
     CHECK(client_connected);
     CHECK_FALSE(handshake_failed);

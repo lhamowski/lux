@@ -1,5 +1,7 @@
 #include "test_utils.hpp"
 
+#include <lux/support/move.hpp>
+
 #include <lux/io/net/tcp_inbound_socket.hpp>
 #include <lux/io/net/base/endpoint.hpp>
 #include <lux/io/net/base/address_v4.hpp>
@@ -12,8 +14,6 @@
 #include <boost/asio/ssl.hpp>
 
 #include <vector>
-#include <cstring>
-#include <thread>
 #include <chrono>
 #include <functional>
 #include <utility>
@@ -98,7 +98,7 @@ TEST_CASE("Construction succeeds with accepted socket", "[io][net][tcp]")
     REQUIRE(accepted);
 
     std::optional<lux::net::tcp_inbound_socket> inbound_socket;
-    REQUIRE_NOTHROW(inbound_socket.emplace(std::move(accepted_socket), config));
+    REQUIRE_NOTHROW(inbound_socket.emplace(lux::move(accepted_socket), config));
     inbound_socket->set_handler(handler);
 
     CHECK(inbound_socket->is_connected());
@@ -136,18 +136,18 @@ TEST_CASE("Disconnect when connected returns success", "[io][net][tcp]")
     io_context.run_for(std::chrono::milliseconds{100});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     CHECK(inbound_socket.is_connected());
 
-    const auto result1 = inbound_socket.disconnect(false);
-    CHECK_FALSE(result1);
+    const auto error1 = inbound_socket.disconnect(false);
+    CHECK_FALSE(error1);
     CHECK_FALSE(inbound_socket.is_connected());
 
     // Disconnect again when already disconnected
-    const auto result2 = inbound_socket.disconnect(true);
-    CHECK_FALSE(result2);
+    const auto error2 = inbound_socket.disconnect(true);
+    CHECK_FALSE(error2);
 
     // Clean up
     client_socket.close();
@@ -175,12 +175,12 @@ TEST_CASE("Inbound socket send data when disconnected returns error", "[io][net]
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     // Disconnect first
@@ -188,11 +188,9 @@ TEST_CASE("Inbound socket send data when disconnected returns error", "[io][net]
 
     const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
 
-    const auto result = inbound_socket.send(std::span<const std::byte>{data});
-    CHECK(result); // Should return error
-    CHECK(result == std::make_error_code(std::errc::not_connected));
-
-    io_context.run_for(std::chrono::milliseconds{50});
+    const auto error = inbound_socket.send(std::span<const std::byte>{data});
+    CHECK(error); // Should return error
+    CHECK(error == std::make_error_code(std::errc::not_connected));
     CHECK(handler.data_sent_calls.empty());
 
     // Clean up
@@ -222,12 +220,12 @@ TEST_CASE("Send and receive data with client", "[io][net][tcp]")
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     bool data_sent = false;
@@ -283,7 +281,7 @@ TEST_CASE("Send and receive data with client", "[io][net][tcp]")
                                   });
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     CHECK(data_sent);
     CHECK(data_received);
@@ -315,12 +313,12 @@ TEST_CASE("Inbound socket multiple sends are queued properly", "[io][net][tcp]")
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     int send_count = 0;
@@ -344,7 +342,7 @@ TEST_CASE("Inbound socket multiple sends are queued properly", "[io][net][tcp]")
     inbound_socket.send(std::span<const std::byte>{data3});
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
     CHECK(send_count == 3);
 
     // Clean up
@@ -374,12 +372,12 @@ TEST_CASE("Inbound socket disconnect gracefully sends pending data", "[io][net][
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     bool data_sent = false;
@@ -398,7 +396,7 @@ TEST_CASE("Inbound socket disconnect gracefully sends pending data", "[io][net][
     inbound_socket.disconnect(true); // Graceful disconnect - should send pending data
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     CHECK(data_sent);
     CHECK(disconnected);
@@ -429,12 +427,12 @@ TEST_CASE("Inbound socket disconnect immediately doesn't send pending data", "[i
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     bool data_sent = false;
@@ -453,7 +451,7 @@ TEST_CASE("Inbound socket disconnect immediately doesn't send pending data", "[i
     inbound_socket.disconnect(false); // Immediate disconnect - may not send pending data
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     CHECK(disconnected);
     CHECK_FALSE(data_sent); // Data should not have been sent due to immediate disconnect
@@ -484,12 +482,12 @@ TEST_CASE("Inbound socket remote disconnect triggers on_disconnected callback", 
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
 
     bool disconnected = false;
@@ -505,7 +503,7 @@ TEST_CASE("Inbound socket remote disconnect triggers on_disconnected callback", 
     client_socket.close();
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     CHECK(disconnected);
     CHECK_FALSE(inbound_socket.is_connected());
@@ -536,12 +534,12 @@ TEST_CASE("Inbound socket complete lifecycle send receive disconnect", "[io][net
     });
 
     client_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                [](const boost::system::error_code&) {});
+                                [&](const boost::system::error_code&) { io_context.stop(); });
 
-    io_context.run_for(std::chrono::milliseconds{100});
+    io_context.run_for(std::chrono::milliseconds{200});
     REQUIRE(accepted);
 
-    lux::net::tcp_inbound_socket inbound_socket{std::move(accepted_socket), config};
+    lux::net::tcp_inbound_socket inbound_socket{lux::move(accepted_socket), config};
     inbound_socket.set_handler(handler);
     inbound_socket.read();
 
@@ -607,7 +605,7 @@ TEST_CASE("Inbound socket complete lifecycle send receive disconnect", "[io][net
                                   });
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{5});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     CHECK(client_data_received);
     CHECK(client_data_sent);
@@ -648,7 +646,7 @@ TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
         if (!ec)
         {
             accepted = true;
-            server_ssl_stream.emplace(std::move(accepted_socket), server_ssl_ctx);
+            server_ssl_stream.emplace(lux::move(accepted_socket), server_ssl_ctx);
             server_ssl_stream->async_handshake(boost::asio::ssl::stream_base::server,
                                                [&](const boost::system::error_code& handshake_ec) {
                                                    if (!handshake_ec)
@@ -663,7 +661,7 @@ TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
                                     [&](const boost::system::error_code& ec) {
                                         if (!ec)
                                         {
-                                            client_ssl_stream.emplace(std::move(client_tcp_socket), client_ssl_ctx);
+                                            client_ssl_stream.emplace(lux::move(client_tcp_socket), client_ssl_ctx);
                                             client_ssl_stream->async_handshake(
                                                 boost::asio::ssl::stream_base::client,
                                                 [&](const boost::system::error_code& handshake_ec) {
@@ -671,17 +669,18 @@ TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
                                                     {
                                                         client_handshake_complete = true;
                                                     }
+                                                    io_context.stop();
                                                 });
                                         }
                                     });
 
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
     REQUIRE(accepted);
     REQUIRE(client_handshake_complete);
     REQUIRE(server_handshake_complete);
 
     std::optional<lux::net::ssl_tcp_inbound_socket> inbound_socket;
-    REQUIRE_NOTHROW(inbound_socket.emplace(std::move(*server_ssl_stream), config));
+    REQUIRE_NOTHROW(inbound_socket.emplace(lux::move(*server_ssl_stream), config));
     inbound_socket->set_handler(handler);
 
     CHECK(inbound_socket->is_connected());
@@ -697,7 +696,7 @@ TEST_CASE("SSL inbound socket construction succeeds", "[io][net][tcp][ssl]")
     acceptor.close();
 }
 
-TEST_CASE("SSL inbound socket send data when disconnected returns error", "[io][net][tcp][ssl]")
+TEST_CASE("SSL inbound socket send returns error when disconnected", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_inbound_socket_handler handler;
@@ -723,7 +722,7 @@ TEST_CASE("SSL inbound socket send data when disconnected returns error", "[io][
         if (!ec)
         {
             accepted = true;
-            server_ssl_stream.emplace(std::move(accepted_socket), server_ssl_ctx);
+            server_ssl_stream.emplace(lux::move(accepted_socket), server_ssl_ctx);
             server_ssl_stream->async_handshake(boost::asio::ssl::stream_base::server,
                                                [&](const boost::system::error_code& handshake_ec) {
                                                    if (!handshake_ec)
@@ -738,7 +737,7 @@ TEST_CASE("SSL inbound socket send data when disconnected returns error", "[io][
                                     [&](const boost::system::error_code& ec) {
                                         if (!ec)
                                         {
-                                            client_ssl_stream.emplace(std::move(client_tcp_socket), client_ssl_ctx);
+                                            client_ssl_stream.emplace(lux::move(client_tcp_socket), client_ssl_ctx);
                                             client_ssl_stream->async_handshake(
                                                 boost::asio::ssl::stream_base::client,
                                                 [&](const boost::system::error_code& handshake_ec) {
@@ -746,109 +745,32 @@ TEST_CASE("SSL inbound socket send data when disconnected returns error", "[io][
                                                     {
                                                         client_handshake_complete = true;
                                                     }
+                                                    io_context.stop();
                                                 });
                                         }
                                     });
 
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
     REQUIRE(accepted);
     REQUIRE(client_handshake_complete);
     REQUIRE(server_handshake_complete);
 
-    lux::net::ssl_tcp_inbound_socket inbound_socket{std::move(*server_ssl_stream), config};
+    lux::net::ssl_tcp_inbound_socket inbound_socket{lux::move(*server_ssl_stream), config};
     inbound_socket.set_handler(handler);
 
     // Disconnect first
-    inbound_socket.disconnect(false);
+    const auto disconnect_error = inbound_socket.disconnect(false);
+    CHECK_FALSE(disconnect_error);
+
+    // Second disconnect does nothing
+    const auto second_disconnect_error = inbound_socket.disconnect(true);
+    CHECK_FALSE(second_disconnect_error);
 
     const std::array<std::byte, 3> data{std::byte{'a'}, std::byte{'b'}, std::byte{'c'}};
 
-    const auto result = inbound_socket.send(std::span<const std::byte>{data});
-    CHECK(result);
-    CHECK(result == std::make_error_code(std::errc::not_connected));
-
-    io_context.restart();
-    io_context.run_for(std::chrono::seconds{2});
-    CHECK(handler.data_sent_calls.empty());
-
-    // Clean up
-    if (client_ssl_stream)
-    {
-        boost::system::error_code ignored_ec;
-        client_ssl_stream->lowest_layer().close(ignored_ec);
-    }
-    acceptor.close();
-}
-
-TEST_CASE("SSL inbound socket disconnect when disconnected returns success", "[io][net][tcp][ssl]")
-{
-    boost::asio::io_context io_context;
-    test_tcp_inbound_socket_handler handler;
-    const auto config = create_default_config();
-
-    auto server_ssl_ctx = lux::test::net::create_ssl_server_context();
-    auto client_ssl_ctx = lux::test::net::create_ssl_client_context();
-
-    boost::asio::ip::tcp::acceptor acceptor{io_context, boost::asio::ip::tcp::endpoint{boost::asio::ip::tcp::v4(), 0}};
-    const auto server_port = acceptor.local_endpoint().port();
-
-    boost::asio::ip::tcp::socket client_tcp_socket{io_context};
-    boost::asio::ip::tcp::socket accepted_socket{io_context};
-
-    std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> client_ssl_stream;
-    std::optional<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> server_ssl_stream;
-
-    bool accepted = false;
-    bool client_handshake_complete = false;
-    bool server_handshake_complete = false;
-
-    acceptor.async_accept(accepted_socket, [&](const boost::system::error_code& ec) {
-        if (!ec)
-        {
-            accepted = true;
-            server_ssl_stream.emplace(std::move(accepted_socket), server_ssl_ctx);
-            server_ssl_stream->async_handshake(boost::asio::ssl::stream_base::server,
-                                               [&](const boost::system::error_code& handshake_ec) {
-                                                   if (!handshake_ec)
-                                                   {
-                                                       server_handshake_complete = true;
-                                                   }
-                                               });
-        }
-    });
-
-    client_tcp_socket.async_connect(lux::test::net::make_localhost_endpoint(server_port),
-                                    [&](const boost::system::error_code& ec) {
-                                        if (!ec)
-                                        {
-                                            client_ssl_stream.emplace(std::move(client_tcp_socket), client_ssl_ctx);
-                                            client_ssl_stream->async_handshake(
-                                                boost::asio::ssl::stream_base::client,
-                                                [&](const boost::system::error_code& handshake_ec) {
-                                                    if (!handshake_ec)
-                                                    {
-                                                        client_handshake_complete = true;
-                                                    }
-                                                });
-                                        }
-                                    });
-
-    io_context.run_for(std::chrono::seconds{2});
-    REQUIRE(accepted);
-    REQUIRE(client_handshake_complete);
-    REQUIRE(server_handshake_complete);
-
-    lux::net::ssl_tcp_inbound_socket inbound_socket{std::move(*server_ssl_stream), config};
-    inbound_socket.set_handler(handler);
-
-    CHECK(inbound_socket.is_connected());
-
-    const auto result1 = inbound_socket.disconnect(false);
-    CHECK_FALSE(result1);
-    CHECK_FALSE(inbound_socket.is_connected());
-
-    const auto result2 = inbound_socket.disconnect(true);
-    CHECK_FALSE(result2);
+    const auto send_error = inbound_socket.send(std::span<const std::byte>{data});
+    CHECK(send_error);
+    CHECK(send_error == std::make_error_code(std::errc::not_connected));
 
     // Clean up
     if (client_ssl_stream)

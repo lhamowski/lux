@@ -137,7 +137,7 @@ TEST_CASE("Listen with specific endpoint succeeds", "[io][net][tcp][acceptor]")
     acceptor.close();
 }
 
-TEST_CASE("Accept single connection", "[io][net][tcp][acceptor]")
+TEST_CASE("Acceptor accepts single connection", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
 
@@ -161,7 +161,7 @@ TEST_CASE("Accept single connection", "[io][net][tcp][acceptor]")
     const auto connect_error = client_socket.connect(*ep);
     CHECK_FALSE(connect_error);
 
-    io_context.run_for(std::chrono::seconds{2});
+    io_context.run_for(std::chrono::milliseconds{100});
 
     REQUIRE(!acceptor_handler.accepted_sockets.empty());
 
@@ -184,7 +184,7 @@ TEST_CASE("Accept single connection", "[io][net][tcp][acceptor]")
     CHECK_FALSE(second_connect_error);
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{3});
+    io_context.run_for(std::chrono::milliseconds{3000});
     CHECK(second_socket_handler.connected_calls == 0);
     CHECK(second_socket_handler.disconnected_calls == 1);
 }
@@ -216,14 +216,17 @@ TEST_CASE("SSL tcp_acceptor listen succeeds", "[io][net][tcp][acceptor][ssl]")
     acceptor.close();
 }
 
-TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor][ssl]")
+TEST_CASE("SSL acceptor accepts single connection", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
 
     test_tcp_acceptor_handler acceptor_handler;
     const auto acceptor_config = create_default_acceptor_config();
     auto server_ssl_context = lux::test::net::create_ssl_server_context();
-    lux::net::ssl_tcp_acceptor acceptor{io_context.get_executor(), acceptor_handler, acceptor_config, server_ssl_context};
+    lux::net::ssl_tcp_acceptor acceptor{io_context.get_executor(),
+                                        acceptor_handler,
+                                        acceptor_config,
+                                        server_ssl_context};
 
     const lux::net::base::endpoint bind_endpoint{lux::net::base::localhost, 0};
     const auto listen_error = acceptor.listen(bind_endpoint);
@@ -235,19 +238,10 @@ TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor]
     test_tcp_socket_handler socket_handler;
     socket_handler.on_connected_callback = [&]() {
         client_connected = true;
-        if (connection_accepted)
-        {
-            io_context.stop();
-        }
+        io_context.stop();
     };
 
-    acceptor_handler.on_accepted_callback = [&]() {
-        connection_accepted = true;
-        if (client_connected)
-        {
-            io_context.stop();
-        }
-    };
+    acceptor_handler.on_accepted_callback = [&]() { connection_accepted = true; };
 
     lux::time::timer_factory timer_factory{io_context.get_executor()};
     const auto socket_config = create_default_socket_config();
@@ -264,7 +258,7 @@ TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor]
     const auto connect_error = client_socket.connect(*ep);
     CHECK_FALSE(connect_error);
 
-    io_context.run_for(std::chrono::seconds{5});
+    io_context.run_for(std::chrono::milliseconds{500});
 
     CHECK(client_connected);
     CHECK(connection_accepted);
@@ -291,7 +285,7 @@ TEST_CASE("SSL tcp_acceptor accept single connection", "[io][net][tcp][acceptor]
     CHECK_FALSE(second_connect_error);
 
     io_context.restart();
-    io_context.run_for(std::chrono::seconds{3});
+    io_context.run_for(std::chrono::milliseconds{3000});
 
     CHECK(second_socket_handler.connected_calls == 0);
     CHECK(second_socket_handler.disconnected_calls == 1);

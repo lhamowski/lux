@@ -36,7 +36,7 @@ inline boost::asio::ssl::context create_ssl_server_context()
     RSA* rsa = RSA_new();
     BIGNUM* e = BN_new();
     BN_set_word(e, RSA_F4);
-    REQUIRE(RSA_generate_key_ex(rsa, 2048, e, nullptr));
+    REQUIRE(RSA_generate_key_ex(rsa, 512, e, nullptr)); // 512 bits for testing purposes only
     BN_free(e);
 
     REQUIRE(EVP_PKEY_assign_RSA(pkey, rsa));
