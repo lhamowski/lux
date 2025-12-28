@@ -92,9 +92,9 @@ lux/
 ### CI (.github/workflows/ci.yml)
 
 **Jobs**:
-1. `build-and-test-linux-gcc-release`: Ubuntu 24.04, GCC 14, Boost 1.87 (Docker: `lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest`)
+1. `build-and-test-linux-gcc-release`: Ubuntu 24.04, GCC 14, Boost 1.87.0 (Docker: `lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest`)
 2. `build-and-test-linux-gcc-sanitizers`: Matrix of asan/tsan/ubsan (GCC 14, master only)
-3. `build-and-test-windows-msvc-release`: Windows Server 2022, MSVC 2022, Boost 1.87 (via GHA)
+3. `build-and-test-windows-msvc-release`: Windows Server 2022, MSVC 2022, Boost 1.87.0 (via GHA)
 4. `build-and-test-linux-clang-coverage`: Ubuntu 24.04, Clang 19, uploads to Codecov
 
 **Reproduce CI**: Use same preset (e.g., `linux-gcc-release`), pass `-DCMAKE_PREFIX_PATH=<boost>`, run `ctest -VV --output-on-failure`.
