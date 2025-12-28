@@ -4,9 +4,9 @@
 
 #include <vector>
 
-TEST_CASE("memory_arena: growable arena", "[utils][memory_arena]")
+TEST_CASE("memory_arena: allocates and reuses memory blocks", "[utils][memory_arena]")
 {
-    SECTION("growable_memory_arena basic functionality")
+    SECTION("Growable arena allocates and reuses memory")
     {
         auto arena = lux::make_growable_memory_arena(3, 100); // initial size 3, each item reserves 100 bytes
 

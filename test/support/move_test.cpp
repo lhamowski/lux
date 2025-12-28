@@ -23,7 +23,7 @@ public:
 };
 } // namespace
 
-TEST_CASE("move: utility", "[move][support]")
+TEST_CASE("move: casts lvalues to rvalue references", "[move][support]")
 {
     SECTION("Move a non-const lvalue")
     {

@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("enum: to_underlying conversion", "[enum][support]")
+TEST_CASE("enum: converts enum to underlying type", "[enum][support]")
 {
     enum class color : int
     {

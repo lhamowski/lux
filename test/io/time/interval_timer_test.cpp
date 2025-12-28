@@ -5,7 +5,7 @@
 #include <chrono>
 #include <cstddef>
 
-TEST_CASE("interval_timer: scheduling and cancellation", "[io][time]")
+TEST_CASE("interval_timer: schedules and cancels timed callbacks", "[io][time]")
 {
     SECTION("Interval timer should schedule once correctly")
     {

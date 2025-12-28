@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-TEST_CASE("buffer_reader: basic functionality", "[utils][buffer_reader]")
+TEST_CASE("buffer_reader: constructs and tracks position in buffer", "[utils][buffer_reader]")
 {
     SECTION("Construction and basic properties")
     {

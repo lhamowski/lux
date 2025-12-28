@@ -18,7 +18,7 @@
 #include <regex>
 #include <sstream>
 
-TEST_CASE("logger: basic functionality", "[logger]")
+TEST_CASE("logger: logs messages at various levels with formatting", "[logger]")
 {
     SECTION("Logger can be created with spdlog logger")
     {
@@ -181,7 +181,7 @@ TEST_CASE("logger: basic functionality", "[logger]")
     }
 }
 
-TEST_CASE("Logger manager basic functionality", "[logger_manager]")
+TEST_CASE("logger_manager: creates loggers with various sink configurations", "[logger_manager]")
 {
     SECTION("Logger manager can be created with console config")
     {
@@ -277,7 +277,7 @@ TEST_CASE("Logger manager basic functionality", "[logger_manager]")
     }
 }
 
-TEST_CASE("Log configuration structures", "[log_config]")
+TEST_CASE("log_config: provides default values for all configuration types", "[log_config]")
 {
     SECTION("Console log config has reasonable defaults")
     {
@@ -318,7 +318,7 @@ TEST_CASE("Log configuration structures", "[log_config]")
     }
 }
 
-TEST_CASE("Integration test - end to end logging", "[logger][integration]")
+TEST_CASE("logger: logs messages end-to-end with console and file sinks", "[logger][integration]")
 {
     SECTION("Complete logging workflow")
     {

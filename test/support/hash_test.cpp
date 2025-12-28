@@ -5,7 +5,7 @@
 #include <functional>
 #include <unordered_map>
 
-TEST_CASE("string_hash: hash function", "[hash][support]")
+TEST_CASE("string_hash: hashes string types uniformly", "[hash][support]")
 {
     lux::string_hash hasher;
 

@@ -45,7 +45,7 @@ retry_policy create_linear_backoff_policy()
 
 } // namespace
 
-TEST_CASE("retry_executor: basic functionality", "[io][time]")
+TEST_CASE("retry_executor: creates timer and schedules retries with delays", "[io][time]")
 {
     SECTION("Should create timer on construction")
     {
@@ -84,7 +84,7 @@ TEST_CASE("retry_executor: basic functionality", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: fixed delay strategy", "[io][time]")
+TEST_CASE("retry_executor: applies fixed delay between retry attempts", "[io][time]")
 {
     SECTION("Should use same delay for all attempts")
     {
@@ -112,7 +112,7 @@ TEST_CASE("retry_executor: fixed delay strategy", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: linear backoff strategy", "[io][time]")
+TEST_CASE("retry_executor: applies linear backoff between retry attempts", "[io][time]")
 {
     SECTION("Should increase delay linearly")
     {
@@ -163,7 +163,7 @@ TEST_CASE("retry_executor: linear backoff strategy", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: exponential backoff strategy", "[io][time]")
+TEST_CASE("retry_executor: applies exponential backoff between retry attempts", "[io][time]")
 {
     SECTION("Should increase delay exponentially")
     {
@@ -215,7 +215,7 @@ TEST_CASE("retry_executor: exponential backoff strategy", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: max attempts behavior", "[io][time]")
+TEST_CASE("retry_executor: respects maximum retry attempts limit", "[io][time]")
 {
     SECTION("Should call retry action up to max_attempts")
     {
@@ -278,7 +278,7 @@ TEST_CASE("retry_executor: max attempts behavior", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: reset functionality", "[io][time]")
+TEST_CASE("retry_executor: resets attempt counter and cancels timer", "[io][time]")
 {
     SECTION("Should reset attempts counter and cancel timer")
     {
@@ -307,7 +307,7 @@ TEST_CASE("retry_executor: reset functionality", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: cancel functionality", "[io][time]")
+TEST_CASE("retry_executor: cancels ongoing retry attempts", "[io][time]")
 {
     SECTION("Should cancel ongoing retries")
     {

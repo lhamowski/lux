@@ -5,7 +5,7 @@
 
 #include <boost/asio/io_context.hpp>
 
-TEST_CASE("promise: lux::promise<T> behavior", "[io][promise]")
+TEST_CASE("promise: completes with value or exception", "[io][promise]")
 {
     boost::asio::io_context io;
 

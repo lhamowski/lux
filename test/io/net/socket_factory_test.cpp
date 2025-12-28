@@ -81,7 +81,7 @@ public:
 
 } // namespace
 
-TEST_CASE("socket_factory: creates UDP socket", "[io][net]")
+TEST_CASE("socket_factory: creates UDP socket successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
 
@@ -93,7 +93,7 @@ TEST_CASE("socket_factory: creates UDP socket", "[io][net]")
     REQUIRE(socket != nullptr);
 }
 
-TEST_CASE("socket_factory: creates TCP socket", "[io][net]")
+TEST_CASE("socket_factory: creates TCP socket successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
 
@@ -105,7 +105,7 @@ TEST_CASE("socket_factory: creates TCP socket", "[io][net]")
     REQUIRE(socket != nullptr);
 }
 
-TEST_CASE("socket_factory: creates SSL TCP socket", "[io][net]")
+TEST_CASE("socket_factory: creates SSL TCP socket successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -118,7 +118,7 @@ TEST_CASE("socket_factory: creates SSL TCP socket", "[io][net]")
     REQUIRE(socket != nullptr);
 }
 
-TEST_CASE("socket_factory: creates TCP acceptor", "[io][net]")
+TEST_CASE("socket_factory: creates TCP acceptor successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -130,7 +130,7 @@ TEST_CASE("socket_factory: creates TCP acceptor", "[io][net]")
     REQUIRE(acceptor != nullptr);
 }
 
-TEST_CASE("socket_factory: creates SSL TCP acceptor", "[io][net]")
+TEST_CASE("socket_factory: creates SSL TCP acceptor successfully", "[io][net]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;

@@ -2,7 +2,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("result: basic usage", "[result][support]")
+TEST_CASE("result: represents success or error with optional value", "[result][support]")
 {
     SECTION("Successful result with value")
     {

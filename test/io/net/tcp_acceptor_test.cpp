@@ -113,7 +113,7 @@ std::uint16_t get_available_port(boost::asio::io_context& io_context)
 
 } // namespace
 
-TEST_CASE("tcp_acceptor: construction succeeds with default config", "[io][net][tcp][acceptor]")
+TEST_CASE("tcp_acceptor: constructs successfully with default configuration", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -123,7 +123,7 @@ TEST_CASE("tcp_acceptor: construction succeeds with default config", "[io][net][
     REQUIRE_NOTHROW(acceptor.emplace(io_context.get_executor(), handler, config));
 }
 
-TEST_CASE("tcp_acceptor: listen with specific endpoint succeeds", "[io][net][tcp][acceptor]")
+TEST_CASE("tcp_acceptor: listens on specified endpoint successfully", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -137,7 +137,7 @@ TEST_CASE("tcp_acceptor: listen with specific endpoint succeeds", "[io][net][tcp
     acceptor.close();
 }
 
-TEST_CASE("tcp_acceptor: accepts single connection", "[io][net][tcp][acceptor]")
+TEST_CASE("tcp_acceptor: accepts incoming connection successfully", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
 
@@ -189,7 +189,7 @@ TEST_CASE("tcp_acceptor: accepts single connection", "[io][net][tcp][acceptor]")
     CHECK(second_socket_handler.disconnected_calls == 1);
 }
 
-TEST_CASE("ssl_tcp_acceptor: construction succeeds", "[io][net][tcp][acceptor][ssl]")
+TEST_CASE("ssl_tcp_acceptor: constructs successfully with SSL context", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -200,7 +200,7 @@ TEST_CASE("ssl_tcp_acceptor: construction succeeds", "[io][net][tcp][acceptor][s
     REQUIRE_NOTHROW(acceptor.emplace(io_context.get_executor(), handler, config, ssl_context));
 }
 
-TEST_CASE("ssl_tcp_acceptor: listen succeeds", "[io][net][tcp][acceptor][ssl]")
+TEST_CASE("ssl_tcp_acceptor: listens on endpoint successfully", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -216,7 +216,7 @@ TEST_CASE("ssl_tcp_acceptor: listen succeeds", "[io][net][tcp][acceptor][ssl]")
     acceptor.close();
 }
 
-TEST_CASE("ssl_tcp_acceptor: accepts single connection", "[io][net][tcp][acceptor][ssl]")
+TEST_CASE("ssl_tcp_acceptor: accepts incoming SSL connection successfully", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
 

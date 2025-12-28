@@ -10,7 +10,7 @@
 
 #include <vector>
 
-TEST_CASE("coro_algorithms: when_any coro utility", "[io][coro]")
+TEST_CASE("coro_algorithms: when_any checks if any task satisfies predicate", "[io][coro]")
 {
     boost::asio::io_context io_context;
 

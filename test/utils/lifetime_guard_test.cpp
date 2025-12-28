@@ -6,11 +6,11 @@
 #include <utility>
 #include <type_traits>
 
-TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
+TEST_CASE("lifetime_guard: creates valid tokens that track guard lifetime", "[lux::lifetime_guard][utils]")
 {
-    SECTION("Token is valid when guard exists")
-    {
-        lux::lifetime_guard guard;
+SECTION("Token is valid while guard exists")
+{
+    lux::lifetime_guard guard;
         auto token = guard.create_token();
 
         CHECK(token.is_valid());
@@ -26,7 +26,7 @@ TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
         CHECK_FALSE(token.is_valid());
     }
 
-    SECTION("Token can be copied")
+    SECTION("Tokens can be copied")
     {
         lux::lifetime_guard guard;
         auto token1 = guard.create_token();
@@ -36,7 +36,7 @@ TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
         CHECK(token2.is_valid());
     }
 
-    SECTION("Token can be copy assigned")
+    SECTION("Tokens can be copy assigned")
     {
         lux::lifetime_guard guard;
         auto token1 = guard.create_token();
@@ -48,7 +48,7 @@ TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
         CHECK(token2.is_valid());
     }
 
-    SECTION("Token can be moved")
+    SECTION("Tokens can be moved")
     {
         lux::lifetime_guard guard;
         auto token1 = guard.create_token();
@@ -57,7 +57,7 @@ TEST_CASE("lifetime_guard: basic functionality", "[lux::lifetime_guard][utils]")
         CHECK(token2.is_valid());
     }
 
-    SECTION("Token can be move assigned")
+    SECTION("Tokens can be move assigned")
     {
         lux::lifetime_guard guard;
         auto token1 = guard.create_token();

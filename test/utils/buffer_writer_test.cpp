@@ -7,7 +7,7 @@
 #include <string_view>
 #include <vector>
 
-TEST_CASE("buffer_writer: basic functionality", "[utils][buffer_writer]")
+TEST_CASE("buffer_writer: constructs and tracks written data", "[utils][buffer_writer]")
 {
     SECTION("Construction and basic properties")
     {

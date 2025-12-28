@@ -4,7 +4,7 @@
 
 #include <thread>
 
-TEST_CASE("stopwatch: functionality", "[stopwatch][utils]")
+TEST_CASE("stopwatch: measures elapsed time and supports reset", "[stopwatch][utils]")
 {
     lux::stopwatch sw;
 
