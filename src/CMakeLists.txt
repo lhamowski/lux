@@ -26,6 +26,7 @@ cflex_add_library(lux SOURCES
 	# Utils files
 	${lux_include_files_dir}/utils/buffer_reader.hpp
 	${lux_include_files_dir}/utils/buffer_writer.hpp
+	${lux_include_files_dir}/utils/expiring_ref.hpp
 	${lux_include_files_dir}/utils/memory_arena.hpp
 	${lux_include_files_dir}/utils/lifetime_guard.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp

@@ -14,6 +14,7 @@ cflex_add_executable(lux-test SOURCES
 
     utils/buffer_writer_test.cpp
     utils/buffer_reader_test.cpp
+    utils/expiring_ref_test.cpp
     utils/lifetime_guard_test.cpp
     utils/memory_arena_test.cpp
     utils/stopwatch_test.cpp
