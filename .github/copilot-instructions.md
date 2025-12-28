@@ -73,21 +73,56 @@ cd build\windows-msvc-release && ctest --output-on-failure
 
 ```
 lux/
-├── CMakeLists.txt           # Top-level: options, find Boost, add subdirs
-├── CMakePresets.json        # Preset definitions (40+ presets)
-├── .github/workflows/ci.yml # CI: gcc-release, sanitizers, msvc-release, clang-coverage
-├── cmake/
-│   ├── CFlex.cmake          # Target/flag management (cflex_add_library/executable)
-│   ├── LuxSourceGroup.cmake # IDE folder organization
-│   ├── CPM.cmake            # Dependency manager
-│   ├── toolchain/           # gcc.cmake, clang.cmake, msvc.cmake, gcc-arm64-cross.cmake
-│   └── build_options/       # Per-toolchain flags (gcc.cmake, clang.cmake, msvc.cmake)
-├── external/CMakeLists.txt  # CPM fetches: fmt, spdlog, magic_enum, BoringSSL, Catch2
-├── include/lux/             # Public headers (logger, support, utils, io)
-├── src/lux/                 # Implementation (.cpp)
-└── test/                    # Catch2 tests (one file per module)
+├── CMakeLists.txt           # Top-level: options (LUX_TEST, LUX_ENABLE_IO), find Boost, add subdirs
+├── CMakePresets.json        # Preset definitions (40+ presets for all toolchain/build-type combos)
+├── .clang-format            # Code formatting rules (4-space, Allman braces, 120-char lines)
+├── .github/
+│   └── workflows/ci.yml     # CI: 4 jobs (gcc-release, gcc-sanitizers, msvc-release, clang-coverage)
+├── cmake/                   # Build system configuration
+│   ├── CFlex.cmake          # Custom target wrappers (cflex_add_library/executable) with flag application
+│   ├── LuxSourceGroup.cmake # IDE folder organization helper (lux_source_group)
+│   ├── CPM.cmake            # Dependency manager (fetches fmt, spdlog, magic_enum, BoringSSL, Catch2)
+│   ├── toolchain/           # Compiler selection per-toolchain
+│   │   ├── gcc.cmake        # Sets g++/gcc
+│   │   ├── clang.cmake      # Sets clang++/clang
+│   │   ├── msvc.cmake       # Sets cl.exe
+│   │   └── gcc-arm64-cross.cmake  # ARM64 cross-compilation
+│   └── build_options/       # Compiler/linker flags per-toolchain (applied via CFlex)
+│       ├── gcc.cmake        # GCC warnings, sanitizers, optimization levels
+│       ├── clang.cmake      # Clang warnings, sanitizers, optimization levels
+│       └── msvc.cmake       # MSVC warnings (/W4, /WX), optimization levels
+├── external/CMakeLists.txt  # CPM dependency fetching (fmt 11.2.0, spdlog 1.15.3, etc.)
+├── include/lux/             # Public API headers (install target)
+│   ├── fwd.hpp              # Forward declarations
+│   ├── logger/              # Logging subsystem (logger, logger_manager, log_level)
+│   ├── support/             # Core utilities (result, strong_typedef, assert, exception, path, hash)
+│   ├── utils/               # Buffer I/O (buffer_reader/writer), memory_arena, stopwatch, lifetime_guard
+│   └── io/                  # Async I/O module (requires Boost, LUX_ENABLE_IO=ON)
+│       ├── promise.hpp      # Promise/future utilities
+│       ├── coro/            # Coroutine helpers (awaitable_event, algorithms, common)
+│       ├── net/             # Networking (tcp_socket, udp_socket, tcp_acceptor, socket_factory, SSL types)
+│       └── time/            # Timers and retry (interval_timer, retry_executor, timer_factory)
+├── src/                     # Implementation files
+│   ├── CMakeLists.txt       # Defines lux::lux and lux::io targets via cflex_add_library
+│   └── lux/
+│       ├── logger/          # logger_manager.cpp, log_level.cpp
+│       ├── support/         # path.cpp
+│       └── io/
+│           ├── net/         # TCP/UDP/SSL implementation, asio_impl.cpp (Boost.Asio compilation unit)
+│           └── time/        # retry_executor.cpp
+└── test/                    # Catch2 v3 tests (one test file per module)
+    ├── CMakeLists.txt       # Defines lux-test via cflex_add_executable, uses catch_discover_tests
+    ├── logger/              # logger_test.cpp
+    ├── support/             # result_test.cpp, strong_typedef_test.cpp, exception_test.cpp, etc.
+    ├── utils/               # buffer_reader_test.cpp, buffer_writer_test.cpp, memory_arena_test.cpp, etc.
+    └── io/                  # I/O module tests (requires LUX_ENABLE_IO=ON)
+        ├── promise_test.cpp
+        ├── coro/            # algorithms_test.cpp, awaitable_event_test.cpp
+        ├── net/             # tcp_socket_test.cpp, udp_socket_test.cpp, tcp_acceptor_test.cpp, test_utils.hpp
+        └── time/            # interval_timer_test.cpp, retry_executor_test.cpp, timer_factory_test.cpp, mocks/
 ```
-**Targets**: `lux::lux` (core), `lux::io` (if `LUX_ENABLE_IO=ON`), `lux-test` (if `LUX_TEST=ON`)
+**Key Targets**: `lux::lux` (core static lib, always built), `lux::io` (I/O static lib, if `LUX_ENABLE_IO=ON`), `lux-test` (test executable, if `LUX_TEST=ON`)  
+**Find headers in**: `include/lux/<module>/` | **Find implementation in**: `src/lux/<module>/` | **Find tests in**: `test/<module>/`
 
 ### CI (.github/workflows/ci.yml)
 
