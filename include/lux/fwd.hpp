@@ -15,6 +15,12 @@ namespace lux::net::base {
 class endpoint;
 class hostname_endpoint;
 
+enum class http_method;
+class http_request;
+class http_response;
+class http_server;
+struct http_server_config;
+
 class socket_factory;
 
 class tcp_acceptor;
