@@ -71,7 +71,9 @@ if(LUX_ENABLE_IO)
 
 		${lux_source_files_dir}/io/net/asio_impl.cpp
 		${lux_source_files_dir}/io/net/utils.hpp
+		${lux_include_files_dir}/io/net/http_app.hpp ${lux_source_files_dir}/io/net/http_app.cpp
 		${lux_include_files_dir}/io/net/http_factory.hpp ${lux_source_files_dir}/io/net/http_factory.cpp
+		${lux_include_files_dir}/io/net/http_router.hpp ${lux_source_files_dir}/io/net/http_router.cpp
 		${lux_include_files_dir}/io/net/http_server.hpp ${lux_source_files_dir}/io/net/http_server.cpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
 		${lux_include_files_dir}/io/net/tcp_acceptor.hpp ${lux_source_files_dir}/io/net/tcp_acceptor.cpp

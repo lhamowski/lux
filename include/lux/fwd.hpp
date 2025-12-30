@@ -16,6 +16,8 @@ class endpoint;
 class hostname_endpoint;
 
 enum class http_method;
+enum class http_status;
+class http_factory;
 class http_request;
 class http_response;
 class http_server;
@@ -42,6 +44,8 @@ class udp_socket_handler;
 
 namespace lux::net {
 
+class http_router;
+class http_app;
 class socket_factory;
 class tcp_socket;
 class tcp_inbound_socket;
