@@ -40,7 +40,7 @@ public:
 
 private:
     class impl;
-    std::shared_ptr<impl> impl_;
+    std::unique_ptr<impl> impl_;
 };
 
 } // namespace lux::net
