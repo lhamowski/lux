@@ -1,6 +1,6 @@
 #include <lux/io/net/tcp_acceptor.hpp>
 #include <lux/io/net/tcp_inbound_socket.hpp>
-#include <lux/io/net/utils.hpp>
+#include <lux/io/net/detail/utils.hpp>
 
 #include <lux/support/assert.hpp>
 #include <lux/support/move.hpp>

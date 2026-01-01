@@ -7,13 +7,13 @@
 #include <lux/io/net/base/tcp_acceptor.hpp>
 #include <lux/io/net/base/tcp_socket.hpp>
 
+#include <lux/io/net/detail/http_parser.hpp>
+
 #include <lux/support/assert.hpp>
 #include <lux/support/move.hpp>
 #include <lux/utils/expiring_ref.hpp>
 
-#include <boost/beast/core/flat_buffer.hpp>
 #include <boost/beast/http/message.hpp>
-#include <boost/beast/http/parser.hpp>
 #include <boost/beast/http/serializer.hpp>
 #include <boost/beast/http/string_body.hpp>
 
@@ -26,10 +26,9 @@ namespace lux::net {
 
 namespace {
 
-using boost_http_request_type = boost::beast::http::request<boost::beast::http::string_body>;
-using boost_http_response_type = boost::beast::http::response<boost::beast::http::string_body>;
+using boost_http_response_type = detail::boost_http_response_type;
 
-lux::net::base::http_request from_boost_http_request(boost_http_request_type&& boost_request)
+lux::net::base::http_request from_boost_http_request(detail::boost_http_request_type&& boost_request)
 {
     lux::net::base::http_request request;
 
@@ -68,150 +67,91 @@ lux::net::base::http_request from_boost_http_request(boost_http_request_type&& b
     return request;
 }
 
-class http_parser_handler
+class server_request_parser_handler : public detail::http_request_parser_handler
 {
 public:
     virtual void on_request_parsed(const lux::net::base::http_request& request) = 0;
-    virtual void on_parse_error(const std::error_code& ec) = 0;
-
-protected:
-    virtual ~http_parser_handler() = default;
-};
-
-class http_parser
-{
-public:
-    explicit http_parser(http_parser_handler& handler) : handler_{handler}
-    {
-        parser_.emplace();
-    }
 
 public:
-    void parse(const std::span<const std::byte>& data)
+    void on_message_parsed(detail::boost_http_request_type&& message) override final
     {
-        LUX_ASSERT(parser_, "Parser must be initialized at this point");
-
-        const auto buf = buffer_.prepare(data.size());
-        std::memcpy(buf.data(), data.data(), data.size());
-        buffer_.commit(data.size());
-
-        while (buffer_.size() > 0)
-        {
-            boost::beast::error_code ec;
-            const std::size_t bytes_consumed = parser_->put(buffer_.data(), ec);
-
-            if (ec == boost::beast::http::error::need_more)
-            {
-                // Need more data to complete the parsing
-                buffer_.consume(bytes_consumed);
-                return;
-            }
-            else if (ec)
-            {
-                // Parsing error occurred
-                buffer_.consume(buffer_.size()); // Clear the buffer
-                parser_.emplace();               // Reset the parser
-                handler_.on_parse_error(ec);
-                return;
-            }
-
-            if (parser_->is_done())
-            {
-                // Successfully parsed a complete HTTP request
-                lux::net::base::http_request request = from_boost_http_request(parser_->release());
-                parser_.emplace(); // Reset the parser for the next request
-                handler_.on_request_parsed(request);
-                buffer_.consume(bytes_consumed);
-            }
-            else
-            {
-                buffer_.consume(bytes_consumed);
-            }
-        }
+        on_request_parsed(from_boost_http_request(lux::move(message)));
     }
-
-private:
-    http_parser_handler& handler_;
-
-private:
-    boost::beast::flat_buffer buffer_;
-
-    using parser_type = boost::beast::http::request_parser<boost::beast::http::string_body>;
-    std::optional<parser_type> parser_;
 };
 
 boost_http_response_type from_lux_http_response(lux::net::base::http_response&& response)
 {
-    using boost_type = boost::beast::http::status;
+    using boost_status_type = boost::beast::http::status;
+    using lux_status_type = lux::net::base::http_status;
 
-    static const std::unordered_map<lux::net::base::http_status, boost_type> status_map = {
-        {lux::net::base::http_status::unknown, boost_type::unknown},
+    static const std::unordered_map<lux::net::base::http_status, boost_status_type> status_map = {
+        {lux_status_type::unknown, boost_status_type::unknown},
 
-        {lux::net::base::http_status::continue_, boost_type::continue_},
-        {lux::net::base::http_status::switching_protocols, boost_type::switching_protocols},
-        {lux::net::base::http_status::processing, boost_type::processing},
-        {lux::net::base::http_status::early_hints, boost_type::early_hints},
+        {lux_status_type::continue_, boost_status_type::continue_},
+        {lux_status_type::switching_protocols, boost_status_type::switching_protocols},
+        {lux_status_type::processing, boost_status_type::processing},
+        {lux_status_type::early_hints, boost_status_type::early_hints},
 
-        {lux::net::base::http_status::ok, boost_type::ok},
-        {lux::net::base::http_status::created, boost_type::created},
-        {lux::net::base::http_status::accepted, boost_type::accepted},
-        {lux::net::base::http_status::non_authoritative_information, boost_type::non_authoritative_information},
-        {lux::net::base::http_status::no_content, boost_type::no_content},
-        {lux::net::base::http_status::reset_content, boost_type::reset_content},
-        {lux::net::base::http_status::partial_content, boost_type::partial_content},
-        {lux::net::base::http_status::multi_status, boost_type::multi_status},
-        {lux::net::base::http_status::already_reported, boost_type::already_reported},
-        {lux::net::base::http_status::im_used, boost_type::im_used},
+        {lux_status_type::ok, boost_status_type::ok},
+        {lux_status_type::created, boost_status_type::created},
+        {lux_status_type::accepted, boost_status_type::accepted},
+        {lux_status_type::non_authoritative_information, boost_status_type::non_authoritative_information},
+        {lux_status_type::no_content, boost_status_type::no_content},
+        {lux_status_type::reset_content, boost_status_type::reset_content},
+        {lux_status_type::partial_content, boost_status_type::partial_content},
+        {lux_status_type::multi_status, boost_status_type::multi_status},
+        {lux_status_type::already_reported, boost_status_type::already_reported},
+        {lux_status_type::im_used, boost_status_type::im_used},
 
-        {lux::net::base::http_status::multiple_choices, boost_type::multiple_choices},
-        {lux::net::base::http_status::moved_permanently, boost_type::moved_permanently},
-        {lux::net::base::http_status::found, boost_type::found},
-        {lux::net::base::http_status::see_other, boost_type::see_other},
-        {lux::net::base::http_status::not_modified, boost_type::not_modified},
-        {lux::net::base::http_status::use_proxy, boost_type::use_proxy},
-        {lux::net::base::http_status::temporary_redirect, boost_type::temporary_redirect},
-        {lux::net::base::http_status::permanent_redirect, boost_type::permanent_redirect},
+        {lux_status_type::multiple_choices, boost_status_type::multiple_choices},
+        {lux_status_type::moved_permanently, boost_status_type::moved_permanently},
+        {lux_status_type::found, boost_status_type::found},
+        {lux_status_type::see_other, boost_status_type::see_other},
+        {lux_status_type::not_modified, boost_status_type::not_modified},
+        {lux_status_type::use_proxy, boost_status_type::use_proxy},
+        {lux_status_type::temporary_redirect, boost_status_type::temporary_redirect},
+        {lux_status_type::permanent_redirect, boost_status_type::permanent_redirect},
 
-        {lux::net::base::http_status::bad_request, boost_type::bad_request},
-        {lux::net::base::http_status::unauthorized, boost_type::unauthorized},
-        {lux::net::base::http_status::payment_required, boost_type::payment_required},
-        {lux::net::base::http_status::forbidden, boost_type::forbidden},
-        {lux::net::base::http_status::not_found, boost_type::not_found},
-        {lux::net::base::http_status::method_not_allowed, boost_type::method_not_allowed},
-        {lux::net::base::http_status::not_acceptable, boost_type::not_acceptable},
-        {lux::net::base::http_status::proxy_authentication_required, boost_type::proxy_authentication_required},
-        {lux::net::base::http_status::request_timeout, boost_type::request_timeout},
-        {lux::net::base::http_status::conflict, boost_type::conflict},
-        {lux::net::base::http_status::gone, boost_type::gone},
-        {lux::net::base::http_status::length_required, boost_type::length_required},
-        {lux::net::base::http_status::precondition_failed, boost_type::precondition_failed},
-        {lux::net::base::http_status::payload_too_large, boost_type::payload_too_large},
-        {lux::net::base::http_status::uri_too_long, boost_type::uri_too_long},
-        {lux::net::base::http_status::unsupported_media_type, boost_type::unsupported_media_type},
-        {lux::net::base::http_status::range_not_satisfiable, boost_type::range_not_satisfiable},
-        {lux::net::base::http_status::expectation_failed, boost_type::expectation_failed},
-        {lux::net::base::http_status::misdirected_request, boost_type::misdirected_request},
-        {lux::net::base::http_status::unprocessable_entity, boost_type::unprocessable_entity},
-        {lux::net::base::http_status::locked, boost_type::locked},
-        {lux::net::base::http_status::failed_dependency, boost_type::failed_dependency},
-        {lux::net::base::http_status::too_early, boost_type::too_early},
-        {lux::net::base::http_status::upgrade_required, boost_type::upgrade_required},
-        {lux::net::base::http_status::precondition_required, boost_type::precondition_required},
-        {lux::net::base::http_status::too_many_requests, boost_type::too_many_requests},
-        {lux::net::base::http_status::request_header_fields_too_large, boost_type::request_header_fields_too_large},
-        {lux::net::base::http_status::unavailable_for_legal_reasons, boost_type::unavailable_for_legal_reasons},
+        {lux_status_type::bad_request, boost_status_type::bad_request},
+        {lux_status_type::unauthorized, boost_status_type::unauthorized},
+        {lux_status_type::payment_required, boost_status_type::payment_required},
+        {lux_status_type::forbidden, boost_status_type::forbidden},
+        {lux_status_type::not_found, boost_status_type::not_found},
+        {lux_status_type::method_not_allowed, boost_status_type::method_not_allowed},
+        {lux_status_type::not_acceptable, boost_status_type::not_acceptable},
+        {lux_status_type::proxy_authentication_required, boost_status_type::proxy_authentication_required},
+        {lux_status_type::request_timeout, boost_status_type::request_timeout},
+        {lux_status_type::conflict, boost_status_type::conflict},
+        {lux_status_type::gone, boost_status_type::gone},
+        {lux_status_type::length_required, boost_status_type::length_required},
+        {lux_status_type::precondition_failed, boost_status_type::precondition_failed},
+        {lux_status_type::payload_too_large, boost_status_type::payload_too_large},
+        {lux_status_type::uri_too_long, boost_status_type::uri_too_long},
+        {lux_status_type::unsupported_media_type, boost_status_type::unsupported_media_type},
+        {lux_status_type::range_not_satisfiable, boost_status_type::range_not_satisfiable},
+        {lux_status_type::expectation_failed, boost_status_type::expectation_failed},
+        {lux_status_type::misdirected_request, boost_status_type::misdirected_request},
+        {lux_status_type::unprocessable_entity, boost_status_type::unprocessable_entity},
+        {lux_status_type::locked, boost_status_type::locked},
+        {lux_status_type::failed_dependency, boost_status_type::failed_dependency},
+        {lux_status_type::too_early, boost_status_type::too_early},
+        {lux_status_type::upgrade_required, boost_status_type::upgrade_required},
+        {lux_status_type::precondition_required, boost_status_type::precondition_required},
+        {lux_status_type::too_many_requests, boost_status_type::too_many_requests},
+        {lux_status_type::request_header_fields_too_large, boost_status_type::request_header_fields_too_large},
+        {lux_status_type::unavailable_for_legal_reasons, boost_status_type::unavailable_for_legal_reasons},
 
-        {lux::net::base::http_status::internal_server_error, boost_type::internal_server_error},
-        {lux::net::base::http_status::not_implemented, boost_type::not_implemented},
-        {lux::net::base::http_status::bad_gateway, boost_type::bad_gateway},
-        {lux::net::base::http_status::service_unavailable, boost_type::service_unavailable},
-        {lux::net::base::http_status::gateway_timeout, boost_type::gateway_timeout},
-        {lux::net::base::http_status::http_version_not_supported, boost_type::http_version_not_supported},
-        {lux::net::base::http_status::variant_also_negotiates, boost_type::variant_also_negotiates},
-        {lux::net::base::http_status::insufficient_storage, boost_type::insufficient_storage},
-        {lux::net::base::http_status::loop_detected, boost_type::loop_detected},
-        {lux::net::base::http_status::not_extended, boost_type::not_extended},
-        {lux::net::base::http_status::network_authentication_required, boost_type::network_authentication_required}};
+        {lux_status_type::internal_server_error, boost_status_type::internal_server_error},
+        {lux_status_type::not_implemented, boost_status_type::not_implemented},
+        {lux_status_type::bad_gateway, boost_status_type::bad_gateway},
+        {lux_status_type::service_unavailable, boost_status_type::service_unavailable},
+        {lux_status_type::gateway_timeout, boost_status_type::gateway_timeout},
+        {lux_status_type::http_version_not_supported, boost_status_type::http_version_not_supported},
+        {lux_status_type::variant_also_negotiates, boost_status_type::variant_also_negotiates},
+        {lux_status_type::insufficient_storage, boost_status_type::insufficient_storage},
+        {lux_status_type::loop_detected, boost_status_type::loop_detected},
+        {lux_status_type::not_extended, boost_status_type::not_extended},
+        {lux_status_type::network_authentication_required, boost_status_type::network_authentication_required}};
 
     boost_http_response_type boost_response;
     LUX_ASSERT(status_map.contains(response.status()), "Unexpected HTTP status code in response");
@@ -234,7 +174,7 @@ using expiring_handler = lux::expiring_ref<lux::net::base::http_server_handler>;
 
 class http_session : public std::enable_shared_from_this<http_session>,
                      public lux::net::base::tcp_inbound_socket_handler,
-                     public http_parser_handler
+                     public server_request_parser_handler
 {
 public:
     http_session(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr, const expiring_handler& handler)
@@ -276,7 +216,7 @@ private:
     }
 
 private:
-    // http_parser_handler implementation
+    // http_request_parser_handler implementation
     void on_request_parsed(const lux::net::base::http_request& request) override
     {
         if (!handler_.is_valid())
@@ -328,7 +268,7 @@ private:
     expiring_handler handler_;
 
 private:
-    http_parser parser_;
+    detail::http_request_parser parser_;
 
 private:
     std::shared_ptr<http_session> self_; // To keep the session alive during async operations

@@ -60,6 +60,12 @@ void http_app::set_on_error_handler(error_handler_type handler)
     on_error_handler_ = lux::move(handler);
 }
 
+std::optional<lux::net::base::endpoint> http_app::local_endpoint() const
+{
+    LUX_ASSERT(server_ptr_, "HTTP server pointer must not be null");
+    return server_ptr_->local_endpoint();
+}
+
 void http_app::on_server_started()
 {
     // No-op

@@ -99,6 +99,12 @@ public:
      */
     void set_on_error_handler(error_handler_type handler);
 
+    /**
+     * Retrieves the local endpoint the server is bound to.
+     * @return An optional endpoint representing the local endpoint, or std::nullopt if not bound.
+     */
+    std::optional<lux::net::base::endpoint> local_endpoint() const;
+
 private:
     // lux::net::base::http_server_handler implementation declarations
     void on_server_started() override;
