@@ -105,6 +105,8 @@ LUX_TEST_CASE("http_client", "sends GET request successfully", "[io][net][http][
     CHECK(received_response.body() == "Hello, World!");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "sends POST request with body successfully", "[io][net][http][client]")
@@ -157,6 +159,8 @@ LUX_TEST_CASE("http_client", "sends POST request with body successfully", "[io][
     CHECK(received_response.body() == "Data created");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "sends PUT request successfully", "[io][net][http][client]")
@@ -206,6 +210,8 @@ LUX_TEST_CASE("http_client", "sends PUT request successfully", "[io][net][http][
     CHECK(received_response.body() == "Resource updated");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "sends DELETE request successfully", "[io][net][http][client]")
@@ -254,6 +260,8 @@ LUX_TEST_CASE("http_client", "sends DELETE request successfully", "[io][net][htt
     CHECK(received_response.body() == "Resource deleted");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "handles request with custom headers", "[io][net][http][client]")
@@ -312,6 +320,8 @@ LUX_TEST_CASE("http_client", "handles request with custom headers", "[io][net][h
     CHECK(received_response.header("X-Response-Header") == "ResponseValue");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "queues multiple requests on same connection", "[io][net][http][client]")
@@ -384,6 +394,8 @@ LUX_TEST_CASE("http_client", "queues multiple requests on same connection", "[io
     }
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "receives different HTTP status codes", "[io][net][http][client]")
@@ -455,6 +467,8 @@ LUX_TEST_CASE("http_client", "receives different HTTP status codes", "[io][net][
     }
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }
 
 LUX_TEST_CASE("http_client", "handles connection error gracefully", "[io][net][http][client]")
@@ -534,4 +548,6 @@ LUX_TEST_CASE("http_client", "sends HTTPS request successfully", "[io][net][http
     CHECK(received_response.body() == "Secure Response");
 
     app.stop();
+    io_context.restart();
+    io_context.run_for(std::chrono::milliseconds{100});
 }

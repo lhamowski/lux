@@ -19,7 +19,8 @@ namespace {
 class mock_http_server : public lux::net::base::http_server
 {
 public:
-    explicit mock_http_server(lux::net::base::http_server_handler& handler) : handler_{handler}
+    explicit mock_http_server(lux::net::base::http_server_handler& handler, bool& served_flag, bool& stopped_flag)
+        : handler_{handler}, served_{served_flag}, stopped_{stopped_flag}
     {
     }
 
@@ -66,8 +67,8 @@ public:
 private:
     lux::net::base::http_server_handler& handler_;
     std::optional<lux::net::base::endpoint> endpoint_;
-    bool served_ = false;
-    bool stopped_ = false;
+    bool& served_;
+    bool& stopped_;
 };
 
 class mock_http_factory : public lux::net::base::http_factory
@@ -78,7 +79,7 @@ public:
     {
         std::ignore = config;
         http_server_created_ = true;
-        auto server = std::make_unique<mock_http_server>(handler);
+        auto server = std::make_unique<mock_http_server>(handler, server_served_, server_stopped_);
         last_created_server_ = server.get();
         return server;
     }
@@ -90,7 +91,7 @@ public:
         std::ignore = config;
         std::ignore = ssl_context;
         https_server_created_ = true;
-        auto server = std::make_unique<mock_http_server>(handler);
+        auto server = std::make_unique<mock_http_server>(handler, server_served_, server_stopped_);
         last_created_server_ = server.get();
         return server;
     }
@@ -132,10 +133,22 @@ public:
         return last_created_server_;
     }
 
+    bool server_served() const
+    {
+        return server_served_;
+    }
+
+    bool server_stopped() const
+    {
+        return server_stopped_;
+    }
+
 private:
     bool http_server_created_ = false;
     bool https_server_created_ = false;
     mock_http_server* last_created_server_ = nullptr;
+    bool server_served_ = false;
+    bool server_stopped_ = false;
 };
 
 lux::net::http_server_app_config create_default_http_server_app_config()
@@ -560,19 +573,16 @@ LUX_TEST_CASE("http_server_app", "destructor stops server automatically", "[io][
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
 
-    mock_http_server* server_ptr = nullptr;
-
     {
         lux::net::http_server_app app{config, factory};
         app.get("/test", [](const auto&, auto& res) { res.ok("Test"); });
         app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
 
-        server_ptr = factory.last_created_server();
-        REQUIRE(server_ptr != nullptr);
-        CHECK(server_ptr->served());
+        CHECK(factory.server_served());
+        CHECK_FALSE(factory.server_stopped());
     }
 
-    CHECK(server_ptr->stopped());
+    CHECK(factory.server_stopped());
 }
 
 LUX_TEST_CASE("http_server_app", "supports method chaining for route registration", "[io][net][http]")
