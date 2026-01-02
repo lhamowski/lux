@@ -49,7 +49,7 @@ public:
     http_server_app(const http_server_app&) = delete;
     http_server_app& operator=(const http_server_app&) = delete;
     http_server_app(http_server_app&&) = default;
-    http_server_app& operator=(http_server_app&&) = default;
+    http_server_app& operator=(http_server_app&&) = delete;
 
 public:
     /**
