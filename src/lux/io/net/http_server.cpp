@@ -18,9 +18,13 @@
 #include <boost/beast/http/string_body.hpp>
 
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <functional>
+#include <mutex>
 #include <optional>
+#include <unordered_map>
+#include <vector>
 
 namespace lux::net {
 
@@ -172,13 +176,21 @@ boost_http_response_type from_lux_http_response(lux::net::base::http_response&& 
 
 using expiring_handler = lux::expiring_ref<lux::net::base::http_server_handler>;
 
+class http_session;
+using session_unregister_callback = std::function<void(http_session*)>;
+
 class http_session : public std::enable_shared_from_this<http_session>,
                      public lux::net::base::tcp_inbound_socket_handler,
                      public server_request_parser_handler
 {
 public:
-    http_session(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr, const expiring_handler& handler)
-        : socket_ptr_{lux::move(socket_ptr)}, handler_{handler}, parser_{*this}
+    http_session(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr,
+                 const expiring_handler& handler,
+                 session_unregister_callback unregister_callback)
+        : socket_ptr_{lux::move(socket_ptr)},
+          handler_{handler},
+          parser_{*this},
+          unregister_callback_{lux::move(unregister_callback)}
     {
         LUX_ASSERT(socket_ptr_, "TCP inbound socket must not be null");
         socket_ptr_->set_handler(*this);
@@ -192,13 +204,26 @@ public:
         socket_ptr_->read();
     }
 
+    void close()
+    {
+        if (socket_ptr_)
+        {
+            socket_ptr_->disconnect(true);
+        }
+    }
+
 private:
     // lux::net::base::tcp_inbound_socket_handler implementation
     void on_disconnected(lux::net::base::tcp_inbound_socket& socket, const std::error_code& ec) override
     {
-        // Do nothing, no need to handle disconnection in this case
         std::ignore = socket;
         std::ignore = ec;
+
+        if (unregister_callback_)
+        {
+            unregister_callback_(this);
+        }
+
         self_.reset(); // Release the shared pointer to allow session destruction
     }
 
@@ -271,6 +296,7 @@ private:
     detail::http_request_parser parser_;
 
 private:
+    session_unregister_callback unregister_callback_;
     std::shared_ptr<http_session> self_; // To keep the session alive during async operations
 };
 
@@ -297,12 +323,6 @@ public:
     }
 
 public:
-    void detach_external_references()
-    {
-        handler_.invalidate();
-    }
-
-public:
     std::error_code serve(const lux::net::base::endpoint& ep)
     {
         return acceptor_->listen(ep);
@@ -310,6 +330,7 @@ public:
 
     std::error_code stop()
     {
+        close_all_sessions();
         return acceptor_->close();
     }
 
@@ -318,16 +339,61 @@ public:
         return acceptor_->local_endpoint();
     }
 
+    void detach_external_references()
+    {
+        handler_.invalidate();
+    }
+
 private:
+    void close_all_sessions()
+    {
+        std::vector<std::shared_ptr<http_session>> sessions_to_close;
+
+        {
+            std::lock_guard lock{sessions_mutex_};
+            sessions_to_close.reserve(sessions_.size());
+            for (auto& [_, session] : sessions_)
+            {
+                if (auto s = session.lock())
+                {
+                    sessions_to_close.push_back(lux::move(s));
+                }
+            }
+            sessions_.clear();
+        }
+
+        // Close sessions outside the lock to avoid deadlock
+        for (auto& session : sessions_to_close)
+        {
+            session->close();
+        }
+    }
+
+private:
+    void unregister_session(http_session* session_addr)
+    {
+        std::lock_guard lock{sessions_mutex_};
+        sessions_.erase(session_addr);
+    }
+
     // lux::net::base::tcp_acceptor_handler implementation
     void on_accepted(lux::net::base::tcp_inbound_socket_ptr&& socket_ptr) override
     {
         if (!handler_.is_valid())
         {
-            return; // Handler is no longer valid, do not process the accepted connection
+            return;
         }
 
-        std::make_shared<http_session>(lux::move(socket_ptr), handler_)->run();
+        auto session = std::make_shared<http_session>(lux::move(socket_ptr), handler_, [this](http_session* addr) {
+            unregister_session(addr);
+        });
+
+        {
+            std::lock_guard lock{sessions_mutex_};
+            sessions_.emplace(session.get(), session);
+        }
+
+        session->run();
     }
 
     void on_accept_error(const std::error_code& ec) override
@@ -343,6 +409,9 @@ private:
 private:
     expiring_handler handler_;
     lux::net::base::tcp_acceptor_ptr acceptor_{nullptr};
+
+    std::recursive_mutex sessions_mutex_;
+    std::unordered_map<http_session*, std::weak_ptr<http_session>> sessions_;
 };
 
 http_server::http_server(const lux::net::base::http_server_config& config,
@@ -364,6 +433,7 @@ http_server::~http_server()
 {
     LUX_ASSERT(impl_, "HTTP server implementation must not be null");
     impl_->detach_external_references();
+    impl_->stop();
 }
 
 std::error_code lux::net::http_server::serve(const lux::net::base::endpoint& ep)

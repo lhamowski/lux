@@ -193,6 +193,14 @@ public:
     {
     }
 
+    ~impl()
+    {
+        if (socket_)
+        {
+            socket_->disconnect(true);
+        }
+    }
+
 private:
     struct pending_request
     {
