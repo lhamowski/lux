@@ -56,6 +56,13 @@ if(LUX_ENABLE_IO)
 		# io/net files
 		${lux_include_files_dir}/io/net/base/address_v4.hpp
 		${lux_include_files_dir}/io/net/base/endpoint.hpp
+		${lux_include_files_dir}/io/net/base/http_client.hpp
+		${lux_include_files_dir}/io/net/base/http_factory.hpp
+		${lux_include_files_dir}/io/net/base/http_method.hpp
+		${lux_include_files_dir}/io/net/base/http_request.hpp
+		${lux_include_files_dir}/io/net/base/http_response.hpp
+		${lux_include_files_dir}/io/net/base/http_server.hpp
+		${lux_include_files_dir}/io/net/base/http_status.hpp
 		${lux_include_files_dir}/io/net/base/socket_config.hpp
 		${lux_include_files_dir}/io/net/base/socket_factory.hpp
 		${lux_include_files_dir}/io/net/base/ssl.hpp
@@ -63,10 +70,17 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/net/base/tcp_socket.hpp
 		${lux_include_files_dir}/io/net/base/udp_socket.hpp
 
-		${lux_source_files_dir}/io/net/asio_impl.cpp
-		${lux_source_files_dir}/io/net/utils.hpp
-		${lux_include_files_dir}/io/net/tcp_acceptor.hpp ${lux_source_files_dir}/io/net/tcp_acceptor.cpp
+		${lux_source_files_dir}/io/net/detail/asio_impl.cpp
+		${lux_source_files_dir}/io/net/detail/utils.hpp
+
+		${lux_include_files_dir}/io/net/http_client.hpp ${lux_source_files_dir}/io/net/http_client.cpp
+		${lux_include_files_dir}/io/net/http_client_app.hpp ${lux_source_files_dir}/io/net/http_client_app.cpp
+		${lux_include_files_dir}/io/net/http_factory.hpp ${lux_source_files_dir}/io/net/http_factory.cpp
+		${lux_include_files_dir}/io/net/http_router.hpp ${lux_source_files_dir}/io/net/http_router.cpp
+		${lux_include_files_dir}/io/net/http_server.hpp ${lux_source_files_dir}/io/net/http_server.cpp
+		${lux_include_files_dir}/io/net/http_server_app.hpp ${lux_source_files_dir}/io/net/http_server_app.cpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
+		${lux_include_files_dir}/io/net/tcp_acceptor.hpp ${lux_source_files_dir}/io/net/tcp_acceptor.cpp
 		${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
 		${lux_include_files_dir}/io/net/tcp_inbound_socket.hpp ${lux_source_files_dir}/io/net/tcp_inbound_socket.cpp
 		${lux_include_files_dir}/io/net/udp_socket.hpp ${lux_source_files_dir}/io/net/udp_socket.cpp

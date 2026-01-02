@@ -1,5 +1,5 @@
 #include <lux/io/net/tcp_socket.hpp>
-#include <lux/io/net/utils.hpp>
+#include <lux/io/net/detail/utils.hpp>
 
 #include <lux/io/net/base/endpoint.hpp>
 #include <lux/io/time/base/timer.hpp>
