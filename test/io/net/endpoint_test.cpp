@@ -1,10 +1,12 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/net/base/endpoint.hpp>
 
 #include <catch2/catch_all.hpp>
 
 using namespace lux::net::base;
 
-TEST_CASE("endpoint: constructs from address and port", "[io][net]")
+LUX_TEST_CASE("endpoint", "constructs from address and port", "[io][net]")
 {
     SECTION("Default constructor")
     {

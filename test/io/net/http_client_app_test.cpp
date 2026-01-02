@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/net/http_client_app.hpp>
 
 #include <lux/io/net/base/http_factory.hpp>
@@ -152,7 +154,7 @@ lux::net::http_client_app_config create_default_http_client_app_config()
 
 } // namespace
 
-TEST_CASE("http_client_app: constructs successfully with HTTP destination", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "constructs successfully with HTTP destination", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -163,7 +165,7 @@ TEST_CASE("http_client_app: constructs successfully with HTTP destination", "[io
     CHECK(factory.http_client_created());
 }
 
-TEST_CASE("http_client_app: constructs successfully with HTTPS destination", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "constructs successfully with HTTPS destination", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -175,7 +177,7 @@ TEST_CASE("http_client_app: constructs successfully with HTTPS destination", "[i
     CHECK(factory.https_client_created());
 }
 
-TEST_CASE("http_client_app: sends GET request with correct method and target", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends GET request with correct method and target", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -197,7 +199,7 @@ TEST_CASE("http_client_app: sends GET request with correct method and target", "
     CHECK(mock_client->last_request().body().empty());
 }
 
-TEST_CASE("http_client_app: sends POST request with body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends POST request with body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -216,7 +218,7 @@ TEST_CASE("http_client_app: sends POST request with body", "[io][net][http]")
     CHECK(mock_client->last_request().body() == request_body);
 }
 
-TEST_CASE("http_client_app: sends PUT request with body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends PUT request with body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -235,7 +237,7 @@ TEST_CASE("http_client_app: sends PUT request with body", "[io][net][http]")
     CHECK(mock_client->last_request().body() == request_body);
 }
 
-TEST_CASE("http_client_app: sends DELETE request with optional body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends DELETE request with optional body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -254,7 +256,7 @@ TEST_CASE("http_client_app: sends DELETE request with optional body", "[io][net]
     CHECK(mock_client->last_request().body() == request_body);
 }
 
-TEST_CASE("http_client_app: sends GET request with custom headers", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends GET request with custom headers", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -276,7 +278,7 @@ TEST_CASE("http_client_app: sends GET request with custom headers", "[io][net][h
     CHECK(mock_client->last_request().header("Accept") == "application/json");
 }
 
-TEST_CASE("http_client_app: sends POST request with custom headers", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends POST request with custom headers", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -298,7 +300,7 @@ TEST_CASE("http_client_app: sends POST request with custom headers", "[io][net][
     CHECK(mock_client->last_request().header("Authorization") == "Bearer token123");
 }
 
-TEST_CASE("http_client_app: invokes handler on successful GET response", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "invokes handler on successful GET response", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -324,7 +326,7 @@ TEST_CASE("http_client_app: invokes handler on successful GET response", "[io][n
     CHECK(handler_called);
 }
 
-TEST_CASE("http_client_app: invokes handler on successful POST response", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "invokes handler on successful POST response", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -354,7 +356,7 @@ TEST_CASE("http_client_app: invokes handler on successful POST response", "[io][
     CHECK(handler_called);
 }
 
-TEST_CASE("http_client_app: invokes handler on error response", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "invokes handler on error response", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -377,7 +379,7 @@ TEST_CASE("http_client_app: invokes handler on error response", "[io][net][http]
     CHECK(handler_called);
 }
 
-TEST_CASE("http_client_app: sends multiple GET requests independently", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends multiple GET requests independently", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -399,7 +401,7 @@ TEST_CASE("http_client_app: sends multiple GET requests independently", "[io][ne
     CHECK(mock_client->request_count() == 3);
 }
 
-TEST_CASE("http_client_app: sends requests with different HTTP methods", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends requests with different HTTP methods", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -424,7 +426,7 @@ TEST_CASE("http_client_app: sends requests with different HTTP methods", "[io][n
     CHECK(mock_client->request_count() == 4);
 }
 
-TEST_CASE("http_client_app: sends POST request with empty body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends POST request with empty body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -440,7 +442,7 @@ TEST_CASE("http_client_app: sends POST request with empty body", "[io][net][http
     CHECK(mock_client->last_request().body().empty());
 }
 
-TEST_CASE("http_client_app: sends DELETE request with empty body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends DELETE request with empty body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -456,7 +458,7 @@ TEST_CASE("http_client_app: sends DELETE request with empty body", "[io][net][ht
     CHECK(mock_client->last_request().body().empty());
 }
 
-TEST_CASE("http_client_app: sends GET request without headers", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends GET request without headers", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -471,7 +473,7 @@ TEST_CASE("http_client_app: sends GET request without headers", "[io][net][http]
     CHECK(mock_client->last_request().headers().empty());
 }
 
-TEST_CASE("http_client_app: preserves request target with query parameters", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "preserves request target with query parameters", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -487,7 +489,7 @@ TEST_CASE("http_client_app: preserves request target with query parameters", "[i
     CHECK(mock_client->last_request().target() == target_with_query);
 }
 
-TEST_CASE("http_client_app: sends request to root path", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends request to root path", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -502,7 +504,7 @@ TEST_CASE("http_client_app: sends request to root path", "[io][net][http]")
     CHECK(mock_client->last_request().target() == "/");
 }
 
-TEST_CASE("http_client_app: sends PUT request with custom headers and body", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends PUT request with custom headers and body", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -525,7 +527,7 @@ TEST_CASE("http_client_app: sends PUT request with custom headers and body", "[i
     CHECK(mock_client->last_request().header("X-Custom-Header") == "CustomValue");
 }
 
-TEST_CASE("http_client_app: sends DELETE request with custom headers", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "sends DELETE request with custom headers", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -541,7 +543,7 @@ TEST_CASE("http_client_app: sends DELETE request with custom headers", "[io][net
     CHECK(mock_client->last_request().header("Authorization") == "Bearer token456");
 }
 
-TEST_CASE("http_client_app: handler receives response headers", "[io][net][http]")
+LUX_TEST_CASE("http_client_app", "handler receives response headers", "[io][net][http]")
 {
     mock_http_factory factory;
     auto endpoint = create_test_endpoint();
@@ -569,3 +571,4 @@ TEST_CASE("http_client_app: handler receives response headers", "[io][net][http]
     mock_client->simulate_success_response(expected_response);
     CHECK(handler_called);
 }
+

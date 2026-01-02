@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/time/interval_timer.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -5,7 +7,7 @@
 #include <chrono>
 #include <cstddef>
 
-TEST_CASE("interval_timer: schedules and cancels timed callbacks", "[io][time]")
+LUX_TEST_CASE("interval_timer", "schedules and cancels timed callbacks", "[io][time]")
 {
     SECTION("Interval timer should schedule once correctly")
     {

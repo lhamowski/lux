@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/container.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -5,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-TEST_CASE("string_unordered_map: supports heterogeneous string lookup", "[container][support]")
+LUX_TEST_CASE("string_unordered_map", "supports heterogeneous string lookup", "[container][support]")
 {
     lux::string_unordered_map<int> my_map;
 

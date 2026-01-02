@@ -1,4 +1,5 @@
-#include "test_utils.hpp"
+﻿#include "test_case.hpp"
+#include "io/net/test_utils.hpp"
 
 #include <lux/io/net/http_client.hpp>
 #include <lux/io/net/http_server_app.hpp>
@@ -35,7 +36,7 @@ lux::net::base::http_client_config create_default_http_client_config()
 
 } // namespace
 
-TEST_CASE("http_client: constructs successfully with hostname endpoint", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "constructs successfully with hostname endpoint", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -46,7 +47,7 @@ TEST_CASE("http_client: constructs successfully with hostname endpoint", "[io][n
     REQUIRE_NOTHROW(client = std::make_unique<lux::net::http_client>(destination, config, socket_factory));
 }
 
-TEST_CASE("http_client: constructs successfully with SSL context", "[io][net][http][client][ssl]")
+LUX_TEST_CASE("http_client", "constructs successfully with SSL context", "[io][net][http][client][ssl]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -58,7 +59,7 @@ TEST_CASE("http_client: constructs successfully with SSL context", "[io][net][ht
     REQUIRE_NOTHROW(client = std::make_unique<lux::net::http_client>(destination, config, socket_factory, ssl_context));
 }
 
-TEST_CASE("http_client: sends GET request successfully", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "sends GET request successfully", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -106,7 +107,7 @@ TEST_CASE("http_client: sends GET request successfully", "[io][net][http][client
     app.stop();
 }
 
-TEST_CASE("http_client: sends POST request with body successfully", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "sends POST request with body successfully", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -158,7 +159,7 @@ TEST_CASE("http_client: sends POST request with body successfully", "[io][net][h
     app.stop();
 }
 
-TEST_CASE("http_client: sends PUT request successfully", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "sends PUT request successfully", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -207,7 +208,7 @@ TEST_CASE("http_client: sends PUT request successfully", "[io][net][http][client
     app.stop();
 }
 
-TEST_CASE("http_client: sends DELETE request successfully", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "sends DELETE request successfully", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -255,7 +256,7 @@ TEST_CASE("http_client: sends DELETE request successfully", "[io][net][http][cli
     app.stop();
 }
 
-TEST_CASE("http_client: handles request with custom headers", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "handles request with custom headers", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -313,7 +314,7 @@ TEST_CASE("http_client: handles request with custom headers", "[io][net][http][c
     app.stop();
 }
 
-TEST_CASE("http_client: queues multiple requests on same connection", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "queues multiple requests on same connection", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -385,7 +386,7 @@ TEST_CASE("http_client: queues multiple requests on same connection", "[io][net]
     app.stop();
 }
 
-TEST_CASE("http_client: receives different HTTP status codes", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "receives different HTTP status codes", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -456,7 +457,7 @@ TEST_CASE("http_client: receives different HTTP status codes", "[io][net][http][
     app.stop();
 }
 
-TEST_CASE("http_client: handles connection error gracefully", "[io][net][http][client]")
+LUX_TEST_CASE("http_client", "handles connection error gracefully", "[io][net][http][client]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -485,7 +486,7 @@ TEST_CASE("http_client: handles connection error gracefully", "[io][net][http][c
     CHECK(received_error);
 }
 
-TEST_CASE("http_client: sends HTTPS request successfully", "[io][net][http][client][ssl]")
+LUX_TEST_CASE("http_client", "sends HTTPS request successfully", "[io][net][http][client][ssl]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};

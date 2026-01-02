@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/utils/buffer_writer.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -7,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-TEST_CASE("buffer_writer: constructs and tracks written data", "[utils][buffer_writer]")
+LUX_TEST_CASE("buffer_writer", "constructs and tracks written data", "[utils][buffer_writer]")
 {
     SECTION("Construction and basic properties")
     {
@@ -73,7 +75,7 @@ TEST_CASE("buffer_writer: constructs and tracks written data", "[utils][buffer_w
     }
 }
 
-TEST_CASE("buffer_writer: containers", "[utils][buffer_writer]")
+LUX_TEST_CASE("buffer_writer", "containers", "[utils][buffer_writer]")
 {
     SECTION("Writing std::array")
     {
@@ -157,7 +159,7 @@ TEST_CASE("buffer_writer: containers", "[utils][buffer_writer]")
     }
 }
 
-TEST_CASE("buffer_writer: skip functionality", "[utils][buffer_writer]")
+LUX_TEST_CASE("buffer_writer", "skip functionality", "[utils][buffer_writer]")
 {
     SECTION("Skip advances position")
     {
@@ -203,7 +205,7 @@ TEST_CASE("buffer_writer: skip functionality", "[utils][buffer_writer]")
     }
 }
 
-TEST_CASE("buffer_writer error handling", "[utils][buffer_writer]")
+LUX_TEST_CASE("buffer_writer error handling", "[utils][buffer_writer]")
 {
     SECTION("Buffer overflow throws exception")
     {
@@ -249,7 +251,7 @@ lux::buffer_writer& operator<<(lux::buffer_writer& writer, const test_point& p)
 
 } // namespace
 
-TEST_CASE("buffer_writer user-defined types", "[utils][buffer_writer]")
+LUX_TEST_CASE("buffer_writer user-defined types", "[utils][buffer_writer]")
 {
     SECTION("Writing user-defined types")
     {

@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/net/http_router.hpp>
 
 #include <lux/io/net/base/http_request.hpp>
@@ -7,7 +9,7 @@
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("http_router: routes request to registered handler successfully", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "routes request to registered handler successfully", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -29,7 +31,7 @@ TEST_CASE("http_router: routes request to registered handler successfully", "[io
     CHECK(response.body() == "Test response");
 }
 
-TEST_CASE("http_router: returns 404 when no route matches", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "returns 404 when no route matches", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -44,7 +46,7 @@ TEST_CASE("http_router: returns 404 when no route matches", "[io][net][http][rou
     CHECK(response.body() == "404 Not Found");
 }
 
-TEST_CASE("http_router: distinguishes routes by HTTP method", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "distinguishes routes by HTTP method", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -88,7 +90,7 @@ TEST_CASE("http_router: distinguishes routes by HTTP method", "[io][net][http][r
     }
 }
 
-TEST_CASE("http_router: distinguishes routes by target path", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "distinguishes routes by target path", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -130,7 +132,7 @@ TEST_CASE("http_router: distinguishes routes by target path", "[io][net][http][r
     }
 }
 
-TEST_CASE("http_router: handles multiple route registrations", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "handles multiple route registrations", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -180,7 +182,7 @@ TEST_CASE("http_router: handles multiple route registrations", "[io][net][http][
     }
 }
 
-TEST_CASE("http_router: handler can access request data", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "handler can access request data", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -209,7 +211,7 @@ TEST_CASE("http_router: handler can access request data", "[io][net][http][route
     CHECK(response.header("Content-Type") == "text/plain");
 }
 
-TEST_CASE("http_router: handler can modify response headers", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "handler can modify response headers", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -228,7 +230,7 @@ TEST_CASE("http_router: handler can modify response headers", "[io][net][http][r
     CHECK(response.header("Content-Type") == "application/json");
 }
 
-TEST_CASE("http_router: handler can set different status codes", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "handler can set different status codes", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -288,7 +290,7 @@ TEST_CASE("http_router: handler can set different status codes", "[io][net][http
     }
 }
 
-TEST_CASE("http_router: handles same path with different methods independently", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "handles same path with different methods independently", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -328,7 +330,7 @@ TEST_CASE("http_router: handles same path with different methods independently",
     CHECK(response3.body() == "PUT item");
 }
 
-TEST_CASE("http_router: unregistered method on registered path returns 404", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "unregistered method on registered path returns 404", "[io][net][http][router]")
 {
     lux::net::http_router router;
 
@@ -343,7 +345,7 @@ TEST_CASE("http_router: unregistered method on registered path returns 404", "[i
     CHECK(response.body() == "404 Not Found");
 }
 
-TEST_CASE("http_router: routes request with unknown method", "[io][net][http][router]")
+LUX_TEST_CASE("http_router", "routes request with unknown method", "[io][net][http][router]")
 {
     lux::net::http_router router;
 

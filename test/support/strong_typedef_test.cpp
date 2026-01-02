@@ -1,8 +1,10 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/strong_typedef.hpp>
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("strong_typedef: wraps underlying type with strong typing", "[strong_typedef][support]")
+LUX_TEST_CASE("strong_typedef", "wraps underlying type with strong typing", "[strong_typedef][support]")
 {
     LUX_STRONG_TYPEDEF(my_int, int);
 
@@ -36,3 +38,4 @@ TEST_CASE("strong_typedef: wraps underlying type with strong typing", "[strong_t
         CHECK(const_value_int == 200);
     }
 }
+

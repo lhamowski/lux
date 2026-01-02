@@ -1,8 +1,10 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/scoped_value.hpp>
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("scoped_value: temporarily changes variable and restores on scope exit", "[scoped_value][support]")
+LUX_TEST_CASE("scoped_value", "temporarily changes variable and restores on scope exit", "[scoped_value][support]")
 {
     SECTION("Scoped value changes variable within scope and restores it after")
     {

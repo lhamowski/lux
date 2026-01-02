@@ -1,4 +1,5 @@
-#include "test_utils.hpp"
+﻿#include "test_case.hpp"
+#include "io/net/test_utils.hpp"
 
 #include <lux/io/net/tcp_acceptor.hpp>
 #include <lux/io/net/tcp_socket.hpp>
@@ -113,7 +114,7 @@ std::uint16_t get_available_port(boost::asio::io_context& io_context)
 
 } // namespace
 
-TEST_CASE("tcp_acceptor: constructs successfully with default configuration", "[io][net][tcp][acceptor]")
+LUX_TEST_CASE("tcp_acceptor", "constructs successfully with default configuration", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -123,7 +124,7 @@ TEST_CASE("tcp_acceptor: constructs successfully with default configuration", "[
     REQUIRE_NOTHROW(acceptor.emplace(io_context.get_executor(), handler, config));
 }
 
-TEST_CASE("tcp_acceptor: listens on specified endpoint successfully", "[io][net][tcp][acceptor]")
+LUX_TEST_CASE("tcp_acceptor", "listens on specified endpoint successfully", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -137,7 +138,7 @@ TEST_CASE("tcp_acceptor: listens on specified endpoint successfully", "[io][net]
     acceptor.close();
 }
 
-TEST_CASE("tcp_acceptor: accepts incoming connection successfully", "[io][net][tcp][acceptor]")
+LUX_TEST_CASE("tcp_acceptor", "accepts incoming connection successfully", "[io][net][tcp][acceptor]")
 {
     boost::asio::io_context io_context;
 
@@ -189,7 +190,7 @@ TEST_CASE("tcp_acceptor: accepts incoming connection successfully", "[io][net][t
     CHECK(second_socket_handler.disconnected_calls == 1);
 }
 
-TEST_CASE("ssl_tcp_acceptor: constructs successfully with SSL context", "[io][net][tcp][acceptor][ssl]")
+LUX_TEST_CASE("ssl_tcp_acceptor", "constructs successfully with SSL context", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -200,7 +201,7 @@ TEST_CASE("ssl_tcp_acceptor: constructs successfully with SSL context", "[io][ne
     REQUIRE_NOTHROW(acceptor.emplace(io_context.get_executor(), handler, config, ssl_context));
 }
 
-TEST_CASE("ssl_tcp_acceptor: listens on endpoint successfully", "[io][net][tcp][acceptor][ssl]")
+LUX_TEST_CASE("ssl_tcp_acceptor", "listens on endpoint successfully", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_acceptor_handler handler;
@@ -216,7 +217,7 @@ TEST_CASE("ssl_tcp_acceptor: listens on endpoint successfully", "[io][net][tcp][
     acceptor.close();
 }
 
-TEST_CASE("ssl_tcp_acceptor: accepts incoming SSL connection successfully", "[io][net][tcp][acceptor][ssl]")
+LUX_TEST_CASE("ssl_tcp_acceptor", "accepts incoming SSL connection successfully", "[io][net][tcp][acceptor][ssl]")
 {
     boost::asio::io_context io_context;
 

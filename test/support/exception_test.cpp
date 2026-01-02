@@ -1,8 +1,10 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/exception.hpp>
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("formatted_exception: formats messages with arguments", "[exception][support]")
+LUX_TEST_CASE("formatted_exception", "formats messages with arguments", "[exception][support]")
 {
     SECTION("Formatted exception with arguments")
     {

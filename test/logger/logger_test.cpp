@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/logger/logger.hpp>
 #include <lux/logger/logger_manager.hpp>
 
@@ -18,7 +20,7 @@
 #include <regex>
 #include <sstream>
 
-TEST_CASE("logger: logs messages at various levels with formatting", "[logger]")
+LUX_TEST_CASE("logger", "logs messages at various levels with formatting", "[logger]")
 {
     SECTION("Logger can be created with spdlog logger")
     {
@@ -181,7 +183,7 @@ TEST_CASE("logger: logs messages at various levels with formatting", "[logger]")
     }
 }
 
-TEST_CASE("logger_manager: creates loggers with various sink configurations", "[logger_manager]")
+LUX_TEST_CASE("logger_manager", "creates loggers with various sink configurations", "[logger_manager]")
 {
     SECTION("Logger manager can be created with console config")
     {
@@ -277,7 +279,7 @@ TEST_CASE("logger_manager: creates loggers with various sink configurations", "[
     }
 }
 
-TEST_CASE("log_config: provides default values for all configuration types", "[log_config]")
+LUX_TEST_CASE("log_config", "provides default values for all configuration types", "[log_config]")
 {
     SECTION("Console log config has reasonable defaults")
     {
@@ -318,7 +320,7 @@ TEST_CASE("log_config: provides default values for all configuration types", "[l
     }
 }
 
-TEST_CASE("logger: logs messages end-to-end with console and file sinks", "[logger][integration]")
+LUX_TEST_CASE("logger", "logs messages end-to-end with console and file sinks", "[logger][integration]")
 {
     SECTION("Complete logging workflow")
     {
@@ -402,3 +404,4 @@ TEST_CASE("logger: logs messages end-to-end with console and file sinks", "[logg
         CHECK(std::regex_search(line, critical_pattern));
     }
 }
+

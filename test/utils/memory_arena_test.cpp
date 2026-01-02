@@ -1,10 +1,12 @@
+﻿#include "test_case.hpp"
+
 #include <lux/utils/memory_arena.hpp>
 
 #include <catch2/catch_all.hpp>
 
 #include <vector>
 
-TEST_CASE("memory_arena: allocates and reuses memory blocks", "[utils][memory_arena]")
+LUX_TEST_CASE("memory_arena", "allocates and reuses memory blocks", "[utils][memory_arena]")
 {
     SECTION("Growable arena allocates and reuses memory")
     {

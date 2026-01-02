@@ -1,4 +1,6 @@
 cflex_add_executable(lux-test SOURCES
+    test_case.hpp
+
     logger/logger_test.cpp
     
     support/container_test.cpp
@@ -59,8 +61,14 @@ if(LUX_ENABLE_IO)
     )
     target_link_libraries(lux-test 
         PRIVATE 
-            lux::io)
+            lux::io
+    )
 endif()
+
+target_include_directories(lux-test
+	PRIVATE
+        ${lux_SOURCE_DIR}/test
+)
 
 set_target_properties(lux-test PROPERTIES FOLDER lux)
 

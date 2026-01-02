@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/finally.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -5,7 +7,7 @@
 #include <filesystem>
 #include <fstream>
 
-TEST_CASE("finally: executes code at scope exit", "[finally][support]")
+LUX_TEST_CASE("finally", "executes code at scope exit", "[finally][support]")
 {
     SECTION("Finally executes code at scope exit")
     {
@@ -42,3 +44,4 @@ TEST_CASE("finally: executes code at scope exit", "[finally][support]")
         CHECK(cleanup_executed);
     }
 }
+

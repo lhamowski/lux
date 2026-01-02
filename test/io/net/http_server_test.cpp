@@ -1,4 +1,5 @@
-#include "test_utils.hpp"
+﻿#include "test_case.hpp"
+#include "io/net/test_utils.hpp"
 
 #include <lux/io/net/http_server.hpp>
 #include <lux/io/net/socket_factory.hpp>
@@ -191,7 +192,7 @@ std::string from_bytes(const std::vector<std::byte>& bytes)
 
 } // namespace
 
-TEST_CASE("http_server: constructs successfully with default configuration", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "constructs successfully with default configuration", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -202,7 +203,7 @@ TEST_CASE("http_server: constructs successfully with default configuration", "[i
     REQUIRE_NOTHROW(server = std::make_unique<lux::net::http_server>(config, handler, socket_factory));
 }
 
-TEST_CASE("http_server: constructs successfully with SSL context", "[io][net][http][server][ssl]")
+LUX_TEST_CASE("http_server", "constructs successfully with SSL context", "[io][net][http][server][ssl]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -214,7 +215,7 @@ TEST_CASE("http_server: constructs successfully with SSL context", "[io][net][ht
     REQUIRE_NOTHROW(server = std::make_unique<lux::net::http_server>(config, handler, socket_factory, ssl_context));
 }
 
-TEST_CASE("http_server: starts serving on specified endpoint successfully", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "starts serving on specified endpoint successfully", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -229,7 +230,7 @@ TEST_CASE("http_server: starts serving on specified endpoint successfully", "[io
     server.stop();
 }
 
-TEST_CASE("http_server: stops serving successfully", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "stops serving successfully", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -245,7 +246,7 @@ TEST_CASE("http_server: stops serving successfully", "[io][net][http][server]")
     CHECK_FALSE(stop_error);
 }
 
-TEST_CASE("http_server: handles GET request successfully", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles GET request successfully", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -307,7 +308,7 @@ TEST_CASE("http_server: handles GET request successfully", "[io][net][http][serv
     server.stop();
 }
 
-TEST_CASE("http_server: handles POST request with body successfully", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles POST request with body successfully", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -380,7 +381,7 @@ TEST_CASE("http_server: handles POST request with body successfully", "[io][net]
     server.stop();
 }
 
-TEST_CASE("http_server: handles multiple requests from same client", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles multiple requests from same client", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -433,7 +434,7 @@ TEST_CASE("http_server: handles multiple requests from same client", "[io][net][
     server.stop();
 }
 
-TEST_CASE("http_server: handles multiple concurrent client connections", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles multiple concurrent client connections", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -515,7 +516,7 @@ TEST_CASE("http_server: handles multiple concurrent client connections", "[io][n
     server.stop();
 }
 
-TEST_CASE("http_server: handles requests with custom headers", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles requests with custom headers", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -581,7 +582,7 @@ TEST_CASE("http_server: handles requests with custom headers", "[io][net][http][
     server.stop();
 }
 
-TEST_CASE("http_server: handles different HTTP methods", "[io][net][http][server]")
+LUX_TEST_CASE("http_server", "handles different HTTP methods", "[io][net][http][server]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -645,7 +646,7 @@ TEST_CASE("http_server: handles different HTTP methods", "[io][net][http][server
     server.stop();
 }
 
-TEST_CASE("ssl_http_server: handles HTTPS request successfully", "[io][net][http][server][ssl]")
+LUX_TEST_CASE("ssl_http_server", "handles HTTPS request successfully", "[io][net][http][server][ssl]")
 {
     boost::asio::io_context io_context;
     lux::net::socket_factory socket_factory{io_context.get_executor()};
@@ -711,3 +712,4 @@ TEST_CASE("ssl_http_server: handles HTTPS request successfully", "[io][net][http
 
     server.stop();
 }
+

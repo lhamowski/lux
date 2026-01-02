@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/net/http_factory.hpp>
 #include <lux/io/net/socket_factory.hpp>
 #include <lux/io/net/base/http_server.hpp>
@@ -35,7 +37,7 @@ public:
 
 } // namespace
 
-TEST_CASE("http_factory: creates HTTP server successfully", "[io][net][http]")
+LUX_TEST_CASE("http_factory", "creates HTTP server successfully", "[io][net][http]")
 {
     boost::asio::io_context io_context;
 
@@ -48,7 +50,7 @@ TEST_CASE("http_factory: creates HTTP server successfully", "[io][net][http]")
     REQUIRE(server != nullptr);
 }
 
-TEST_CASE("http_factory: creates HTTPS server successfully", "[io][net][http]")
+LUX_TEST_CASE("http_factory", "creates HTTPS server successfully", "[io][net][http]")
 {
     boost::asio::io_context io_context;
 
@@ -61,3 +63,4 @@ TEST_CASE("http_factory: creates HTTPS server successfully", "[io][net][http]")
     auto server = factory.create_https_server(config, handler, ssl_context);
     REQUIRE(server != nullptr);
 }
+

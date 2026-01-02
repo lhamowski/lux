@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/hash.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -5,7 +7,7 @@
 #include <functional>
 #include <unordered_map>
 
-TEST_CASE("string_hash: hashes string types uniformly", "[hash][support]")
+LUX_TEST_CASE("string_hash", "hashes string types uniformly", "[hash][support]")
 {
     lux::string_hash hasher;
 

@@ -1,8 +1,10 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/time/timer_factory.hpp>
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("timer_factory: creates interval timer successfully", "[io][time]")
+LUX_TEST_CASE("timer_factory", "creates interval timer successfully", "[io][time]")
 {
     boost::asio::io_context io_context;
 
@@ -11,3 +13,4 @@ TEST_CASE("timer_factory: creates interval timer successfully", "[io][time]")
 
     REQUIRE(timer != nullptr);
 }
+

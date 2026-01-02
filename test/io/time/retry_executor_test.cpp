@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/time/retry_executor.hpp>
 
 #include "mocks/timer_factory_mock.hpp"
@@ -45,7 +47,7 @@ retry_policy create_linear_backoff_policy()
 
 } // namespace
 
-TEST_CASE("retry_executor: creates timer and schedules retries with delays", "[io][time]")
+LUX_TEST_CASE("retry_executor", "creates timer and schedules retries with delays", "[io][time]")
 {
     SECTION("Should create timer on construction")
     {
@@ -84,7 +86,7 @@ TEST_CASE("retry_executor: creates timer and schedules retries with delays", "[i
     }
 }
 
-TEST_CASE("retry_executor: applies fixed delay between retry attempts", "[io][time]")
+LUX_TEST_CASE("retry_executor", "applies fixed delay between retry attempts", "[io][time]")
 {
     SECTION("Should use same delay for all attempts")
     {
@@ -112,7 +114,7 @@ TEST_CASE("retry_executor: applies fixed delay between retry attempts", "[io][ti
     }
 }
 
-TEST_CASE("retry_executor: applies linear backoff between retry attempts", "[io][time]")
+LUX_TEST_CASE("retry_executor", "applies linear backoff between retry attempts", "[io][time]")
 {
     SECTION("Should increase delay linearly")
     {
@@ -163,7 +165,7 @@ TEST_CASE("retry_executor: applies linear backoff between retry attempts", "[io]
     }
 }
 
-TEST_CASE("retry_executor: applies exponential backoff between retry attempts", "[io][time]")
+LUX_TEST_CASE("retry_executor", "applies exponential backoff between retry attempts", "[io][time]")
 {
     SECTION("Should increase delay exponentially")
     {
@@ -215,7 +217,7 @@ TEST_CASE("retry_executor: applies exponential backoff between retry attempts", 
     }
 }
 
-TEST_CASE("retry_executor: respects maximum retry attempts limit", "[io][time]")
+LUX_TEST_CASE("retry_executor", "respects maximum retry attempts limit", "[io][time]")
 {
     SECTION("Should call retry action up to max_attempts")
     {
@@ -278,7 +280,7 @@ TEST_CASE("retry_executor: respects maximum retry attempts limit", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: resets attempt counter and cancels timer", "[io][time]")
+LUX_TEST_CASE("retry_executor", "resets attempt counter and cancels timer", "[io][time]")
 {
     SECTION("Should reset attempts counter and cancel timer")
     {
@@ -307,7 +309,7 @@ TEST_CASE("retry_executor: resets attempt counter and cancels timer", "[io][time
     }
 }
 
-TEST_CASE("retry_executor: cancels ongoing retry attempts", "[io][time]")
+LUX_TEST_CASE("retry_executor", "cancels ongoing retry attempts", "[io][time]")
 {
     SECTION("Should cancel ongoing retries")
     {
@@ -332,7 +334,7 @@ TEST_CASE("retry_executor: cancels ongoing retry attempts", "[io][time]")
     }
 }
 
-TEST_CASE("retry_executor: edge cases", "[io][time]")
+LUX_TEST_CASE("retry_executor", "edge cases", "[io][time]")
 {
     SECTION("Should handle zero base delay")
     {

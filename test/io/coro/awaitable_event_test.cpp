@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/coro/awaitable_event.hpp>
 #include <lux/io/coro/common.hpp>
 
@@ -12,7 +14,7 @@
 
 using namespace std::chrono_literals;
 
-TEST_CASE("awaitable_event: completes with delivered value", "[io][coro]")
+LUX_TEST_CASE("awaitable_event", "completes with delivered value", "[io][coro]")
 {
     boost::asio::io_context io;
 
@@ -96,7 +98,7 @@ TEST_CASE("awaitable_event: completes with delivered value", "[io][coro]")
     }
 }
 
-TEST_CASE("awaitable_event: completes when triggered without value", "[io][coro]")
+LUX_TEST_CASE("awaitable_event", "completes when triggered without value", "[io][coro]")
 {
     boost::asio::io_context io;
 

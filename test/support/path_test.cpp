@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/path.hpp>
 
 #include <lux/support/finally.hpp>
@@ -8,7 +10,7 @@
 #include <string>
 #include <optional>
 
-TEST_CASE("path: creates application data directory", "[path][support]")
+LUX_TEST_CASE("path", "creates application data directory", "[path][support]")
 {
     SECTION("Create app data directory")
     {
@@ -26,3 +28,4 @@ TEST_CASE("path: creates application data directory", "[path][support]")
         CHECK(std::filesystem::exists(lux::app_data_path(app_name)));
     }
 }
+

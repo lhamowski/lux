@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/move.hpp>
 
 #include <catch2/catch_all.hpp>
@@ -23,7 +25,7 @@ public:
 };
 } // namespace
 
-TEST_CASE("move: casts lvalues to rvalue references", "[move][support]")
+LUX_TEST_CASE("move", "casts lvalues to rvalue references", "[move][support]")
 {
     SECTION("Move a non-const lvalue")
     {
@@ -48,3 +50,4 @@ TEST_CASE("move: casts lvalues to rvalue references", "[move][support]")
         STATIC_CHECK(std::is_same_v<decltype(lux::move(obj)), non_copyable&&>);
     }
 }
+

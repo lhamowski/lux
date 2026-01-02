@@ -1,8 +1,10 @@
+﻿#include "test_case.hpp"
+
 #include <lux/support/result.hpp>
 
 #include <catch2/catch_all.hpp>
 
-TEST_CASE("result: represents success or error with optional value", "[result][support]")
+LUX_TEST_CASE("result", "represents success or error with optional value", "[result][support]")
 {
     SECTION("Successful result with value")
     {
@@ -45,7 +47,7 @@ TEST_CASE("result: represents success or error with optional value", "[result][s
     }
 }
 
-TEST_CASE("result: error message construction", "[result][support]")
+LUX_TEST_CASE("result", "error message construction", "[result][support]")
 {
     SECTION("Error message from string")
     {

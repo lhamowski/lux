@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/net/http_server_app.hpp>
 #include <lux/io/net/base/http_factory.hpp>
 #include <lux/io/net/base/http_server.hpp>
@@ -146,7 +148,7 @@ lux::net::http_server_app_config create_default_http_server_app_config()
 
 } // namespace
 
-TEST_CASE("http_server_app: constructs successfully with default configuration", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "constructs successfully with default configuration", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -156,7 +158,7 @@ TEST_CASE("http_server_app: constructs successfully with default configuration",
     CHECK(factory.http_server_created());
 }
 
-TEST_CASE("http_server_app: starts serving on specified endpoint successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "starts serving on specified endpoint successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -173,7 +175,7 @@ TEST_CASE("http_server_app: starts serving on specified endpoint successfully", 
     app.stop();
 }
 
-TEST_CASE("http_server_app: stops serving successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "stops serving successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -191,7 +193,7 @@ TEST_CASE("http_server_app: stops serving successfully", "[io][net][http][app]")
     CHECK(mock_server->stopped());
 }
 
-TEST_CASE("http_server_app: registers GET route successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers GET route successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -204,7 +206,7 @@ TEST_CASE("http_server_app: registers GET route successfully", "[io][net][http][
     }));
 }
 
-TEST_CASE("http_server_app: routes GET request to registered handler", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "routes GET request to registered handler", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -232,7 +234,7 @@ TEST_CASE("http_server_app: routes GET request to registered handler", "[io][net
     CHECK(response.has_header("Server"));
 }
 
-TEST_CASE("http_server_app: registers POST route successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers POST route successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -241,7 +243,7 @@ TEST_CASE("http_server_app: registers POST route successfully", "[io][net][http]
     REQUIRE_NOTHROW(app.post("/api/data", [](const auto&, auto& res) { res.created("Created"); }));
 }
 
-TEST_CASE("http_server_app: routes POST request to registered handler", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "routes POST request to registered handler", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -274,7 +276,7 @@ TEST_CASE("http_server_app: routes POST request to registered handler", "[io][ne
     CHECK(response.body() == "Resource created");
 }
 
-TEST_CASE("http_server_app: registers PUT route successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers PUT route successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -283,7 +285,7 @@ TEST_CASE("http_server_app: registers PUT route successfully", "[io][net][http][
     REQUIRE_NOTHROW(app.put("/api/resource", [](const auto&, auto& res) { res.ok("Updated"); }));
 }
 
-TEST_CASE("http_server_app: routes PUT request to registered handler", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "routes PUT request to registered handler", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -309,7 +311,7 @@ TEST_CASE("http_server_app: routes PUT request to registered handler", "[io][net
     CHECK(response.body() == "Resource updated");
 }
 
-TEST_CASE("http_server_app: registers DELETE route successfully", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers DELETE route successfully", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -318,7 +320,7 @@ TEST_CASE("http_server_app: registers DELETE route successfully", "[io][net][htt
     REQUIRE_NOTHROW(app.del("/api/resource", [](const auto&, auto& res) { res.no_content(); }));
 }
 
-TEST_CASE("http_server_app: routes DELETE request to registered handler", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "routes DELETE request to registered handler", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -343,7 +345,7 @@ TEST_CASE("http_server_app: routes DELETE request to registered handler", "[io][
     CHECK(response.status() == lux::net::base::http_status::no_content);
 }
 
-TEST_CASE("http_server_app: registers multiple routes independently", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers multiple routes independently", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -355,7 +357,7 @@ TEST_CASE("http_server_app: registers multiple routes independently", "[io][net]
     REQUIRE_NOTHROW(app.del("/users", [](const auto&, auto& res) { res.no_content(); }));
 }
 
-TEST_CASE("http_server_app: routes multiple requests to correct handlers", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "routes multiple requests to correct handlers", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -402,7 +404,7 @@ TEST_CASE("http_server_app: routes multiple requests to correct handlers", "[io]
     CHECK(delete_calls == 1);
 }
 
-TEST_CASE("http_server_app: registers routes with different paths", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers routes with different paths", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -414,7 +416,7 @@ TEST_CASE("http_server_app: registers routes with different paths", "[io][net][h
     REQUIRE_NOTHROW(app.post("/api/v1/users", [](const auto&, auto& res) { res.created("User created"); }));
 }
 
-TEST_CASE("http_server_app: returns 404 for unregistered routes", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "returns 404 for unregistered routes", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -434,7 +436,7 @@ TEST_CASE("http_server_app: returns 404 for unregistered routes", "[io][net][htt
     CHECK(response.body() == "404 Not Found");
 }
 
-TEST_CASE("http_server_app: sets custom server name in config", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "sets custom server name in config", "[io][net][http]")
 {
     mock_http_factory factory;
     auto config = create_default_http_server_app_config();
@@ -455,7 +457,7 @@ TEST_CASE("http_server_app: sets custom server name in config", "[io][net][http]
     CHECK(response.header("Server") == "CustomServer/2.0");
 }
 
-TEST_CASE("http_server_app: response includes default Server header", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "response includes default Server header", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -475,7 +477,7 @@ TEST_CASE("http_server_app: response includes default Server header", "[io][net]
     CHECK(response.header("Server") == "LuxHTTPServer");
 }
 
-TEST_CASE("http_server_app: handler can access request headers", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "handler can access request headers", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -505,7 +507,7 @@ TEST_CASE("http_server_app: handler can access request headers", "[io][net][http
     CHECK(headers_verified);
 }
 
-TEST_CASE("http_server_app: handler can set custom response headers", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "handler can set custom response headers", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -527,7 +529,7 @@ TEST_CASE("http_server_app: handler can set custom response headers", "[io][net]
     CHECK(response.header("Content-Type") == "application/json");
 }
 
-TEST_CASE("http_server_app: sets custom error handler", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "sets custom error handler", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -553,7 +555,7 @@ TEST_CASE("http_server_app: sets custom error handler", "[io][net][http][app]")
     CHECK(captured_error == test_error);
 }
 
-TEST_CASE("http_server_app: destructor stops server automatically", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "destructor stops server automatically", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -573,7 +575,7 @@ TEST_CASE("http_server_app: destructor stops server automatically", "[io][net][h
     CHECK(server_ptr->stopped());
 }
 
-TEST_CASE("http_server_app: supports method chaining for route registration", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "supports method chaining for route registration", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -584,7 +586,7 @@ TEST_CASE("http_server_app: supports method chaining for route registration", "[
     REQUIRE_NOTHROW(app.post("/contact", [](const auto&, auto& res) { res.created("Message sent"); }));
 }
 
-TEST_CASE("http_server_app: handles empty path routes", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "handles empty path routes", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -608,7 +610,7 @@ TEST_CASE("http_server_app: handles empty path routes", "[io][net][http][app]")
     CHECK(response.body() == "Empty path");
 }
 
-TEST_CASE("http_server_app: registers routes before serving", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "registers routes before serving", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -625,7 +627,7 @@ TEST_CASE("http_server_app: registers routes before serving", "[io][net][http][a
     CHECK(mock_server->served());
 }
 
-TEST_CASE("http_server_app: response preserves request HTTP version", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "response preserves request HTTP version", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -646,7 +648,7 @@ TEST_CASE("http_server_app: response preserves request HTTP version", "[io][net]
     CHECK(response.version() == 10);
 }
 
-TEST_CASE("http_server_app: handler can read request body", "[io][net][http][app]")
+LUX_TEST_CASE("http_server_app", "handler can read request body", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
@@ -674,3 +676,4 @@ TEST_CASE("http_server_app: handler can read request body", "[io][net][http][app
     CHECK(body_verified);
     CHECK(response.body() == expected_body);
 }
+

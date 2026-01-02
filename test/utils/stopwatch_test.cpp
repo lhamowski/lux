@@ -1,10 +1,12 @@
+﻿#include "test_case.hpp"
+
 #include <lux/utils/stopwatch.hpp>
 
 #include <catch2/catch_all.hpp>
 
 #include <thread>
 
-TEST_CASE("stopwatch: measures elapsed time and supports reset", "[stopwatch][utils]")
+LUX_TEST_CASE("stopwatch", "measures elapsed time and supports reset", "[stopwatch][utils]")
 {
     lux::stopwatch sw;
 

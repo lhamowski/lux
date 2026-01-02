@@ -1,3 +1,5 @@
+﻿#include "test_case.hpp"
+
 #include <lux/io/coro/algorithms.hpp>
 #include <lux/support/move.hpp>
 
@@ -10,7 +12,7 @@
 
 #include <vector>
 
-TEST_CASE("coro_algorithms: when_any checks if any task satisfies predicate", "[io][coro]")
+LUX_TEST_CASE("coro_algorithms", "when_any checks if any task satisfies predicate", "[io][coro]")
 {
     boost::asio::io_context io_context;
 

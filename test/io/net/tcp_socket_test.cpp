@@ -1,4 +1,5 @@
-#include "test_utils.hpp"
+﻿#include "test_case.hpp"
+#include "io/net/test_utils.hpp"
 
 #include <lux/io/net/tcp_socket.hpp>
 #include <lux/io/net/base/endpoint.hpp>
@@ -87,7 +88,7 @@ lux::net::base::tcp_socket_config create_default_config()
 
 } // namespace
 
-TEST_CASE("tcp_socket: constructs successfully with default configuration", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "constructs successfully with default configuration", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -102,7 +103,7 @@ TEST_CASE("tcp_socket: constructs successfully with default configuration", "[io
     CHECK_FALSE(socket->remote_endpoint().has_value());
 }
 
-TEST_CASE("tcp_socket: fails to connect to invalid endpoint", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "fails to connect to invalid endpoint", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -126,7 +127,7 @@ TEST_CASE("tcp_socket: fails to connect to invalid endpoint", "[io][net][tcp]")
     CHECK(disconnected_called);
 }
 
-TEST_CASE("tcp_socket: returns error when connecting while already connecting", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "returns error when connecting while already connecting", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -144,7 +145,7 @@ TEST_CASE("tcp_socket: returns error when connecting while already connecting", 
     CHECK(result2 == std::make_error_code(std::errc::operation_in_progress));
 }
 
-TEST_CASE("tcp_socket: succeeds when disconnecting while already disconnected", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "succeeds when disconnecting while already disconnected", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -159,7 +160,7 @@ TEST_CASE("tcp_socket: succeeds when disconnecting while already disconnected", 
     CHECK_FALSE(result2);
 }
 
-TEST_CASE("tcp_socket: returns error when sending data while disconnected", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "returns error when sending data while disconnected", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -177,7 +178,7 @@ TEST_CASE("tcp_socket: returns error when sending data while disconnected", "[io
     CHECK(handler.data_sent_calls.empty());
 }
 
-TEST_CASE("tcp_socket: connects successfully to localhost server", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "connects successfully to localhost server", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -214,7 +215,7 @@ TEST_CASE("tcp_socket: connects successfully to localhost server", "[io][net][tc
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: connects and exchanges data using hostname endpoint", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "connects and exchanges data using hostname endpoint", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -302,7 +303,7 @@ TEST_CASE("tcp_socket: connects and exchanges data using hostname endpoint", "[i
     // We don't need to explicitly disconnect the socket here since destructors will handle it
 }
 
-TEST_CASE("tcp_socket: fails to connect using invalid hostname", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "fails to connect using invalid hostname", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -327,7 +328,7 @@ TEST_CASE("tcp_socket: fails to connect using invalid hostname", "[io][net][tcp]
     CHECK_FALSE(socket.is_connected());
 }
 
-TEST_CASE("tcp_socket: sends and receives data with echo server", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "sends and receives data with echo server", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -414,7 +415,7 @@ TEST_CASE("tcp_socket: sends and receives data with echo server", "[io][net][tcp
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: queues multiple send operations correctly", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "queues multiple send operations correctly", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -465,7 +466,7 @@ TEST_CASE("tcp_socket: queues multiple send operations correctly", "[io][net][tc
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: sends pending data when disconnecting gracefully", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "sends pending data when disconnecting gracefully", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -512,7 +513,7 @@ TEST_CASE("tcp_socket: sends pending data when disconnecting gracefully", "[io][
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: discards pending data when disconnecting immediately", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "discards pending data when disconnecting immediately", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -559,7 +560,7 @@ TEST_CASE("tcp_socket: discards pending data when disconnecting immediately", "[
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: completes full lifecycle of connect, send, receive, disconnect", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "completes full lifecycle of connect, send, receive, disconnect", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -650,7 +651,7 @@ TEST_CASE("tcp_socket: completes full lifecycle of connect, send, receive, disco
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: retries connection using exponential backoff policy", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "retries connection using exponential backoff policy", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -696,7 +697,7 @@ TEST_CASE("tcp_socket: retries connection using exponential backoff policy", "[i
     CHECK(handler.will_reconnect_flags[2] == false); // No more reconnect attempts
 }
 
-TEST_CASE("tcp_socket: reconnects successfully when server becomes available", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "reconnects successfully when server becomes available", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -747,7 +748,7 @@ TEST_CASE("tcp_socket: reconnects successfully when server becomes available", "
     acceptor.close();
 }
 
-TEST_CASE("tcp_socket: stops reconnection attempts after manual disconnect", "[io][net][tcp]")
+LUX_TEST_CASE("tcp_socket", "stops reconnection attempts after manual disconnect", "[io][net][tcp]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -792,7 +793,7 @@ TEST_CASE("tcp_socket: stops reconnection attempts after manual disconnect", "[i
                                                     // attempts with no more calls (already disconnected)
 }
 
-TEST_CASE("ssl_tcp_socket: constructs successfully with SSL context", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "constructs successfully with SSL context", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -808,7 +809,7 @@ TEST_CASE("ssl_tcp_socket: constructs successfully with SSL context", "[io][net]
     CHECK_FALSE(socket->remote_endpoint().has_value());
 }
 
-TEST_CASE("ssl_tcp_socket: fails to connect to invalid endpoint", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "fails to connect to invalid endpoint", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -834,7 +835,7 @@ TEST_CASE("ssl_tcp_socket: fails to connect to invalid endpoint", "[io][net][tcp
     CHECK(disconnected_called);
 }
 
-TEST_CASE("ssl_tcp_socket: returns error when sending data while disconnected", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "returns error when sending data while disconnected", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -854,7 +855,7 @@ TEST_CASE("ssl_tcp_socket: returns error when sending data while disconnected", 
     CHECK(handler.data_sent_calls.empty());
 }
 
-TEST_CASE("ssl_tcp_socket: succeeds when disconnecting while already disconnected", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "succeeds when disconnecting while already disconnected", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -871,7 +872,7 @@ TEST_CASE("ssl_tcp_socket: succeeds when disconnecting while already disconnecte
     CHECK_FALSE(result2);
 }
 
-TEST_CASE("ssl_tcp_socket: returns error when connecting while already connecting", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "returns error when connecting while already connecting", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
@@ -891,7 +892,7 @@ TEST_CASE("ssl_tcp_socket: returns error when connecting while already connectin
     CHECK(result2 == std::make_error_code(std::errc::operation_in_progress));
 }
 
-TEST_CASE("ssl_tcp_socket: completes handshake successfully without certificate verification", "[io][net][tcp][ssl]")
+LUX_TEST_CASE("ssl_tcp_socket", "completes handshake successfully without certificate verification", "[io][net][tcp][ssl]")
 {
     boost::asio::io_context io_context;
     test_tcp_socket_handler handler;
