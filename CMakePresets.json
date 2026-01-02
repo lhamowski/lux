@@ -55,8 +55,7 @@
             "name": "release",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+              "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
