@@ -361,6 +361,11 @@ private:
         {
             process_next_request();
         }
+        else
+        {
+            // No pending requests - disconnect socket
+            socket_->disconnect(true);
+        }
     }
 
     void on_parse_error(const std::error_code& ec) override
@@ -376,6 +381,11 @@ private:
         if (!request_queue_.empty())
         {
             process_next_request();
+        }
+        else
+        {
+            // No pending requests - disconnect socket
+            socket_->disconnect(true);
         }
     }
 
