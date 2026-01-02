@@ -1,4 +1,6 @@
-#include <lux/utils/expiring_ref.hpp>
+﻿#include "test_case.hpp"
+
+#include <lux/support/expiring_ref.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -37,7 +39,7 @@ private:
 
 } // namespace
 
-TEST_CASE("expiring_ref: constructs and provides access to referenced object", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "constructs and provides access to referenced object", "[expiring_ref][utils]")
 {
     test_object obj{42};
     lux::expiring_ref<test_object> ref{obj};
@@ -59,7 +61,7 @@ TEST_CASE("expiring_ref: constructs and provides access to referenced object", "
     }
 }
 
-TEST_CASE("expiring_ref: becomes invalid when invalidated", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "becomes invalid when invalidated", "[expiring_ref][utils]")
 {
     test_object obj{10};
     lux::expiring_ref<test_object> ref{obj};
@@ -79,7 +81,7 @@ TEST_CASE("expiring_ref: becomes invalid when invalidated", "[expiring_ref][util
     }
 }
 
-TEST_CASE("expiring_ref: shares validity state across copies", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "shares validity state across copies", "[expiring_ref][utils]")
 {
     test_object obj{5};
     lux::expiring_ref<test_object> ref1{obj};
@@ -133,7 +135,7 @@ TEST_CASE("expiring_ref: shares validity state across copies", "[expiring_ref][u
     }
 }
 
-TEST_CASE("expiring_ref: transfers validity state when moved", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "transfers validity state when moved", "[expiring_ref][utils]")
 {
     test_object obj{7};
     lux::expiring_ref<test_object> ref1{obj};
@@ -160,7 +162,7 @@ TEST_CASE("expiring_ref: transfers validity state when moved", "[expiring_ref][u
     }
 }
 
-TEST_CASE("expiring_ref: provides consistent access across multiple copies", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "provides consistent access across multiple copies", "[expiring_ref][utils]")
 {
     test_object obj{0};
     lux::expiring_ref<test_object> ref1{obj};
@@ -177,7 +179,7 @@ TEST_CASE("expiring_ref: provides consistent access across multiple copies", "[e
     }
 }
 
-TEST_CASE("expiring_ref: maintains const-correctness", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "maintains const-correctness", "[expiring_ref][utils]")
 {
     test_object obj{15};
     const lux::expiring_ref<test_object> ref{obj};
@@ -193,7 +195,7 @@ TEST_CASE("expiring_ref: maintains const-correctness", "[expiring_ref][utils]")
     }
 }
 
-TEST_CASE("expiring_ref: supports various types", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "supports various types", "[expiring_ref][utils]")
 {
     SECTION("Works with std::string")
     {
@@ -238,7 +240,7 @@ TEST_CASE("expiring_ref: supports various types", "[expiring_ref][utils]")
     }
 }
 
-TEST_CASE("expiring_ref: supports thread-safe validity checking", "[expiring_ref][threading][utils]")
+LUX_TEST_CASE("expiring_ref", "supports thread-safe validity checking", "[expiring_ref][threading][utils]")
 {
     test_object obj{0};
     lux::expiring_ref<test_object> ref{obj};
@@ -303,7 +305,7 @@ TEST_CASE("expiring_ref: supports thread-safe validity checking", "[expiring_ref
     }
 }
 
-TEST_CASE("expiring_ref: demonstrates common usage patterns", "[expiring_ref][utils]")
+LUX_TEST_CASE("expiring_ref", "demonstrates common usage patterns", "[expiring_ref][utils]")
 {
     SECTION("Check-before-use pattern prevents access to invalid reference")
     {
@@ -355,3 +357,4 @@ TEST_CASE("expiring_ref: demonstrates common usage patterns", "[expiring_ref][ut
         REQUIRE(obj.get_value() == 2); // Should not have changed
     }
 }
+

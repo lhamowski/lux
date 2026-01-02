@@ -11,7 +11,7 @@
 
 #include <lux/support/assert.hpp>
 #include <lux/support/move.hpp>
-#include <lux/utils/expiring_ref.hpp>
+#include <lux/support/expiring_ref.hpp>
 
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/serializer.hpp>

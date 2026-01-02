@@ -11,10 +11,12 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/support/assert.hpp
 	${lux_include_files_dir}/support/concepts.hpp
 	${lux_include_files_dir}/support/container.hpp
-	${lux_include_files_dir}/support/exception.hpp
 	${lux_include_files_dir}/support/enum.hpp
+	${lux_include_files_dir}/support/exception.hpp
+	${lux_include_files_dir}/support/expiring_ref.hpp
 	${lux_include_files_dir}/support/finally.hpp
 	${lux_include_files_dir}/support/hash.hpp
+	${lux_include_files_dir}/support/lifetime_guard.hpp
 	${lux_include_files_dir}/support/macros.hpp
 	${lux_include_files_dir}/support/move.hpp
 	${lux_include_files_dir}/support/overload.hpp
@@ -26,9 +28,7 @@ cflex_add_library(lux SOURCES
 	# Utils files
 	${lux_include_files_dir}/utils/buffer_reader.hpp
 	${lux_include_files_dir}/utils/buffer_writer.hpp
-	${lux_include_files_dir}/utils/expiring_ref.hpp
 	${lux_include_files_dir}/utils/memory_arena.hpp
-	${lux_include_files_dir}/utils/lifetime_guard.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp
 
 	${lux_include_files_dir}/fwd.hpp

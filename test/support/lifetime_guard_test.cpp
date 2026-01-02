@@ -1,4 +1,6 @@
-#include <lux/utils/lifetime_guard.hpp>
+﻿#include "test_case.hpp"
+
+#include <lux/support/lifetime_guard.hpp>
 
 #include <catch2/catch_all.hpp>
 
@@ -6,7 +8,7 @@
 #include <utility>
 #include <type_traits>
 
-TEST_CASE("lifetime_guard: creates valid tokens that track guard lifetime", "[lux::lifetime_guard][utils]")
+LUX_TEST_CASE("lifetime_guard", "creates valid tokens that track guard lifetime", "[lux::lifetime_guard][utils]")
 {
 SECTION("Token is valid while guard exists")
 {
