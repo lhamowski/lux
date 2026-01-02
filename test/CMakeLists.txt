@@ -33,10 +33,11 @@ if(LUX_ENABLE_IO)
 
         io/net/address_v4_test.cpp
         io/net/endpoint_test.cpp
-        io/net/http_app_test.cpp
         io/net/http_client_test.cpp
+        io/net/http_client_app_test.cpp
         io/net/http_factory_test.cpp
         io/net/http_router_test.cpp
+        io/net/http_server_app_test.cpp
         io/net/http_server_test.cpp
         io/net/socket_factory_test.cpp
         io/net/tcp_acceptor_test.cpp

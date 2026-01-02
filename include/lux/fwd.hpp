@@ -51,7 +51,7 @@ class udp_socket_handler;
 namespace lux::net {
 
 class http_router;
-class http_app;
+class http_server_app;
 class socket_factory;
 class tcp_socket;
 class tcp_inbound_socket;

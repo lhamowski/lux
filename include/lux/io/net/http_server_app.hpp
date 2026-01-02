@@ -15,7 +15,7 @@
 
 namespace lux::net {
 
-struct http_app_config
+struct http_server_app_config
 {
     /**
      * Configuration for the underlying HTTP server.
@@ -32,24 +32,24 @@ struct http_app_config
  * Represents a facade for an HTTP application, providing methods to register request handlers and manage the server
  * lifecycle. It supports both HTTP and HTTPS protocols.
  */
-class http_app : public lux::net::base::http_server_handler
+class http_server_app : public lux::net::base::http_server_handler
 {
 public:
     using handler_type = lux::net::http_router::handler_type;
     using error_handler_type = std::function<void(const std::error_code&)>;
 
 public:
-    http_app(const lux::net::http_app_config& config, lux::net::base::http_factory& factory);
-    http_app(const lux::net::http_app_config& config,
-             lux::net::base::http_factory& factory,
-             lux::net::base::ssl_context& ssl_context);
+    http_server_app(const lux::net::http_server_app_config& config, lux::net::base::http_factory& factory);
+    http_server_app(const lux::net::http_server_app_config& config,
+                    lux::net::base::http_factory& factory,
+                    lux::net::base::ssl_context& ssl_context);
 
-    ~http_app();
+    ~http_server_app();
 
-    http_app(const http_app&) = delete;
-    http_app& operator=(const http_app&) = delete;
-    http_app(http_app&&) = default;
-    http_app& operator=(http_app&&) = default;
+    http_server_app(const http_server_app&) = delete;
+    http_server_app& operator=(const http_server_app&) = delete;
+    http_server_app(http_server_app&&) = default;
+    http_server_app& operator=(http_server_app&&) = default;
 
 public:
     /**
@@ -113,7 +113,7 @@ private:
     lux::net::base::http_response handle_request(const lux::net::base::http_request& request) override;
 
 private:
-    const lux::net::http_app_config config_;
+    const lux::net::http_server_app_config config_;
     lux::net::base::http_server_ptr server_ptr_{nullptr};
     lux::net::http_router router_;
 

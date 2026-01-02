@@ -12,6 +12,9 @@ namespace lux::net::base {
 class http_response
 {
 public:
+    using headers_type = lux::string_unordered_map<std::string>;
+
+public:
     http_response() = default;
 
     explicit http_response(http_status status) : status_{status}
@@ -189,7 +192,7 @@ public:
 private:
     http_status status_ = http_status::ok;
     unsigned version_ = 11; // HTTP/1.1 by default
-    lux::string_unordered_map<std::string> headers_;
+    headers_type headers_;
     std::string body_;
 };
 

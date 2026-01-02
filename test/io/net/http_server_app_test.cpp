@@ -1,4 +1,4 @@
-#include <lux/io/net/http_app.hpp>
+#include <lux/io/net/http_server_app.hpp>
 #include <lux/io/net/base/http_factory.hpp>
 #include <lux/io/net/base/http_server.hpp>
 #include <lux/io/net/base/endpoint.hpp>
@@ -93,6 +93,28 @@ public:
         return server;
     }
 
+    lux::net::base::http_client_ptr create_http_client(const lux::net::base::hostname_endpoint& destination,
+                                                       const lux::net::base::http_client_config& config) override
+    {
+        std::ignore = destination;
+        std::ignore = config;
+
+        REQUIRE(false); // Not used in these tests
+        return nullptr;
+    }
+
+    lux::net::base::http_client_ptr create_https_client(const lux::net::base::hostname_endpoint& destination,
+                                                        const lux::net::base::http_client_config& config,
+                                                        lux::net::base::ssl_context& ssl_context) override
+    {
+        std::ignore = destination;
+        std::ignore = config;
+        std::ignore = ssl_context;
+
+        REQUIRE(false); // Not used in these tests
+        return nullptr;
+    }
+
     bool http_server_created() const
     {
         return http_server_created_;
@@ -114,9 +136,9 @@ private:
     mock_http_server* last_created_server_ = nullptr;
 };
 
-lux::net::http_app_config create_default_http_app_config()
+lux::net::http_server_app_config create_default_http_server_app_config()
 {
-    lux::net::http_app_config config;
+    lux::net::http_server_app_config config;
     config.server_config.acceptor_config.reuse_address = true;
     config.server_config.acceptor_config.keep_alive = false;
     return config;
@@ -124,21 +146,21 @@ lux::net::http_app_config create_default_http_app_config()
 
 } // namespace
 
-TEST_CASE("http_app: constructs successfully with default configuration", "[io][net][http][app]")
+TEST_CASE("http_server_app: constructs successfully with default configuration", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
+    const auto config = create_default_http_server_app_config();
 
-    std::unique_ptr<lux::net::http_app> app;
-    REQUIRE_NOTHROW(app = std::make_unique<lux::net::http_app>(config, factory));
+    std::unique_ptr<lux::net::http_server_app> app;
+    REQUIRE_NOTHROW(app = std::make_unique<lux::net::http_server_app>(config, factory));
     CHECK(factory.http_server_created());
 }
 
-TEST_CASE("http_app: starts serving on specified endpoint successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: starts serving on specified endpoint successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, 8080};
     const auto serve_error = app.serve(endpoint);
@@ -151,11 +173,11 @@ TEST_CASE("http_app: starts serving on specified endpoint successfully", "[io][n
     app.stop();
 }
 
-TEST_CASE("http_app: stops serving successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: stops serving successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     const lux::net::base::endpoint endpoint{lux::net::base::localhost, 8080};
     const auto serve_error = app.serve(endpoint);
@@ -169,11 +191,11 @@ TEST_CASE("http_app: stops serving successfully", "[io][net][http][app]")
     CHECK(mock_server->stopped());
 }
 
-TEST_CASE("http_app: registers GET route successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers GET route successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool handler_called = false;
     REQUIRE_NOTHROW(app.get("/test", [&](const auto&, auto& res) {
@@ -182,11 +204,11 @@ TEST_CASE("http_app: registers GET route successfully", "[io][net][http][app]")
     }));
 }
 
-TEST_CASE("http_app: routes GET request to registered handler", "[io][net][http][app]")
+TEST_CASE("http_server_app: routes GET request to registered handler", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool handler_called = false;
     app.get("/test", [&](const auto& req, auto& res) {
@@ -210,20 +232,20 @@ TEST_CASE("http_app: routes GET request to registered handler", "[io][net][http]
     CHECK(response.has_header("Server"));
 }
 
-TEST_CASE("http_app: registers POST route successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers POST route successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.post("/api/data", [](const auto&, auto& res) { res.created("Created"); }));
 }
 
-TEST_CASE("http_app: routes POST request to registered handler", "[io][net][http][app]")
+TEST_CASE("http_server_app: routes POST request to registered handler", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     const std::string expected_body = R"({"key":"value"})";
     bool handler_called = false;
@@ -252,20 +274,20 @@ TEST_CASE("http_app: routes POST request to registered handler", "[io][net][http
     CHECK(response.body() == "Resource created");
 }
 
-TEST_CASE("http_app: registers PUT route successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers PUT route successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.put("/api/resource", [](const auto&, auto& res) { res.ok("Updated"); }));
 }
 
-TEST_CASE("http_app: routes PUT request to registered handler", "[io][net][http][app]")
+TEST_CASE("http_server_app: routes PUT request to registered handler", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool handler_called = false;
     app.put("/api/resource", [&](const auto& req, auto& res) {
@@ -287,20 +309,20 @@ TEST_CASE("http_app: routes PUT request to registered handler", "[io][net][http]
     CHECK(response.body() == "Resource updated");
 }
 
-TEST_CASE("http_app: registers DELETE route successfully", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers DELETE route successfully", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.del("/api/resource", [](const auto&, auto& res) { res.no_content(); }));
 }
 
-TEST_CASE("http_app: routes DELETE request to registered handler", "[io][net][http][app]")
+TEST_CASE("http_server_app: routes DELETE request to registered handler", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool handler_called = false;
     app.del("/api/resource", [&](const auto& req, auto& res) {
@@ -321,11 +343,11 @@ TEST_CASE("http_app: routes DELETE request to registered handler", "[io][net][ht
     CHECK(response.status() == lux::net::base::http_status::no_content);
 }
 
-TEST_CASE("http_app: registers multiple routes independently", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers multiple routes independently", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.get("/users", [](const auto&, auto& res) { res.ok("List users"); }));
     REQUIRE_NOTHROW(app.post("/users", [](const auto&, auto& res) { res.created("User created"); }));
@@ -333,11 +355,11 @@ TEST_CASE("http_app: registers multiple routes independently", "[io][net][http][
     REQUIRE_NOTHROW(app.del("/users", [](const auto&, auto& res) { res.no_content(); }));
 }
 
-TEST_CASE("http_app: routes multiple requests to correct handlers", "[io][net][http][app]")
+TEST_CASE("http_server_app: routes multiple requests to correct handlers", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     int get_calls = 0;
     int post_calls = 0;
@@ -380,11 +402,11 @@ TEST_CASE("http_app: routes multiple requests to correct handlers", "[io][net][h
     CHECK(delete_calls == 1);
 }
 
-TEST_CASE("http_app: registers routes with different paths", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers routes with different paths", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.get("/", [](const auto&, auto& res) { res.ok("Root"); }));
     REQUIRE_NOTHROW(app.get("/api/v1/users", [](const auto&, auto& res) { res.ok("Users"); }));
@@ -392,11 +414,11 @@ TEST_CASE("http_app: registers routes with different paths", "[io][net][http][ap
     REQUIRE_NOTHROW(app.post("/api/v1/users", [](const auto&, auto& res) { res.created("User created"); }));
 }
 
-TEST_CASE("http_app: returns 404 for unregistered routes", "[io][net][http][app]")
+TEST_CASE("http_server_app: returns 404 for unregistered routes", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     app.get("/existing", [](const auto&, auto& res) { res.ok("Found"); });
 
@@ -412,13 +434,13 @@ TEST_CASE("http_app: returns 404 for unregistered routes", "[io][net][http][app]
     CHECK(response.body() == "404 Not Found");
 }
 
-TEST_CASE("http_app: sets custom server name in config", "[io][net][http][app]")
+TEST_CASE("http_server_app: sets custom server name in config", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    auto config = create_default_http_app_config();
+    auto config = create_default_http_server_app_config();
     config.server_name = "CustomServer/2.0";
 
-    lux::net::http_app app{config, factory};
+    lux::net::http_server_app app{config, factory};
     app.get("/test", [](const auto&, auto& res) { res.ok("Test"); });
 
     app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
@@ -433,11 +455,11 @@ TEST_CASE("http_app: sets custom server name in config", "[io][net][http][app]")
     CHECK(response.header("Server") == "CustomServer/2.0");
 }
 
-TEST_CASE("http_app: response includes default Server header", "[io][net][http][app]")
+TEST_CASE("http_server_app: response includes default Server header", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     app.get("/test", [](const auto&, auto& res) { res.ok("Test"); });
 
@@ -453,11 +475,11 @@ TEST_CASE("http_app: response includes default Server header", "[io][net][http][
     CHECK(response.header("Server") == "LuxHTTPServer");
 }
 
-TEST_CASE("http_app: handler can access request headers", "[io][net][http][app]")
+TEST_CASE("http_server_app: handler can access request headers", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool headers_verified = false;
     app.get("/test", [&](const auto& req, auto& res) {
@@ -483,11 +505,11 @@ TEST_CASE("http_app: handler can access request headers", "[io][net][http][app]"
     CHECK(headers_verified);
 }
 
-TEST_CASE("http_app: handler can set custom response headers", "[io][net][http][app]")
+TEST_CASE("http_server_app: handler can set custom response headers", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     app.get("/json", [](const auto&, auto& res) { res.ok().json(R"({"status":"success"})"); });
 
@@ -505,11 +527,11 @@ TEST_CASE("http_app: handler can set custom response headers", "[io][net][http][
     CHECK(response.header("Content-Type") == "application/json");
 }
 
-TEST_CASE("http_app: sets custom error handler", "[io][net][http][app]")
+TEST_CASE("http_server_app: sets custom error handler", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool error_handler_called = false;
     std::error_code captured_error;
@@ -531,15 +553,15 @@ TEST_CASE("http_app: sets custom error handler", "[io][net][http][app]")
     CHECK(captured_error == test_error);
 }
 
-TEST_CASE("http_app: destructor stops server automatically", "[io][net][http][app]")
+TEST_CASE("http_server_app: destructor stops server automatically", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
+    const auto config = create_default_http_server_app_config();
 
     mock_http_server* server_ptr = nullptr;
 
     {
-        lux::net::http_app app{config, factory};
+        lux::net::http_server_app app{config, factory};
         app.get("/test", [](const auto&, auto& res) { res.ok("Test"); });
         app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
 
@@ -551,22 +573,22 @@ TEST_CASE("http_app: destructor stops server automatically", "[io][net][http][ap
     CHECK(server_ptr->stopped());
 }
 
-TEST_CASE("http_app: supports method chaining for route registration", "[io][net][http][app]")
+TEST_CASE("http_server_app: supports method chaining for route registration", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     REQUIRE_NOTHROW(app.get("/", [](const auto&, auto& res) { res.ok("Home"); }));
     REQUIRE_NOTHROW(app.get("/about", [](const auto&, auto& res) { res.ok("About"); }));
     REQUIRE_NOTHROW(app.post("/contact", [](const auto&, auto& res) { res.created("Message sent"); }));
 }
 
-TEST_CASE("http_app: handles empty path routes", "[io][net][http][app]")
+TEST_CASE("http_server_app: handles empty path routes", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     bool handler_called = false;
     app.get("", [&](const auto&, auto& res) {
@@ -586,11 +608,11 @@ TEST_CASE("http_app: handles empty path routes", "[io][net][http][app]")
     CHECK(response.body() == "Empty path");
 }
 
-TEST_CASE("http_app: registers routes before serving", "[io][net][http][app]")
+TEST_CASE("http_server_app: registers routes before serving", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     app.get("/before", [](const auto&, auto& res) { res.ok("Before"); });
     app.post("/before", [](const auto&, auto& res) { res.created("Created before"); });
@@ -603,11 +625,11 @@ TEST_CASE("http_app: registers routes before serving", "[io][net][http][app]")
     CHECK(mock_server->served());
 }
 
-TEST_CASE("http_app: response preserves request HTTP version", "[io][net][http][app]")
+TEST_CASE("http_server_app: response preserves request HTTP version", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     app.get("/test", [](const auto&, auto& res) { res.ok("Test"); });
 
@@ -624,11 +646,11 @@ TEST_CASE("http_app: response preserves request HTTP version", "[io][net][http][
     CHECK(response.version() == 10);
 }
 
-TEST_CASE("http_app: handler can read request body", "[io][net][http][app]")
+TEST_CASE("http_server_app: handler can read request body", "[io][net][http][app]")
 {
     mock_http_factory factory;
-    const auto config = create_default_http_app_config();
-    lux::net::http_app app{config, factory};
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
 
     const std::string expected_body = "Request payload";
     bool body_verified = false;

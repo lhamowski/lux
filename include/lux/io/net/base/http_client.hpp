@@ -4,6 +4,8 @@
 #include <lux/io/net/base/tcp_socket.hpp>
 
 #include <expected>
+#include <functional>
+#include <memory>
 #include <system_error>
 
 namespace lux::net::base {
@@ -40,5 +42,7 @@ public:
      */
     virtual void request(const lux::net::base::http_request& request, http_client_handler_type handler) = 0;
 };
+
+using http_client_ptr = std::unique_ptr<lux::net::base::http_client>;
 
 } // namespace lux::net::base

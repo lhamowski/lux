@@ -2,6 +2,7 @@
 
 #include <lux/io/net/base/http_method.hpp>
 #include <lux/support/container.hpp>
+#include <lux/support/move.hpp>
 
 #include <unordered_map>
 #include <string>
@@ -12,6 +13,9 @@ namespace lux::net::base {
 
 class http_request
 {
+public:
+    using headers_type = lux::string_unordered_map<std::string>;
+
 public:
     http_request() = default;
 
@@ -54,9 +58,14 @@ public:
         return body_;
     }
 
-    void set_body(std::string body)
+    void set_body(const std::string& body)
     {
-        body_ = std::move(body);
+        body_ = body;
+    }
+
+    void set_body(std::string&& body)
+    {
+        body_ = lux::move(body);
     }
 
     std::string_view header(std::string_view key) const
@@ -66,6 +75,16 @@ public:
             return it->second;
         }
         return {};
+    }
+
+    void set_headers(const headers_type& headers)
+    {
+        headers_ = headers;
+    }
+
+    void set_headers(headers_type&& headers)
+    {
+        headers_ = lux::move(headers);
     }
 
     void set_header(std::string key, std::string value)
@@ -94,7 +113,7 @@ private:
     http_method method_ = http_method::unknown;
     std::string target_;
     unsigned version_ = 11; // HTTP/1.1 by default
-    lux::string_unordered_map<std::string> headers_;
+    headers_type headers_;
     std::string body_;
 };
 

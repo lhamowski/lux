@@ -1,7 +1,7 @@
 #include "test_utils.hpp"
 
 #include <lux/io/net/http_client.hpp>
-#include <lux/io/net/http_app.hpp>
+#include <lux/io/net/http_server_app.hpp>
 #include <lux/io/net/http_factory.hpp>
 #include <lux/io/net/socket_factory.hpp>
 #include <lux/io/net/base/endpoint.hpp>
@@ -20,9 +20,9 @@
 
 namespace {
 
-lux::net::http_app_config create_default_http_app_config()
+lux::net::http_server_app_config create_default_http_server_app_config()
 {
-    lux::net::http_app_config config;
+    lux::net::http_server_app_config config;
     config.server_config.acceptor_config.reuse_address = true;
     config.server_config.acceptor_config.keep_alive = true;
     return config;
@@ -64,8 +64,8 @@ TEST_CASE("http_client: sends GET request successfully", "[io][net][http][client
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     app.get("/test", [](const auto& req, auto& res) {
         CHECK(req.method() == lux::net::base::http_method::get);
@@ -112,8 +112,8 @@ TEST_CASE("http_client: sends POST request with body successfully", "[io][net][h
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     const std::string expected_body = R"({"key":"value"})";
     app.post("/api/data", [&](const auto& req, auto& res) {
@@ -164,8 +164,8 @@ TEST_CASE("http_client: sends PUT request successfully", "[io][net][http][client
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     app.put("/resource/123", [](const auto& req, auto& res) {
         CHECK(req.method() == lux::net::base::http_method::put);
@@ -213,8 +213,8 @@ TEST_CASE("http_client: sends DELETE request successfully", "[io][net][http][cli
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     app.del("/resource/456", [](const auto& req, auto& res) {
         CHECK(req.method() == lux::net::base::http_method::delete_);
@@ -261,8 +261,8 @@ TEST_CASE("http_client: handles request with custom headers", "[io][net][http][c
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     bool headers_verified = false;
     app.get("/test", [&](const auto& req, auto& res) {
@@ -319,8 +319,8 @@ TEST_CASE("http_client: queues multiple requests on same connection", "[io][net]
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     std::atomic<int> requests_handled{0};
 
@@ -391,8 +391,8 @@ TEST_CASE("http_client: receives different HTTP status codes", "[io][net][http][
     lux::net::socket_factory socket_factory{io_context.get_executor()};
     lux::net::http_factory http_factory{socket_factory};
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory};
 
     app.get("/ok", [](const auto&, auto& res) { res.ok(); });
     app.get("/created", [](const auto&, auto& res) { res.created(); });
@@ -492,8 +492,8 @@ TEST_CASE("http_client: sends HTTPS request successfully", "[io][net][http][clie
     lux::net::http_factory http_factory{socket_factory};
     auto server_ssl_context = lux::test::net::create_ssl_server_context();
 
-    const auto app_config = create_default_http_app_config();
-    lux::net::http_app app{app_config, http_factory, server_ssl_context};
+    const auto app_config = create_default_http_server_app_config();
+    lux::net::http_server_app app{app_config, http_factory, server_ssl_context};
 
     app.get("/secure", [](const auto& req, auto& res) {
         CHECK(req.method() == lux::net::base::http_method::get);
