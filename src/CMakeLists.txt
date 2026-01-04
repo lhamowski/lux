@@ -29,6 +29,7 @@ cflex_add_library(lux SOURCES
 	${lux_include_files_dir}/utils/buffer_reader.hpp
 	${lux_include_files_dir}/utils/buffer_writer.hpp
 	${lux_include_files_dir}/utils/memory_arena.hpp
+	${lux_include_files_dir}/utils/random_bytes.hpp
 	${lux_include_files_dir}/utils/stopwatch.hpp
 
 	${lux_include_files_dir}/fwd.hpp
