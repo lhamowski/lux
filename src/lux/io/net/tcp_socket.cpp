@@ -257,14 +257,24 @@ private:
         return static_cast<const Derived&>(*this);
     }
 
+    auto& stream()
+    {
+        return derived().stream();
+    }
+
+    const auto& stream() const
+    {
+        return derived().stream();
+    }
+
     auto& socket()
     {
-        return boost::beast::get_lowest_layer(derived().stream());
+        return boost::beast::get_lowest_layer(stream());
     }
 
     const auto& socket() const
     {
-        return boost::beast::get_lowest_layer(derived().stream());
+        return boost::beast::get_lowest_layer(stream());
     }
 
 private:
@@ -371,7 +381,7 @@ private:
             return; // Cannot read if not connected
         }
 
-        socket().async_read_some(
+        stream().async_read_some(
             boost::asio::mutable_buffer(read_buffer_.data(), read_buffer_.size()),
             [self = this->shared_from_this()](const auto& ec, auto size) { self->on_read(ec, size); });
     }
@@ -387,7 +397,7 @@ private:
 
         auto& data = pending_data_to_send_.front();
         boost::asio::async_write(
-            socket(),
+            stream(),
             boost::asio::buffer(*data),
             [self = this->shared_from_this()](const auto& ec, auto size) { self->on_sent(ec, size); });
     }
@@ -680,8 +690,7 @@ public:
          const lux::net::base::tcp_socket_config& config,
          lux::time::base::timer_factory& timer_factory,
          lux::net::base::ssl_context& ssl_context)
-        : base_tcp_socket<ssl_tcp_socket::impl>(parent, exe, handler, config, timer_factory),
-          stream_{exe, ssl_context}
+        : base_tcp_socket<ssl_tcp_socket::impl>(parent, exe, handler, config, timer_factory), stream_{exe, ssl_context}
     {
     }
 

@@ -90,7 +90,7 @@ public:
             return;
         }
 
-        socket().async_read_some(
+        stream().async_read_some(
             boost::asio::mutable_buffer(read_buffer_.data(), read_buffer_.size()),
             [self = this->shared_from_this()](const auto& ec, auto size) { self->on_read(ec, size); });
     }
@@ -172,14 +172,24 @@ private:
         return static_cast<const Derived&>(*this);
     }
 
+    auto& stream()
+    {
+        return derived().stream();
+    }
+
+    const auto& stream() const
+    {
+        return derived().stream();
+    }
+
     auto& socket()
     {
-        return boost::beast::get_lowest_layer(derived().stream());
+        return boost::beast::get_lowest_layer(stream());
     }
 
     const auto& socket() const
     {
-        return boost::beast::get_lowest_layer(derived().stream());
+        return boost::beast::get_lowest_layer(stream());
     }
 
 private:
@@ -245,7 +255,7 @@ private:
 
         auto& data = pending_data_to_send_.front();
         boost::asio::async_write(
-            socket(),
+            stream(),
             boost::asio::buffer(*data),
             [self = this->shared_from_this()](const auto& ec, auto size) { self->on_sent(ec, size); });
     }
