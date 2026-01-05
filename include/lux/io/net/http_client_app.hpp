@@ -21,10 +21,10 @@ struct http_client_app_config
 class http_client_app
 {
 public:
-    http_client_app(lux::net::base::hostname_endpoint& destination,
+    http_client_app(const lux::net::base::hostname_endpoint& destination,
                     lux::net::base::http_factory& factory,
                     const lux::net::http_client_app_config& config = {});
-    http_client_app(lux::net::base::hostname_endpoint& destination,
+    http_client_app(const lux::net::base::hostname_endpoint& destination,
                     lux::net::base::http_factory& factory,
                     lux::net::base::ssl_context& ssl_context,
                     const lux::net::http_client_app_config& config = {});
