@@ -1,8 +1,11 @@
 #pragma once
 
 #include <lux/io/net/base/http_method.hpp>
+#include <lux/support/assert.hpp>
 #include <lux/support/container.hpp>
 #include <lux/support/move.hpp>
+
+#include <boost/url/parse.hpp>
 
 #include <unordered_map>
 #include <string>
@@ -15,6 +18,7 @@ class http_request
 {
 public:
     using headers_type = lux::string_unordered_map<std::string>;
+    using query_params_type = lux::string_unordered_map<std::string>;
 
 public:
     http_request() = default;
@@ -40,7 +44,8 @@ public:
 
     void set_target(std::string target)
     {
-        target_ = std::move(target);
+        query_params_.reset(); // Invalidate existing query parameters
+        target_ = lux::move(target);
     }
 
     unsigned version() const noexcept
@@ -104,9 +109,44 @@ public:
         headers_.erase(eq_range.first, eq_range.second);
     }
 
-    const lux::string_unordered_map<std::string>& headers() const noexcept
+    const headers_type& headers() const noexcept
     {
         return headers_;
+    }
+
+    const query_params_type& query_params() const
+    {
+        if (!query_params_)
+        {
+            // Lazy initialization
+            construct_query_params();
+        }
+
+        LUX_ASSERT(query_params_, "Query parameters should be initialized");
+        return *query_params_;
+    }
+
+private:
+    void construct_query_params() const
+    {
+        LUX_ASSERT(!query_params_, "Query parameters already constructed");
+
+        auto result = boost::urls::parse_origin_form(target_);
+        if (!result)
+        {
+            query_params_ = query_params_type{};
+            return;
+        }
+
+        const boost::urls::url_view url = result.value();
+        const auto& boost_params = url.params();
+
+        query_params_.emplace();
+        query_params_->reserve(boost_params.size());
+        for (const auto& param : boost_params)
+        {
+            query_params_->emplace(param.key, param.value);
+        }
     }
 
 private:
@@ -114,6 +154,7 @@ private:
     std::string target_;
     unsigned version_ = 11; // HTTP/1.1 by default
     headers_type headers_;
+    mutable std::optional<query_params_type> query_params_; // Lazy initialized
     std::string body_;
 };
 

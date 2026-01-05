@@ -596,14 +596,33 @@ LUX_TEST_CASE("http_server_app", "supports method chaining for route registratio
     REQUIRE_NOTHROW(app.post("/contact", [](const auto&, auto& res) { res.created("Message sent"); }));
 }
 
+
 LUX_TEST_CASE("http_server_app", "handles empty path routes", "[io][net][http]")
 {
     mock_http_factory factory;
     const auto config = create_default_http_server_app_config();
     lux::net::http_server_app app{config, factory};
 
+    app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+    auto* mock_server = factory.last_created_server();
+    REQUIRE(mock_server != nullptr);
+
+    lux::net::base::http_request request{lux::net::base::http_method::get, ""};
+    auto response = mock_server->simulate_request(request);
+
+    CHECK(response.status() == lux::net::base::http_status::bad_request);
+    CHECK(response.body() == "400 Bad Request");
+}
+
+LUX_TEST_CASE("http_server_app", "handles root path routes", "[io][net][http]")
+{
+    mock_http_factory factory;
+    const auto config = create_default_http_server_app_config();
+    lux::net::http_server_app app{config, factory};
+
     bool handler_called = false;
-    app.get("", [&](const auto&, auto& res) {
+    app.get("/", [&](const auto&, auto& res) {
         handler_called = true;
         res.ok("Empty path");
     });
@@ -613,7 +632,7 @@ LUX_TEST_CASE("http_server_app", "handles empty path routes", "[io][net][http]")
     auto* mock_server = factory.last_created_server();
     REQUIRE(mock_server != nullptr);
 
-    lux::net::base::http_request request{lux::net::base::http_method::get, ""};
+    lux::net::base::http_request request{lux::net::base::http_method::get, "/"};
     auto response = mock_server->simulate_request(request);
 
     CHECK(handler_called);
@@ -686,4 +705,169 @@ LUX_TEST_CASE("http_server_app", "handler can read request body", "[io][net][htt
     CHECK(body_verified);
     CHECK(response.body() == expected_body);
 }
+
+    LUX_TEST_CASE("http_server_app", "handler can access query parameters from request", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool query_params_verified = false;
+        app.get("/search", [&](const auto& req, auto& res) {
+            CHECK(req.query_params().contains("q"));
+            CHECK(req.query_params().at("q") == "test");
+            CHECK(req.query_params().contains("page"));
+            CHECK(req.query_params().at("page") == "1");
+            query_params_verified = true;
+            res.ok("Search results");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::get, "/search?q=test&page=1"};
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(query_params_verified);
+        CHECK(response.status() == lux::net::base::http_status::ok);
+    }
+
+    LUX_TEST_CASE("http_server_app", "handler receives URL-decoded query parameters", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool decoded_params_verified = false;
+        app.get("/api", [&](const auto& req, auto& res) {
+            const auto& params = req.query_params();
+            CHECK(params.contains("name"));
+            CHECK(params.at("name") == "hello world");
+            CHECK(params.contains("special"));
+            CHECK(params.at("special") == "a+b=c");
+            decoded_params_verified = true;
+            res.ok("OK");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::get, "/api?name=hello+world&special=a%2Bb%3Dc"};
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(decoded_params_verified);
+    }
+
+    LUX_TEST_CASE("http_server_app", "handler receives empty query parameters map when no query string", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool no_params_verified = false;
+        app.get("/noparams", [&](const auto& req, auto& res) {
+            CHECK(req.query_params().empty());
+            no_params_verified = true;
+            res.ok("OK");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::get, "/noparams"};
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(no_params_verified);
+    }
+
+    LUX_TEST_CASE("http_server_app", "routes correctly ignoring query parameters in path matching", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool handler_called = false;
+        app.get("/users", [&](const auto& req, auto& res) {
+            handler_called = true;
+            CHECK(req.query_params().contains("id"));
+            CHECK(req.query_params().at("id") == "123");
+            res.ok("User 123");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::get, "/users?id=123"};
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(handler_called);
+        CHECK(response.status() == lux::net::base::http_status::ok);
+        CHECK(response.body() == "User 123");
+    }
+
+    LUX_TEST_CASE("http_server_app", "handler processes POST request with both body and query parameters", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool both_verified = false;
+        app.post("/api/data", [&](const auto& req, auto& res) {
+            CHECK(req.body() == R"({"data":"value"})");
+            CHECK(req.query_params().contains("action"));
+            CHECK(req.query_params().at("action") == "create");
+            both_verified = true;
+            res.created("Created");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::post, "/api/data?action=create"};
+        request.set_body(R"({"data":"value"})");
+        request.set_header("Content-Type", "application/json");
+
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(both_verified);
+        CHECK(response.status() == lux::net::base::http_status::created);
+    }
+
+    LUX_TEST_CASE("http_server_app", "handler processes query parameters with empty values", "[io][net][http]")
+    {
+        mock_http_factory factory;
+        const auto config = create_default_http_server_app_config();
+        lux::net::http_server_app app{config, factory};
+
+        bool empty_values_verified = false;
+        app.get("/flags", [&](const auto& req, auto& res) {
+            const auto& params = req.query_params();
+            CHECK(params.contains("debug"));
+            CHECK(params.at("debug").empty());
+            CHECK(params.contains("verbose"));
+            CHECK(params.at("verbose").empty());
+            empty_values_verified = true;
+            res.ok("OK");
+        });
+
+        app.serve(lux::net::base::endpoint{lux::net::base::localhost, 8080});
+
+        auto* mock_server = factory.last_created_server();
+        REQUIRE(mock_server != nullptr);
+
+        lux::net::base::http_request request{lux::net::base::http_method::get, "/flags?debug&verbose"};
+        auto response = mock_server->simulate_request(request);
+
+        CHECK(empty_values_verified);
+    }
 

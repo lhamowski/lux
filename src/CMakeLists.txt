@@ -113,6 +113,7 @@ if(LUX_ENABLE_IO)
 			ssl
 			crypto
 			Boost::boost
+			Boost::url
     )
 
 	target_include_directories(lux-io

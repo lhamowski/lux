@@ -32,7 +32,7 @@ option(LUX_FMT_EXTERNAL "Use external fmt library" OFF)
 
 if(LUX_ENABLE_IO)
     set(Boost_USE_STATIC_LIBS ON)
-    find_package(Boost 1.87.0 REQUIRED)
+    find_package(Boost 1.87.0 REQUIRED COMPONENTS url)
     if (${Boost_FOUND})
         message(STATUS "Found Boost ${Boost_VERSION}")
     endif()
