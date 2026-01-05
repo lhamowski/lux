@@ -75,7 +75,7 @@ public:
 
         connect_target_ = endpoint;
 
-        if (const auto ec = initialize_socket(); ec)
+        if (const auto ec = derived().initialize_socket(); ec)
         {
             return ec;
         }
@@ -103,7 +103,7 @@ public:
 
         connect_target_ = hostname_endpoint;
 
-        if (const auto ec = initialize_socket(); ec)
+        if (const auto ec = derived().initialize_socket(); ec)
         {
             return ec;
         }
@@ -268,28 +268,6 @@ private:
     }
 
 private:
-    std::error_code initialize_socket()
-    {
-        LUX_ASSERT(!socket().is_open(), "Socket should not be open when initializing");
-
-        boost::system::error_code ec;
-        socket().open(boost::asio::ip::tcp::v4(), ec);
-        if (ec)
-        {
-            return ec;
-        }
-
-        socket().set_option(boost::asio::socket_base::keep_alive{config_.keep_alive}, ec);
-        if (ec)
-        {
-            boost::system::error_code ignored_ec;
-            socket().close(ignored_ec);
-            return ec;
-        }
-
-        return {};
-    }
-
     std::error_code close_socket()
     {
         return derived().close();
@@ -574,6 +552,28 @@ public:
     }
 
 public:
+    std::error_code initialize_socket()
+    {
+        LUX_ASSERT(!socket_.is_open(), "Socket should not be open when initializing");
+
+        boost::system::error_code ec;
+        socket_.open(boost::asio::ip::tcp::v4(), ec);
+        if (ec)
+        {
+            return ec;
+        }
+
+        socket_.set_option(boost::asio::socket_base::keep_alive{config_.keep_alive}, ec);
+        if (ec)
+        {
+            boost::system::error_code ignored_ec;
+            socket_.close(ignored_ec);
+            return ec;
+        }
+
+        return {};
+    }
+
     std::error_code close()
     {
         boost::system::error_code ec;
@@ -697,6 +697,42 @@ public:
     }
 
 public:
+    std::error_code initialize_socket()
+    {
+        LUX_ASSERT(!socket().is_open(), "Socket should not be open when initializing");
+
+        boost::system::error_code ec;
+        socket().open(boost::asio::ip::tcp::v4(), ec);
+        if (ec)
+        {
+            return ec;
+        }
+
+        socket().set_option(boost::asio::socket_base::keep_alive{config_.keep_alive}, ec);
+        if (ec)
+        {
+            boost::system::error_code ignored_ec;
+            socket().close(ignored_ec);
+            return ec;
+        }
+
+        if (std::holds_alternative<lux::net::base::hostname_endpoint>(connect_target_))
+        {
+            const auto& hostname_endpoint = std::get<lux::net::base::hostname_endpoint>(connect_target_);
+            const auto host = std::string(hostname_endpoint.host());
+
+            // Set SNI Hostname (many hosts need this to handshake successfully)
+            if (!SSL_set_tlsext_host_name(stream_.native_handle(), host.c_str()))
+            {
+                boost::system::error_code ssl_ec{static_cast<int>(::ERR_get_error()),
+                                                 boost::asio::error::get_ssl_category()};
+                return ssl_ec;
+            }
+        }
+
+        return {};
+    }
+
     std::error_code close()
     {
         // Perform the SSL shutdown
