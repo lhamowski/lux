@@ -44,37 +44,37 @@ public:
     /**
      * Send a GET request.
      * @param target The target path for the GET request.
-     * @param handler The callback to invoke when the request completes.
      * @param headers The headers to include in the request.
+     * @param handler The callback to invoke when the request completes.
      */
-    void get(std::string_view target, handler_type handler, headers_type headers = {});
+    void get(std::string_view target, const headers_type& headers, handler_type handler);
 
     /**
      * Send a POST request.
      * @param target The target path for the POST request.
-     * @param handler The callback to invoke when the request completes.
      * @param headers The headers to include in the request.
      * @param body The body of the request.
+     * @param handler The callback to invoke when the request completes.
      */
-    void post(std::string_view target, handler_type handler, headers_type headers = {}, const std::string& body = {});
+    void post(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler);
 
     /**
      * Send a PUT request.
      * @param target The target path for the PUT request.
-     * @param handler The callback to invoke when the request completes.
      * @param headers The headers to include in the request.
      * @param body The body of the request.
+     * @param handler The callback to invoke when the request completes.
      */
-    void put(std::string_view target, handler_type handler, headers_type headers = {}, const std::string& body = {});
+    void put(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler);
 
     /**
      * Send a DELETE request.
      * @param target The target path for the DELETE request.
-     * @param handler The callback to invoke when the request completes.
      * @param headers The headers to include in the request.
      * @param body The body of the request.
+     * @param handler The callback to invoke when the request completes.
      */
-    void del(std::string_view target, handler_type handler, headers_type headers = {}, const std::string& body = {});
+    void del(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler);
 
 private:
     lux::net::base::http_client_ptr client_ptr_{nullptr};

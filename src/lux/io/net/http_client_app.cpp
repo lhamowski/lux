@@ -20,7 +20,7 @@ http_client_app::http_client_app(const lux::net::base::hostname_endpoint& destin
 {
 }
 
-void http_client_app::get(std::string_view target, handler_type handler, headers_type headers)
+void http_client_app::get(std::string_view target, const headers_type& headers, handler_type handler)
 {
     lux::net::base::http_request request;
     request.set_method(lux::net::base::http_method::get);
@@ -30,35 +30,35 @@ void http_client_app::get(std::string_view target, handler_type handler, headers
     client_ptr_->request(request, lux::move(handler));
 }
 
-void http_client_app::post(std::string_view target, handler_type handler, headers_type headers, const std::string& body)
+void http_client_app::post(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler)
 {
     lux::net::base::http_request request;
     request.set_method(lux::net::base::http_method::post);
     request.set_target(std::string{target});
     request.set_body(body);
-    request.set_headers(lux::move(headers));
+    request.set_headers(headers);
 
     client_ptr_->request(request, lux::move(handler));
 }
 
-void http_client_app::put(std::string_view target, handler_type handler, headers_type headers, const std::string& body)
+void http_client_app::put(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler)
 {
     lux::net::base::http_request request;
     request.set_method(lux::net::base::http_method::put);
     request.set_target(std::string{target});
     request.set_body(body);
-    request.set_headers(lux::move(headers));
+    request.set_headers(headers);
 
     client_ptr_->request(request, lux::move(handler));
 }
 
-void http_client_app::del(std::string_view target, handler_type handler, headers_type headers, const std::string& body)
+void http_client_app::del(std::string_view target, const headers_type& headers, const std::string& body, handler_type handler)
 {
     lux::net::base::http_request request;
     request.set_method(lux::net::base::http_method::delete_);
     request.set_target(std::string{target});
     request.set_body(body);
-    request.set_headers(lux::move(headers));
+    request.set_headers(headers);
 
     client_ptr_->request(request, lux::move(handler));
 }

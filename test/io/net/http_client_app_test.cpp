@@ -188,7 +188,7 @@ LUX_TEST_CASE("http_client_app", "sends GET request with correct method and targ
     REQUIRE(mock_client != nullptr);
 
     bool handler_called = false;
-    app.get("/api/data", [&](const auto& result) {
+    app.get("/api/data", {}, [&](const auto& result) {
         handler_called = true;
         CHECK(result.has_value());
     });
@@ -210,7 +210,7 @@ LUX_TEST_CASE("http_client_app", "sends POST request with body", "[io][net][http
     REQUIRE(mock_client != nullptr);
 
     const std::string request_body = R"({"key":"value"})";
-    app.post("/api/data", [](const auto&) {}, {}, request_body);
+    app.post("/api/data", {}, request_body, [](const auto&) {});
 
     CHECK(mock_client->request_count() == 1);
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::post);
@@ -229,7 +229,7 @@ LUX_TEST_CASE("http_client_app", "sends PUT request with body", "[io][net][http]
     REQUIRE(mock_client != nullptr);
 
     const std::string request_body = R"({"updated":"value"})";
-    app.put("/api/resource", [](const auto&) {}, {}, request_body);
+    app.put("/api/resource", {}, request_body, [](const auto&) {});
 
     CHECK(mock_client->request_count() == 1);
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::put);
@@ -248,7 +248,7 @@ LUX_TEST_CASE("http_client_app", "sends DELETE request with optional body", "[io
     REQUIRE(mock_client != nullptr);
 
     const std::string request_body = R"({"reason":"obsolete"})";
-    app.del("/api/resource", [](const auto&) {}, {}, request_body);
+    app.del("/api/resource", {}, request_body, [](const auto&) {});
 
     CHECK(mock_client->request_count() == 1);
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::delete_);
@@ -270,7 +270,7 @@ LUX_TEST_CASE("http_client_app", "sends GET request with custom headers", "[io][
     headers["User-Agent"] = "TestClient/1.0";
     headers["Accept"] = "application/json";
 
-    app.get("/api/data", [](const auto&) {}, headers);
+    app.get("/api/data", headers, [](const auto&) {});
 
     CHECK(mock_client->last_request().has_header("User-Agent"));
     CHECK(mock_client->last_request().header("User-Agent") == "TestClient/1.0");
@@ -292,7 +292,7 @@ LUX_TEST_CASE("http_client_app", "sends POST request with custom headers", "[io]
     headers["Content-Type"] = "application/json";
     headers["Authorization"] = "Bearer token123";
 
-    app.post("/api/data", [](const auto&) {}, headers, R"({"key":"value"})");
+    app.post("/api/data", headers, R"({"key":"value"})", [](const auto&) {});
 
     CHECK(mock_client->last_request().has_header("Content-Type"));
     CHECK(mock_client->last_request().header("Content-Type") == "application/json");
@@ -315,7 +315,7 @@ LUX_TEST_CASE("http_client_app", "invokes handler on successful GET response", "
     expected_response.set_status(lux::net::base::http_status::ok);
     expected_response.set_body("Response body");
 
-    app.get("/test", [&](const auto& result) {
+    app.get("/test", {}, [&](const auto& result) {
         handler_called = true;
         REQUIRE(result.has_value());
         CHECK(result.value().status() == lux::net::base::http_status::ok);
@@ -343,14 +343,14 @@ LUX_TEST_CASE("http_client_app", "invokes handler on successful POST response", 
 
     app.post(
         "/api/resource",
+        {},
+        R"({"data":"value"})",
         [&](const auto& result) {
             handler_called = true;
             REQUIRE(result.has_value());
             CHECK(result.value().status() == lux::net::base::http_status::created);
             CHECK(result.value().body() == "Resource created");
-        },
-        {},
-        R"({"data":"value"})");
+        });
 
     mock_client->simulate_success_response(expected_response);
     CHECK(handler_called);
@@ -369,7 +369,7 @@ LUX_TEST_CASE("http_client_app", "invokes handler on error response", "[io][net]
     bool handler_called = false;
     std::error_code expected_error = std::make_error_code(std::errc::connection_refused);
 
-    app.get("/test", [&](const auto& result) {
+    app.get("/test", {}, [&](const auto& result) {
         handler_called = true;
         REQUIRE_FALSE(result.has_value());
         CHECK(result.error() == expected_error);
@@ -389,13 +389,13 @@ LUX_TEST_CASE("http_client_app", "sends multiple GET requests independently", "[
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.get("/first", [](const auto&) {});
+    app.get("/first", {}, [](const auto&) {});
     CHECK(mock_client->last_request().target() == "/first");
 
-    app.get("/second", [](const auto&) {});
+    app.get("/second", {}, [](const auto&) {});
     CHECK(mock_client->last_request().target() == "/second");
 
-    app.get("/third", [](const auto&) {});
+    app.get("/third", {}, [](const auto&) {});
     CHECK(mock_client->last_request().target() == "/third");
 
     CHECK(mock_client->request_count() == 3);
@@ -411,16 +411,16 @@ LUX_TEST_CASE("http_client_app", "sends requests with different HTTP methods", "
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.get("/resource", [](const auto&) {});
+    app.get("/resource", {}, [](const auto&) {});
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::get);
 
-    app.post("/resource", [](const auto&) {}, {}, "data");
+    app.post("/resource", {}, "data", [](const auto&) {});
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::post);
 
-    app.put("/resource", [](const auto&) {}, {}, "data");
+    app.put("/resource", {}, "data", [](const auto&) {});
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::put);
 
-    app.del("/resource", [](const auto&) {});
+    app.del("/resource", {}, "", [](const auto&) {});
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::delete_);
 
     CHECK(mock_client->request_count() == 4);
@@ -436,7 +436,7 @@ LUX_TEST_CASE("http_client_app", "sends POST request with empty body", "[io][net
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.post("/api/action", [](const auto&) {});
+    app.post("/api/action", {}, "", [](const auto&) {});
 
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::post);
     CHECK(mock_client->last_request().body().empty());
@@ -452,7 +452,7 @@ LUX_TEST_CASE("http_client_app", "sends DELETE request with empty body", "[io][n
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.del("/api/resource", [](const auto&) {});
+    app.del("/api/resource", {}, "", [](const auto&) {});
 
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::delete_);
     CHECK(mock_client->last_request().body().empty());
@@ -468,7 +468,7 @@ LUX_TEST_CASE("http_client_app", "sends GET request without headers", "[io][net]
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.get("/test", [](const auto&) {});
+    app.get("/test", {}, [](const auto&) {});
 
     CHECK(mock_client->last_request().headers().empty());
 }
@@ -484,7 +484,7 @@ LUX_TEST_CASE("http_client_app", "preserves request target with query parameters
     REQUIRE(mock_client != nullptr);
 
     const std::string target_with_query = "/api/search?query=test&limit=10";
-    app.get(target_with_query, [](const auto&) {});
+    app.get(target_with_query, {}, [](const auto&) {});
 
     CHECK(mock_client->last_request().target() == target_with_query);
 }
@@ -499,7 +499,7 @@ LUX_TEST_CASE("http_client_app", "sends request to root path", "[io][net][http]"
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.get("/", [](const auto&) {});
+    app.get("/", {}, [](const auto&) {});
 
     CHECK(mock_client->last_request().target() == "/");
 }
@@ -519,7 +519,7 @@ LUX_TEST_CASE("http_client_app", "sends PUT request with custom headers and body
     headers["X-Custom-Header"] = "CustomValue";
 
     const std::string body = "<data><value>123</value></data>";
-    app.put("/api/resource", [](const auto&) {}, headers, body);
+    app.put("/api/resource", headers, body, [](const auto&) {});
 
     CHECK(mock_client->last_request().method() == lux::net::base::http_method::put);
     CHECK(mock_client->last_request().body() == body);
@@ -537,7 +537,7 @@ LUX_TEST_CASE("http_client_app", "sends DELETE request with custom headers", "[i
     auto* mock_client = factory.last_created_client();
     REQUIRE(mock_client != nullptr);
 
-    app.del("/api/resource/123", [](const auto&) {}, {{"Authorization", "Bearer token456"}});
+    app.del("/api/resource/123", {{"Authorization", "Bearer token456"}}, "", [](const auto&) {});
 
     CHECK(mock_client->last_request().has_header("Authorization"));
     CHECK(mock_client->last_request().header("Authorization") == "Bearer token456");
@@ -559,7 +559,7 @@ LUX_TEST_CASE("http_client_app", "handler receives response headers", "[io][net]
     expected_response.set_header("Content-Type", "application/json");
     expected_response.set_header("X-Request-ID", "req-123");
 
-    app.get("/test", [&](const auto& result) {
+    app.get("/test", {}, [&](const auto& result) {
         handler_called = true;
         REQUIRE(result.has_value());
         CHECK(result.value().has_header("Content-Type"));
