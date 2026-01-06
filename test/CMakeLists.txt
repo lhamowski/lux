@@ -68,6 +68,7 @@ endif()
 
 if(LUX_ENABLE_CRYPTO)
     target_sources(lux-test PRIVATE
+        crypto/cert_test.cpp
         crypto/key_test.cpp
     )
     target_link_libraries(lux-test 

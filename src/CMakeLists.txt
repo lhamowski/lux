@@ -127,6 +127,7 @@ endif()
 if(LUX_ENABLE_CRYPTO)
 	cflex_add_library(lux-crypto SOURCES 
 		${lux_include_files_dir}/crypto/key.hpp ${lux_source_files_dir}/crypto/key.cpp
+		${lux_include_files_dir}/crypto/cert.hpp ${lux_source_files_dir}/crypto/cert.cpp
 	)
 
 	add_library(lux::crypto ALIAS lux-crypto)
