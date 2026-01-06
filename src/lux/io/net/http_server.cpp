@@ -12,6 +12,7 @@
 #include <lux/support/assert.hpp>
 #include <lux/support/move.hpp>
 #include <lux/support/expiring_ref.hpp>
+#include <lux/support/finally.hpp>
 
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/serializer.hpp>
@@ -206,6 +207,19 @@ public:
 
     void close()
     {
+        if (state_ == state::closed || state_ == state::closing)
+        {
+            return;
+        }
+
+        if (state_ == state::responding)
+        {
+            set_state(state::closing);
+            return;
+        }
+
+        // If we are not currently responding, we can disconnect immediately
+        set_state(state::closing);
         if (socket_ptr_)
         {
             socket_ptr_->disconnect(true);
@@ -216,6 +230,8 @@ private:
     // lux::net::base::tcp_inbound_socket_handler implementation
     void on_disconnected(lux::net::base::tcp_inbound_socket& socket, const std::error_code& ec) override
     {
+        set_state(state::closed);
+
         std::ignore = socket;
         std::ignore = ec;
 
@@ -230,14 +246,17 @@ private:
     void on_data_read(lux::net::base::tcp_inbound_socket& socket, const std::span<const std::byte>& data) override
     {
         std::ignore = socket;
+
+        set_state(state::parsing);
         parser_.parse(data);
     }
 
     void on_data_sent(lux::net::base::tcp_inbound_socket& socket, const std::span<const std::byte>& data) override
     {
-        // Do nothing, no need to handle data sent in this case
         std::ignore = socket;
         std::ignore = data;
+
+        set_state(state::idle);
     }
 
 private:
@@ -248,6 +267,8 @@ private:
         {
             return; // Handler is no longer valid, do not process the request
         }
+
+        set_state(state::responding);
 
         auto response = handler_.get().handle_request(request);
         auto boost_response = from_lux_http_response(lux::move(response));
@@ -274,7 +295,15 @@ private:
 
         if (ec)
         {
-            handler_.get().on_server_error(ec);
+            if (handler_.is_valid())
+            {
+                handler_.get().on_server_error(ec);
+            }
+        }
+
+        if (state_ == state::closing)
+        {
+            socket_ptr_->disconnect(true);
         }
     }
 
@@ -285,7 +314,24 @@ private:
             return; // Handler is no longer valid, do not process the error
         }
 
+        set_state(state::idle);
         handler_.get().on_server_error(ec);
+    }
+
+private:
+    enum class state
+    {
+        idle,
+        parsing,
+        responding,
+        closing,
+        closed
+    };
+    state state_{state::idle};
+
+    void set_state(state new_state)
+    {
+        state_ = new_state;
     }
 
 private:
