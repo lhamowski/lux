@@ -27,6 +27,7 @@ cmake_dependent_option(
     OFF
 )
 option(LUX_ENABLE_IO "Enable lux-io module" ON)
+option(LUX_ENABLE_CRYPTO "Enable lux-crypto module" ON)
 option(LUX_FETCH_DEPS "Fetch required dependencies" ON)
 option(LUX_FMT_EXTERNAL "Use external fmt library" OFF)
 

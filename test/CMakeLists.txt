@@ -66,6 +66,16 @@ if(LUX_ENABLE_IO)
     )
 endif()
 
+if(LUX_ENABLE_CRYPTO)
+    target_sources(lux-test PRIVATE
+        crypto/key_test.cpp
+    )
+    target_link_libraries(lux-test 
+        PRIVATE 
+            lux::crypto
+    )
+endif()
+
 target_include_directories(lux-test
 	PRIVATE
         ${lux_SOURCE_DIR}/test

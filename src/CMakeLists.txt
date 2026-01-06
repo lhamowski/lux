@@ -123,3 +123,25 @@ if(LUX_ENABLE_IO)
 
     lux_source_group(lux TREE ${lux_SOURCE_DIR})
 endif()
+
+if(LUX_ENABLE_CRYPTO)
+	cflex_add_library(lux-crypto SOURCES 
+		${lux_include_files_dir}/crypto/key.hpp ${lux_source_files_dir}/crypto/key.cpp
+	)
+
+	add_library(lux::crypto ALIAS lux-crypto)
+
+	target_link_libraries(lux-crypto
+		PUBLIC
+			lux::lux
+			ssl
+			crypto
+	)
+
+	target_include_directories(lux-crypto
+		PRIVATE
+			${lux_SOURCE_DIR}/src
+	)
+
+	lux_source_group(lux TREE ${lux_SOURCE_DIR})
+endif()

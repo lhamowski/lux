@@ -25,7 +25,7 @@ else()
     message(STATUS "Using external spdlog library")
 endif()
 
-if (LUX_ENABLE_IO AND LUX_FETCH_BORINGSSL)
+if ((LUX_ENABLE_IO OR LUX_ENABLE_CRYPTO) AND LUX_FETCH_BORINGSSL)
     CPMAddPackage(
         NAME boringssl
         GITHUB_REPOSITORY google/boringssl
