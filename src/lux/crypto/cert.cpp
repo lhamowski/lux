@@ -1,11 +1,13 @@
 #include <lux/crypto/cert.hpp>
+#include <lux/crypto/detail/openssl_utils.hpp>
 #include <lux/support/move.hpp>
 
 #include <openssl/evp.h>
-#include <openssl/err.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/pem.h>
 #include <openssl/bio.h>
+#include <openssl/asn1.h>
 
 #include <cstdint>
 #include <cstring>
@@ -15,292 +17,255 @@ namespace lux::crypto {
 
 namespace {
 
-std::string get_openssl_error()
+lux::result<void> add_name_entry(X509_NAME* name, const char* field, const std::string& value)
 {
-    const unsigned long err = ERR_get_error();
-    if (err == 0)
+    if (!value.empty())
     {
-        return "Unknown OpenSSL error";
-    }
-
-    char buffer[256];
-    ERR_error_string_n(err, buffer, sizeof(buffer));
-    return std::string{buffer};
-}
-
-struct x509_req_deleter
-{
-    void operator()(X509_REQ* req) const
-    {
-        if (req)
+        if (X509_NAME_add_entry_by_txt(name,
+                                       field,
+                                       MBSTRING_UTF8,
+                                       reinterpret_cast<const unsigned char*>(value.c_str()),
+                                       -1,
+                                       -1,
+                                       0) != 1)
         {
-            X509_REQ_free(req);
+            return lux::err("Failed to add {} to X509_NAME (err={})", field, detail::get_openssl_error());
         }
     }
-};
-
-using x509_req_ptr = std::unique_ptr<X509_REQ, x509_req_deleter>;
-
-struct evp_pkey_deleter
-{
-    void operator()(EVP_PKEY* pkey) const
-    {
-        if (pkey)
-        {
-            EVP_PKEY_free(pkey);
-        }
-    }
-};
-
-using evp_pkey_ptr = std::unique_ptr<EVP_PKEY, evp_pkey_deleter>;
-
-struct bio_deleter
-{
-    void operator()(BIO* bio) const
-    {
-        if (bio)
-        {
-            BIO_free_all(bio);
-        }
-    }
-};
-
-using bio_ptr = std::unique_ptr<BIO, bio_deleter>;
-
-struct x509_name_deleter
-{
-    void operator()(X509_NAME* name) const
-    {
-        if (name)
-        {
-            X509_NAME_free(name);
-        }
-    }
-};
-
-using x509_name_ptr = std::unique_ptr<X509_NAME, x509_name_deleter>;
-
-const std::uint8_t* as_uint8_ptr(const auto* ptr)
-{
-    return reinterpret_cast<const std::uint8_t*>(ptr);
+    return lux::ok();
 }
 
 lux::result<X509_NAME*> create_subject_name(const subject_info& subject)
 {
-    x509_name_ptr name{X509_NAME_new()};
+    detail::x509_name_ptr name{X509_NAME_new()};
     if (!name)
     {
-        return lux::err("Failed to create X509_NAME (err={})", get_openssl_error());
+        return lux::err("Failed to create X509_NAME (err={})", detail::get_openssl_error());
     }
 
-    if (subject.country.has_value())
+    if (auto res = add_name_entry(name.get(), "CN", subject.common_name); !res)
     {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "C",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.country->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        return lux::err(lux::move(res.error()));
+    }
+
+    if (subject.country)
+    {
+        if (auto res = add_name_entry(name.get(), "C", *subject.country); !res)
         {
-            return lux::err("Failed to add country to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    if (subject.state.has_value())
+    if (subject.state)
     {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "ST",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.state->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        if (auto res = add_name_entry(name.get(), "ST", *subject.state); !res)
         {
-            return lux::err("Failed to add state to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    if (subject.locality.has_value())
+    if (subject.locality)
     {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "L",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.locality->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        if (auto res = add_name_entry(name.get(), "L", *subject.locality); !res)
         {
-            return lux::err("Failed to add locality to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    if (subject.organization.has_value())
+    if (subject.organization)
     {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "O",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.organization->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        if (auto res = add_name_entry(name.get(), "O", *subject.organization); !res)
         {
-            return lux::err("Failed to add organization to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    if (subject.organizational_unit.has_value())
+    if (subject.organizational_unit)
     {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "OU",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.organizational_unit->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        if (auto res = add_name_entry(name.get(), "OU", *subject.organizational_unit); !res)
         {
-            return lux::err("Failed to add organizational unit to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    if (!X509_NAME_add_entry_by_txt(name.get(),
-                                    "CN",
-                                    MBSTRING_ASC,
-                                    as_uint8_ptr(subject.common_name.c_str()),
-                                    -1,
-                                    -1,
-                                    0))
+    if (subject.email)
     {
-        return lux::err("Failed to add common name to subject (err={})", get_openssl_error());
-    }
-
-    if (subject.email.has_value())
-    {
-        if (!X509_NAME_add_entry_by_txt(name.get(),
-                                        "emailAddress",
-                                        MBSTRING_ASC,
-                                        as_uint8_ptr(subject.email->c_str()),
-                                        -1,
-                                        -1,
-                                        0))
+        if (auto res = add_name_entry(name.get(), "emailAddress", *subject.email); !res)
         {
-            return lux::err("Failed to add email to subject (err={})", get_openssl_error());
+            return lux::err(lux::move(res.error()));
         }
     }
 
-    return lux::ok(name.release());
-}
-
-lux::result<evp_pkey_ptr> create_evp_pkey_from_keypair(const ed25519_keypair& keypair)
-{
-    if (keypair.private_key.size() != 32)
-    {
-        return lux::err("Invalid ED25519 private key size (expected=32, actual={})", keypair.private_key.size());
-    }
-
-    if (keypair.public_key.size() != 32)
-    {
-        return lux::err("Invalid ED25519 public key size (expected=32, actual={})", keypair.public_key.size());
-    }
-
-    evp_pkey_ptr pkey{EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,
-                                                   nullptr,
-                                                   as_uint8_ptr(keypair.private_key.data()),
-                                                   keypair.private_key.size())};
-
-    if (!pkey)
-    {
-        return lux::err("Failed to create EVP_PKEY from ED25519 private key (err={})", get_openssl_error());
-    }
-
-    return lux::ok(lux::move(pkey));
+    return name.release();
 }
 
 } // anonymous namespace
 
-lux::result<csr_result> generate_csr(const ed25519_keypair& keypair, const subject_info& subject, csr_format format)
+lux::result<csr_der> generate_csr(const lux::crypto::ed25519_private_key& private_key, const subject_info& subject)
 {
-    if (subject.common_name.empty())
+    detail::evp_pkey_ptr pkey{EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,
+                                                           nullptr,
+                                                           detail::as_uint8_ptr(private_key.data.data()),
+                                                           private_key.data.size())};
+    if (!pkey)
     {
-        return lux::err("Common name (CN) is required for CSR generation");
+        return lux::err("Failed to create EVP_PKEY from private key (err={})", detail::get_openssl_error());
     }
 
-    auto pkey_result = create_evp_pkey_from_keypair(keypair);
-    if (!pkey_result)
-    {
-        return lux::err("Failed to create EVP_PKEY: {}", pkey_result.error().str());
-    }
-    evp_pkey_ptr pkey = lux::move(pkey_result.value());
-
-    x509_req_ptr req{X509_REQ_new()};
+    detail::x509_req_ptr req{X509_REQ_new()};
     if (!req)
     {
-        return lux::err("Failed to create X509_REQ (err={})", get_openssl_error());
+        return lux::err("Failed to create X509_REQ (err={})", detail::get_openssl_error());
     }
 
-    if (!X509_REQ_set_version(req.get(), 0))
+    if (X509_REQ_set_version(req.get(), 0) != 1)
     {
-        return lux::err("Failed to set CSR version (err={})", get_openssl_error());
+        return lux::err("Failed to set X509_REQ version (err={})", detail::get_openssl_error());
     }
 
-    auto subject_name_result = create_subject_name(subject);
-    if (!subject_name_result)
+    auto name_result = create_subject_name(subject);
+    if (!name_result)
     {
-        return lux::err("Failed to create subject name: {}", subject_name_result.error().str());
+        return lux::err(lux::move(name_result.error()));
     }
-    X509_NAME* const subject_name = subject_name_result.value();
 
-    if (!X509_REQ_set_subject_name(req.get(), subject_name))
+    X509_NAME* name{*name_result};
+    if (X509_REQ_set_subject_name(req.get(), name) != 1)
     {
-        X509_NAME_free(subject_name);
-        return lux::err("Failed to set subject name (err={})", get_openssl_error());
+        X509_NAME_free(name);
+        return lux::err("Failed to set subject name (err={})", detail::get_openssl_error());
     }
-    X509_NAME_free(subject_name);
+    X509_NAME_free(name);
 
-    if (!X509_REQ_set_pubkey(req.get(), pkey.get()))
+    if (X509_REQ_set_pubkey(req.get(), pkey.get()) != 1)
     {
-        return lux::err("Failed to set public key (err={})", get_openssl_error());
+        return lux::err("Failed to set public key (err={})", detail::get_openssl_error());
     }
 
-    if (!X509_REQ_sign(req.get(), pkey.get(), nullptr))
+    if (!subject.subject_alt_names.empty())
     {
-        return lux::err("Failed to sign CSR (err={})", get_openssl_error());
+        GENERAL_NAMES* gens{sk_GENERAL_NAME_new_null()};
+        if (!gens)
+        {
+            return lux::err("Failed to create GENERAL_NAMES (err={})", detail::get_openssl_error());
+        }
+
+        for (const auto& san : subject.subject_alt_names)
+        {
+            GENERAL_NAME* gen{GENERAL_NAME_new()};
+            if (!gen)
+            {
+                sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+                return lux::err("Failed to create GENERAL_NAME (err={})", detail::get_openssl_error());
+            }
+
+            ASN1_IA5STRING* ia5{ASN1_IA5STRING_new()};
+            if (!ia5)
+            {
+                GENERAL_NAME_free(gen);
+                sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+                return lux::err("Failed to create ASN1_IA5STRING (err={})", detail::get_openssl_error());
+            }
+
+            if (ASN1_STRING_set(ia5, san.c_str(), static_cast<int>(san.length())) != 1)
+            {
+                ASN1_IA5STRING_free(ia5);
+                GENERAL_NAME_free(gen);
+                sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+                return lux::err("Failed to set ASN1_IA5STRING (err={})", detail::get_openssl_error());
+            }
+
+            gen->type = GEN_DNS;
+            gen->d.dNSName = ia5;
+
+            if (sk_GENERAL_NAME_push(gens, gen) == 0)
+            {
+                GENERAL_NAME_free(gen);
+                sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+                return lux::err("Failed to add GENERAL_NAME (err={})", detail::get_openssl_error());
+            }
+        }
+
+        X509_EXTENSIONS* exts{sk_X509_EXTENSION_new_null()};
+        if (!exts)
+        {
+            sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+            return lux::err("Failed to create X509_EXTENSIONS (err={})", detail::get_openssl_error());
+        }
+
+        X509_EXTENSION* ext{X509V3_EXT_i2d(NID_subject_alt_name, 0, gens)};
+        sk_GENERAL_NAME_pop_free(gens, GENERAL_NAME_free);
+
+        if (!ext)
+        {
+            sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+            return lux::err("Failed to create SAN extension (err={})", detail::get_openssl_error());
+        }
+
+        if (sk_X509_EXTENSION_push(exts, ext) == 0)
+        {
+            X509_EXTENSION_free(ext);
+            sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+            return lux::err("Failed to add SAN extension (err={})", detail::get_openssl_error());
+        }
+
+        if (X509_REQ_add_extensions(req.get(), exts) != 1)
+        {
+            sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
+            return lux::err("Failed to add extensions to CSR (err={})", detail::get_openssl_error());
+        }
+
+        sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
     }
 
-    bio_ptr bio{BIO_new(BIO_s_mem())};
+    if (X509_REQ_sign(req.get(), pkey.get(), nullptr) <= 0)
+    {
+        return lux::err("Failed to sign CSR (err={})", detail::get_openssl_error());
+    }
+
+    unsigned char* der_data{nullptr};
+    int der_len{i2d_X509_REQ(req.get(), &der_data)};
+    if (der_len < 0)
+    {
+        return lux::err("Failed to encode CSR to DER (err={})", detail::get_openssl_error());
+    }
+
+    const std::byte* der_data_as_bytes = reinterpret_cast<std::byte*>(der_data);
+    std::vector<std::byte> der_vec{der_data_as_bytes, der_data_as_bytes + der_len};
+    OPENSSL_free(der_data);
+
+    return csr_der{lux::move(der_vec)};
+}
+
+lux::result<csr_pem> to_pem(const csr_der& der_csr)
+{
+    const unsigned char* der_ptr{detail::as_uint8_ptr(const_cast<std::byte*>(der_csr.get().data()))};
+    X509_REQ* req{d2i_X509_REQ(nullptr, &der_ptr, static_cast<long>(der_csr.get().size()))};
+    if (!req)
+    {
+        return lux::err("Failed to decode DER CSR (err={})", detail::get_openssl_error());
+    }
+    detail::x509_req_ptr req_ptr{req};
+
+    detail::bio_ptr bio{BIO_new(BIO_s_mem())};
     if (!bio)
     {
-        return lux::err("Failed to create BIO (err={})", get_openssl_error());
+        return lux::err("Failed to create memory BIO (err={})", detail::get_openssl_error());
     }
 
-    if (format == csr_format::pem)
+    if (PEM_write_bio_X509_REQ(bio.get(), req_ptr.get()) != 1)
     {
-        if (!PEM_write_bio_X509_REQ(bio.get(), req.get()))
-        {
-            return lux::err("Failed to write CSR in PEM format (err={})", get_openssl_error());
-        }
+        return lux::err("Failed to write CSR to PEM (err={})", detail::get_openssl_error());
     }
-    else
+
+    char* data{nullptr};
+    long len{BIO_get_mem_data(bio.get(), &data)};
+    if (len <= 0)
     {
-        if (!i2d_X509_REQ_bio(bio.get(), req.get()))
-        {
-            return lux::err("Failed to write CSR in DER format (err={})", get_openssl_error());
-        }
+        return lux::err("Failed to get PEM data from BIO");
     }
 
-    BUF_MEM* mem = nullptr;
-    BIO_get_mem_ptr(bio.get(), &mem);
-    if (!mem || !mem->data || mem->length == 0)
-    {
-        return lux::err("Failed to get CSR data from BIO");
-    }
-
-    csr_result result;
-    result.format = format;
-    result.data.resize(mem->length);
-    std::memcpy(result.data.data(), mem->data, mem->length);
-
-    return lux::ok(lux::move(result));
+    return csr_pem{std::string{data, static_cast<std::size_t>(len)}};
 }
 
 } // namespace lux::crypto

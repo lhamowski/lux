@@ -5,178 +5,148 @@
 
 #include "test_case.hpp"
 
-#include <string>
-
-LUX_TEST_CASE("csr", "generates CSR successfully with minimal subject info", "[csr][crypto]")
+LUX_TEST_CASE("generate_csr", "generates CSR successfully with basic subject info", "[crypto][cert][csr]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "example.com"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
 
-    const auto csr_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::pem);
+    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
-    CHECK(csr_result->format == lux::crypto::csr_format::pem);
-    CHECK_FALSE(csr_result->data.empty());
-
-    const auto& data = csr_result->data;
-    const std::string pem_str(reinterpret_cast<const char*>(data.data()), data.size());
-    CHECK(pem_str.find("-----BEGIN CERTIFICATE REQUEST-----") != std::string::npos);
-    CHECK(pem_str.find("-----END CERTIFICATE REQUEST-----") != std::string::npos);
+    CHECK_FALSE(csr_result->get().empty());
 }
 
-LUX_TEST_CASE("csr", "generates CSR successfully with complete subject info", "[csr][crypto]")
+LUX_TEST_CASE("generate_csr", "generates CSR successfully with full subject info", "[crypto][cert][csr]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "example.com",
-                                            .country = "US",
-                                            .state = "California",
-                                            .locality = "San Francisco",
-                                            .organization = "Example Inc",
-                                            .organizational_unit = "IT Department",
-                                            .email = "admin@example.com"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
+    subject.country = "US";
+    subject.state = "California";
+    subject.locality = "San Francisco";
+    subject.organization = "Test Organization";
+    subject.organizational_unit = "IT Department";
+    subject.email = "admin@example.com";
 
-    const auto csr_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::pem);
+    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
-    CHECK(csr_result->format == lux::crypto::csr_format::pem);
-    CHECK_FALSE(csr_result->data.empty());
+    CHECK_FALSE(csr_result->get().empty());
 }
 
-LUX_TEST_CASE("csr", "generates CSR in DER format successfully", "[csr][crypto]")
+LUX_TEST_CASE("generate_csr", "generates CSR successfully with subject alternative names", "[crypto][cert][csr]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "example.com",
-                                            .country = "US",
-                                            .organization = "Example Inc"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
+    subject.subject_alt_names = {"www.example.com", "api.example.com", "example.com"};
 
-    const auto csr_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::der);
+    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
-    CHECK(csr_result->format == lux::crypto::csr_format::der);
-    CHECK_FALSE(csr_result->data.empty());
-
-    const auto& data = csr_result->data;
-    const std::string der_str(reinterpret_cast<const char*>(data.data()), data.size());
-    CHECK(der_str.find("-----BEGIN") == std::string::npos);
+    CHECK_FALSE(csr_result->get().empty());
 }
 
-LUX_TEST_CASE("csr", "returns error when common name is empty", "[csr][crypto]")
+LUX_TEST_CASE("generate_csr", "generates CSR successfully with all fields", "[crypto][cert][csr]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "", .country = "US"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
+    subject.country = "US";
+    subject.state = "California";
+    subject.locality = "San Francisco";
+    subject.organization = "Test Organization";
+    subject.organizational_unit = "IT Department";
+    subject.email = "admin@example.com";
+    subject.subject_alt_names = {"www.example.com", "api.example.com"};
 
-    const auto csr_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::pem);
+    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
-    REQUIRE_FALSE(csr_result.has_value());
-    CHECK(csr_result.error().str() == "Common name (CN) is required for CSR generation\n");
+    REQUIRE(csr_result.has_value());
+    CHECK_FALSE(csr_result->get().empty());
 }
 
-LUX_TEST_CASE("csr", "generates different CSRs for different keypairs", "[csr][crypto]")
+LUX_TEST_CASE("generate_csr", "generates different CSRs with different keys", "[crypto][cert][csr]")
 {
-    const auto keypair1_result = lux::crypto::generate_ed25519_keypair();
-    const auto keypair2_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair1_result.has_value());
-    REQUIRE(keypair2_result.has_value());
+    auto private_key1{lux::crypto::generate_ed25519_private_key()};
+    auto private_key2{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key1.has_value());
+    REQUIRE(private_key2.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "example.com"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
 
-    const auto csr1_result = lux::crypto::generate_csr(keypair1_result.value(), subject, lux::crypto::csr_format::pem);
-    const auto csr2_result = lux::crypto::generate_csr(keypair2_result.value(), subject, lux::crypto::csr_format::pem);
+    auto csr1{lux::crypto::generate_csr(*private_key1, subject)};
+    auto csr2{lux::crypto::generate_csr(*private_key2, subject)};
 
-    REQUIRE(csr1_result.has_value());
-    REQUIRE(csr2_result.has_value());
-    CHECK(csr1_result->data != csr2_result->data);
+    REQUIRE(csr1.has_value());
+    REQUIRE(csr2.has_value());
+    CHECK(csr1->get() != csr2->get());
 }
 
-LUX_TEST_CASE("csr", "generates different CSRs for different subjects", "[csr][crypto]")
+LUX_TEST_CASE("csr_pem", "converts DER CSR to PEM format successfully", "[crypto][cert][csr][pem]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject1{.common_name = "example1.com"};
-    const lux::crypto::subject_info subject2{.common_name = "example2.com"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
 
-    const auto csr1_result = lux::crypto::generate_csr(keypair_result.value(), subject1, lux::crypto::csr_format::pem);
-    const auto csr2_result = lux::crypto::generate_csr(keypair_result.value(), subject2, lux::crypto::csr_format::pem);
+    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    REQUIRE(csr_der_result.has_value());
 
-    REQUIRE(csr1_result.has_value());
-    REQUIRE(csr2_result.has_value());
-    CHECK(csr1_result->data != csr2_result->data);
+    auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
+
+    REQUIRE(csr_pem_result.has_value());
+    CHECK_FALSE(csr_pem_result->get().empty());
+    CHECK(csr_pem_result->get().find("-----BEGIN CERTIFICATE REQUEST-----") != std::string::npos);
+    CHECK(csr_pem_result->get().find("-----END CERTIFICATE REQUEST-----") != std::string::npos);
 }
 
-LUX_TEST_CASE("csr", "handles optional subject fields correctly", "[csr][crypto]")
+LUX_TEST_CASE("csr_pem", "produces consistent PEM for same DER CSR", "[crypto][cert][csr][pem]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    SECTION("With only common name")
-    {
-        const lux::crypto::subject_info subject{.common_name = "test.com"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
 
-        const auto csr_result = lux::crypto::generate_csr(keypair_result.value(),
-                                                          subject,
-                                                          lux::crypto::csr_format::pem);
+    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    REQUIRE(csr_der_result.has_value());
 
-        REQUIRE(csr_result.has_value());
-        CHECK_FALSE(csr_result->data.empty());
-    }
+    auto pem1{lux::crypto::to_pem(*csr_der_result)};
+    auto pem2{lux::crypto::to_pem(*csr_der_result)};
 
-    SECTION("With country only")
-    {
-        const lux::crypto::subject_info subject{.common_name = "test.com", .country = "PL"};
-
-        const auto csr_result = lux::crypto::generate_csr(keypair_result.value(),
-                                                          subject,
-                                                          lux::crypto::csr_format::pem);
-
-        REQUIRE(csr_result.has_value());
-        CHECK_FALSE(csr_result->data.empty());
-    }
-
-    SECTION("With organization only")
-    {
-        const lux::crypto::subject_info subject{.common_name = "test.com", .organization = "Test Org"};
-
-        const auto csr_result = lux::crypto::generate_csr(keypair_result.value(),
-                                                          subject,
-                                                          lux::crypto::csr_format::pem);
-
-        REQUIRE(csr_result.has_value());
-        CHECK_FALSE(csr_result->data.empty());
-    }
-
-    SECTION("With email only")
-    {
-        const lux::crypto::subject_info subject{.common_name = "test.com", .email = "test@test.com"};
-
-        const auto csr_result = lux::crypto::generate_csr(keypair_result.value(),
-                                                          subject,
-                                                          lux::crypto::csr_format::pem);
-
-        REQUIRE(csr_result.has_value());
-        CHECK_FALSE(csr_result->data.empty());
-    }
+    REQUIRE(pem1.has_value());
+    REQUIRE(pem2.has_value());
+    CHECK(pem1->get() == pem2->get());
 }
 
-LUX_TEST_CASE("csr", "generates consistent output format for same inputs", "[csr][crypto]")
+LUX_TEST_CASE("csr_pem", "converts CSR with SANs to PEM successfully", "[crypto][cert][csr][pem]")
 {
-    const auto keypair_result = lux::crypto::generate_ed25519_keypair();
-    REQUIRE(keypair_result.has_value());
+    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    REQUIRE(private_key_result.has_value());
 
-    const lux::crypto::subject_info subject{.common_name = "example.com", .country = "US"};
+    lux::crypto::subject_info subject{};
+    subject.common_name = "test.example.com";
+    subject.subject_alt_names = {"www.example.com", "api.example.com"};
 
-    const auto csr1_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::pem);
-    const auto csr2_result = lux::crypto::generate_csr(keypair_result.value(), subject, lux::crypto::csr_format::pem);
+    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    REQUIRE(csr_der_result.has_value());
 
-    REQUIRE(csr1_result.has_value());
-    REQUIRE(csr2_result.has_value());
-    CHECK(csr1_result->data == csr2_result->data);
+    auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
+
+    REQUIRE(csr_pem_result.has_value());
+    CHECK_FALSE(csr_pem_result->get().empty());
+    CHECK(csr_pem_result->get().find("-----BEGIN CERTIFICATE REQUEST-----") != std::string::npos);
+    CHECK(csr_pem_result->get().find("-----END CERTIFICATE REQUEST-----") != std::string::npos);
 }

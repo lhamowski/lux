@@ -1,104 +1,144 @@
 #include <lux/crypto/key.hpp>
+
+#include <lux/crypto/detail/openssl_utils.hpp>
 #include <lux/support/move.hpp>
 
 #include <openssl/evp.h>
-#include <openssl/err.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
 
 #include <memory>
 
 namespace lux::crypto {
 
-namespace {
-
-std::string get_openssl_error()
+lux::result<ed25519_private_key> generate_ed25519_private_key()
 {
-    unsigned long err = ERR_get_error();
-    if (err == 0)
-    {
-        return "Unknown OpenSSL error";
-    }
-
-    char buffer[256];
-    ERR_error_string_n(err, buffer, sizeof(buffer));
-    return std::string{buffer};
-}
-
-struct evp_pkey_deleter
-{
-    void operator()(EVP_PKEY* pkey) const
-    {
-        if (pkey)
-        {
-            EVP_PKEY_free(pkey);
-        }
-    }
-};
-
-using evp_pkey_ptr = std::unique_ptr<EVP_PKEY, evp_pkey_deleter>;
-
-struct evp_pkey_ctx_deleter
-{
-    void operator()(EVP_PKEY_CTX* ctx) const
-    {
-        if (ctx)
-        {
-            EVP_PKEY_CTX_free(ctx);
-        }
-    }
-};
-
-using evp_pkey_ctx_ptr = std::unique_ptr<EVP_PKEY_CTX, evp_pkey_ctx_deleter>;
-
-} // anonymous namespace
-
-lux::result<ed25519_keypair> generate_ed25519_keypair()
-{
-    evp_pkey_ctx_ptr ctx{EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr)};
+    detail::evp_pkey_ctx_ptr ctx{EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr)};
     if (!ctx)
     {
-        return lux::err("Failed to create EVP_PKEY_CTX (err={})", get_openssl_error());
+        return lux::err("Failed to create EVP_PKEY_CTX (err={})", detail::get_openssl_error());
     }
 
     if (EVP_PKEY_keygen_init(ctx.get()) <= 0)
     {
-        return lux::err("Failed to initialize key generation (err={})", get_openssl_error());
+        return lux::err("Failed to initialize key generation (err={})", detail::get_openssl_error());
     }
 
-    EVP_PKEY* raw_pkey = nullptr;
+    EVP_PKEY* raw_pkey{nullptr};
     if (EVP_PKEY_keygen(ctx.get(), &raw_pkey) <= 0)
     {
-        return lux::err("Failed to generate ED25519 keypair (err={})", get_openssl_error());
+        return lux::err("Failed to generate Ed25519 key (err={})", detail::get_openssl_error());
     }
 
-    const evp_pkey_ptr pkey{raw_pkey};
-    ed25519_keypair keypair;
+    detail::evp_pkey_ptr pkey{raw_pkey};
 
-    // Extract private key
-    std::size_t private_key_len = 32;
-    keypair.private_key.resize(private_key_len);
+    std::size_t key_len{ed25519_private_key::size};
+    ed25519_private_key private_key{};
 
-    auto* private_key_data = reinterpret_cast<uint8_t*>(keypair.private_key.data());
-    if (EVP_PKEY_get_raw_private_key(pkey.get(), private_key_data, &private_key_len) <= 0)
+    if (EVP_PKEY_get_raw_private_key(pkey.get(), detail::as_uint8_ptr(private_key.data.data()), &key_len) <= 0)
     {
-        return lux::err("Failed to extract private key (err={})", get_openssl_error());
+        return lux::err("Failed to extract Ed25519 private key (err={})", detail::get_openssl_error());
     }
 
-    keypair.private_key.resize(private_key_len);
-
-    // Extract public key
-    std::size_t public_key_len = 32;
-    keypair.public_key.resize(public_key_len);
-
-    auto* public_key_data = reinterpret_cast<uint8_t*>(keypair.public_key.data());
-
-    if (EVP_PKEY_get_raw_public_key(pkey.get(), public_key_data, &public_key_len) <= 0)
+    if (key_len != ed25519_private_key::size)
     {
-        return lux::err("Failed to extract public key (err={})", get_openssl_error());
+        return lux::err("Invalid Ed25519 private key size (expected={}, actual={})",
+                        ed25519_private_key::size,
+                        key_len);
     }
 
-    keypair.public_key.resize(public_key_len);
+    return private_key;
+}
 
-    return lux::ok(lux::move(keypair));
+lux::result<ed25519_public_key> lux::crypto::derive_public_key(const ed25519_private_key& private_key)
+{
+    detail::evp_pkey_ptr pkey{EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,
+                                                           nullptr,
+                                                           detail::as_uint8_ptr(private_key.data.data()),
+                                                           private_key.data.size())};
+    if (!pkey)
+    {
+        return lux::err("Failed to create EVP_PKEY from private key (err={})", detail::get_openssl_error());
+    }
+
+    ed25519_public_key public_key{};
+    std::size_t key_len{ed25519_public_key::size};
+
+    if (EVP_PKEY_get_raw_public_key(pkey.get(), detail::as_uint8_ptr(public_key.data.data()), &key_len) <= 0)
+    {
+        return lux::err("Failed to derive Ed25519 public key (err={})", detail::get_openssl_error());
+    }
+
+    if (key_len != ed25519_public_key::size)
+    {
+        return lux::err("Invalid Ed25519 public key size (expected={}, actual={})", ed25519_public_key::size, key_len);
+    }
+
+    return public_key;
+}
+
+lux::result<lux::crypto::secure_string> to_pem(const ed25519_private_key& private_key)
+{
+    detail::evp_pkey_ptr pkey{EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,
+                                                           nullptr,
+                                                           detail::as_uint8_ptr(private_key.data.data()),
+                                                           private_key.data.size())};
+    if (!pkey)
+    {
+        return lux::err("Failed to create EVP_PKEY from private key (err={})", detail::get_openssl_error());
+    }
+
+    detail::bio_ptr bio{BIO_new(BIO_s_mem())};
+    if (!bio)
+    {
+        return lux::err("Failed to create memory BIO (err={})", detail::get_openssl_error());
+    }
+
+    if (PEM_write_bio_PrivateKey(bio.get(), pkey.get(), nullptr, nullptr, 0, nullptr, nullptr) <= 0)
+    {
+        return lux::err("Failed to write private key to PEM (err={})", detail::get_openssl_error());
+    }
+
+    char* data{nullptr};
+    long len{BIO_get_mem_data(bio.get(), &data)};
+    if (len <= 0)
+    {
+        return lux::err("Failed to get PEM data from BIO");
+    }
+
+    return lux::crypto::secure_string{data, static_cast<std::size_t>(len)};
+}
+
+lux::result<std::string> to_pem(const ed25519_public_key& public_key)
+{
+    detail::evp_pkey_ptr pkey{EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519,
+                                                          nullptr,
+                                                          detail::as_uint8_ptr(public_key.data.data()),
+                                                          public_key.data.size())};
+    if (!pkey)
+    {
+        return lux::err("Failed to create EVP_PKEY from public key (err={})", detail::get_openssl_error());
+    }
+
+    detail::bio_ptr bio{BIO_new(BIO_s_mem())};
+    if (!bio)
+    {
+        return lux::err("Failed to create memory BIO (err={})", detail::get_openssl_error());
+    }
+
+    if (PEM_write_bio_PUBKEY(bio.get(), pkey.get()) <= 0)
+    {
+        return lux::err("Failed to write public key to PEM (err={})", detail::get_openssl_error());
+    }
+
+    char* data{nullptr};
+    long len{BIO_get_mem_data(bio.get(), &data)};
+    if (len <= 0)
+    {
+        return lux::err("Failed to get PEM data from BIO");
+    }
+
+    return std::string{data, static_cast<std::size_t>(len)};
 }
 
 } // namespace lux::crypto
