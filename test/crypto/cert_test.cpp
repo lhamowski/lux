@@ -7,13 +7,13 @@
 
 LUX_TEST_CASE("generate_csr", "generates CSR successfully with basic subject info", "[crypto][cert][csr]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
 
-    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
     CHECK_FALSE(csr_result->get().empty());
@@ -21,7 +21,7 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with basic subject inf
 
 LUX_TEST_CASE("generate_csr", "generates CSR successfully with full subject info", "[crypto][cert][csr]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
@@ -33,7 +33,7 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with full subject info
     subject.organizational_unit = "IT Department";
     subject.email = "admin@example.com";
 
-    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
     CHECK_FALSE(csr_result->get().empty());
@@ -41,14 +41,14 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with full subject info
 
 LUX_TEST_CASE("generate_csr", "generates CSR successfully with subject alternative names", "[crypto][cert][csr]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
     subject.subject_alt_names = {"www.example.com", "api.example.com", "example.com"};
 
-    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
     CHECK_FALSE(csr_result->get().empty());
@@ -56,7 +56,7 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with subject alternati
 
 LUX_TEST_CASE("generate_csr", "generates CSR successfully with all fields", "[crypto][cert][csr]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
@@ -69,7 +69,7 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with all fields", "[cr
     subject.email = "admin@example.com";
     subject.subject_alt_names = {"www.example.com", "api.example.com"};
 
-    auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_result{lux::crypto::generate_csr(*private_key_result, subject)};
 
     REQUIRE(csr_result.has_value());
     CHECK_FALSE(csr_result->get().empty());
@@ -77,16 +77,16 @@ LUX_TEST_CASE("generate_csr", "generates CSR successfully with all fields", "[cr
 
 LUX_TEST_CASE("generate_csr", "generates different CSRs with different keys", "[crypto][cert][csr]")
 {
-    auto private_key1{lux::crypto::generate_ed25519_private_key()};
-    auto private_key2{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key1{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key2{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key1.has_value());
     REQUIRE(private_key2.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
 
-    auto csr1{lux::crypto::generate_csr(*private_key1, subject)};
-    auto csr2{lux::crypto::generate_csr(*private_key2, subject)};
+    const auto csr1{lux::crypto::generate_csr(*private_key1, subject)};
+    const auto csr2{lux::crypto::generate_csr(*private_key2, subject)};
 
     REQUIRE(csr1.has_value());
     REQUIRE(csr2.has_value());
@@ -95,16 +95,16 @@ LUX_TEST_CASE("generate_csr", "generates different CSRs with different keys", "[
 
 LUX_TEST_CASE("csr_pem", "converts DER CSR to PEM format successfully", "[crypto][cert][csr][pem]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
 
-    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
     REQUIRE(csr_der_result.has_value());
 
-    auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
+    const auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
 
     REQUIRE(csr_pem_result.has_value());
     CHECK_FALSE(csr_pem_result->get().empty());
@@ -114,17 +114,17 @@ LUX_TEST_CASE("csr_pem", "converts DER CSR to PEM format successfully", "[crypto
 
 LUX_TEST_CASE("csr_pem", "produces consistent PEM for same DER CSR", "[crypto][cert][csr][pem]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
 
-    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
     REQUIRE(csr_der_result.has_value());
 
-    auto pem1{lux::crypto::to_pem(*csr_der_result)};
-    auto pem2{lux::crypto::to_pem(*csr_der_result)};
+    const auto pem1{lux::crypto::to_pem(*csr_der_result)};
+    const auto pem2{lux::crypto::to_pem(*csr_der_result)};
 
     REQUIRE(pem1.has_value());
     REQUIRE(pem2.has_value());
@@ -133,17 +133,17 @@ LUX_TEST_CASE("csr_pem", "produces consistent PEM for same DER CSR", "[crypto][c
 
 LUX_TEST_CASE("csr_pem", "converts CSR with SANs to PEM successfully", "[crypto][cert][csr][pem]")
 {
-    auto private_key_result{lux::crypto::generate_ed25519_private_key()};
+    const auto private_key_result{lux::crypto::generate_ed25519_private_key()};
     REQUIRE(private_key_result.has_value());
 
     lux::crypto::subject_info subject{};
     subject.common_name = "test.example.com";
     subject.subject_alt_names = {"www.example.com", "api.example.com"};
 
-    auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
+    const auto csr_der_result{lux::crypto::generate_csr(*private_key_result, subject)};
     REQUIRE(csr_der_result.has_value());
 
-    auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
+    const auto csr_pem_result{lux::crypto::to_pem(*csr_der_result)};
 
     REQUIRE(csr_pem_result.has_value());
     CHECK_FALSE(csr_pem_result->get().empty());
