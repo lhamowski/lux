@@ -117,7 +117,23 @@ lux/
 
 **Formatting** (`.clang-format`): 4-space indent, Allman braces, 120-char lines, left pointer alignment.
 **Naming**: Private members end with `_` (e.g., `value_`), functions are `snake_case`, no include sorting.  
+**Initialization**: Use uniform initialization `{}` wherever possible (e.g., `int x{42};`, `std::string s{};`, `Type obj{arg1, arg2};`).
+**Const Correctness**: Use `const` for variables and member functions that do not modify state.
 **Testing**: Catch2 v3. Run all: `cd build/<preset> && ctest --output-on-failure`. Run specific: `./test/lux-test "[logger]"`. Tests link `Catch2::Catch2WithMain`, `lux::lux`, `lux::io`.
+
+### Error Messages
+
+**Format**: Place parameters at the end using named format placeholders:
+- Single error value: `"Operation failed (err={})"`
+- Expected vs actual: `"Invalid size (expected={}, actual={})"`
+- Multiple values: Use descriptive names like `(code={}, reason={})`, `(min={}, max={}, value={})`
+
+**Examples**:
+```cpp
+return lux::err("Failed to create context (err={})", get_openssl_error());
+return lux::err("Invalid buffer size (expected={}, actual={})", expected_size, actual_size);
+return lux::err("Connection timeout (host={}, port={}, timeout_ms={})", host, port, timeout);
+```
 
 ### Test Naming Convention (Catch2 v3)
 
