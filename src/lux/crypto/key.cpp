@@ -50,7 +50,7 @@ lux::result<ed25519_private_key> generate_ed25519_private_key()
     return private_key;
 }
 
-lux::result<ed25519_public_key> lux::crypto::derive_public_key(const ed25519_private_key& private_key)
+lux::result<ed25519_public_key> derive_public_key(const ed25519_private_key& private_key)
 {
     detail::evp_pkey_ptr pkey{EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519,
                                                            nullptr,
