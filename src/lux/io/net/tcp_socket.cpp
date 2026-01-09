@@ -150,7 +150,7 @@ public:
 
     std::error_code send(const std::span<const std::byte>& data)
     {
-        if (!is_connected() && !is_disconnecting())
+        if (!is_connected())
         {
             return std::make_error_code(std::errc::not_connected);
         }
@@ -280,6 +280,7 @@ private:
 private:
     std::error_code close_socket()
     {
+        pending_data_to_send_.clear();
         return derived().close();
     }
 
@@ -320,7 +321,6 @@ private:
         }
 
         const auto close_ec = close_socket();
-        state_ = state::disconnected;
 
         if (handler_)
         {
@@ -586,24 +586,17 @@ public:
 
     std::error_code close()
     {
-        boost::system::error_code ec;
+        state_ = state::disconnected;
 
         if (is_connected())
         {
-            socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-            if (ec)
-            {
-                return ec;
-            }
+            boost::system::error_code ignored_ec;
+            socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
         }
 
+        boost::system::error_code ec{};
         socket_.close(ec);
-        if (ec)
-        {
-            return ec;
-        }
-
-        return {};
+        return ec;
     }
 
 public:
@@ -690,25 +683,30 @@ public:
          const lux::net::base::tcp_socket_config& config,
          lux::time::base::timer_factory& timer_factory,
          lux::net::base::ssl_context& ssl_context)
-        : base_tcp_socket<ssl_tcp_socket::impl>(parent, exe, handler, config, timer_factory), stream_{exe, ssl_context}
+        : base_tcp_socket<ssl_tcp_socket::impl>(parent, exe, handler, config, timer_factory),
+          exe_{exe},
+          ssl_context_{ssl_context}
     {
+        stream_.emplace(exe_, ssl_context_);
     }
 
 public:
     auto& stream()
     {
-        return stream_;
+        LUX_ASSERT(stream_.has_value(), "SSL stream is not initialized");
+        return *stream_;
     }
 
     const auto& stream() const
     {
-        return stream_;
+        LUX_ASSERT(stream_.has_value(), "SSL stream is not initialized");
+        return *stream_;
     }
 
 public:
     std::error_code initialize_socket()
     {
-        LUX_ASSERT(!socket().is_open(), "Socket should not be open when initializing");
+        LUX_ASSERT(stream_.has_value(), "SSL stream is not initialized");
 
         boost::system::error_code ec;
         socket().open(boost::asio::ip::tcp::v4(), ec);
@@ -731,7 +729,7 @@ public:
             const auto host = std::string(hostname_endpoint.host());
 
             // Set SNI Hostname (many hosts need this to handshake successfully)
-            if (!SSL_set_tlsext_host_name(stream_.native_handle(), host.c_str()))
+            if (!SSL_set_tlsext_host_name(stream_->native_handle(), host.c_str()))
             {
                 boost::system::error_code ssl_ec{static_cast<int>(::ERR_get_error()),
                                                  boost::asio::error::get_ssl_category()};
@@ -744,8 +742,10 @@ public:
 
     std::error_code close()
     {
+        state_ = state::disconnecting;
+
         // Perform the SSL shutdown
-        stream_.async_shutdown([self = shared_from_base()](const auto& ec) { self->on_shutdowned(ec); });
+        stream_->async_shutdown([self = shared_from_base()](const auto& ec) { self->on_shutdowned(ec); });
         return {};
     }
 
@@ -758,7 +758,7 @@ public:
 private:
     void handshake()
     {
-        stream_.async_handshake(boost::asio::ssl::stream_base::client,
+        stream_->async_handshake(boost::asio::ssl::stream_base::client,
                                 [self = shared_from_base()](const auto& ec) { self->on_handshake_completed(ec); });
     }
 
@@ -787,6 +787,11 @@ private:
 
     void on_shutdowned(const boost::system::error_code& ec)
     {
+        state_ = state::disconnected;
+
+        boost::system::error_code ignored_ec;
+        stream_->lowest_layer().close(ignored_ec);
+
         if (ec)
         {
             // Non-compliant servers don't participate in the SSL/TLS shutdown process and
@@ -798,10 +803,19 @@ private:
                 // TODO: inform the handler about the shutdown error
             }
         }
+
+        stream_.emplace(exe_, ssl_context_); // Recreate the stream for future connections
     }
 
 private:
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> stream_;
+    boost::asio::any_io_executor exe_;
+    boost::asio::ssl::context& ssl_context_;
+
+private:
+    // need to recreate the stream after closing
+    // https://github.com/boostorg/beast/issues/821
+    using stream_type = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
+    std::optional<stream_type> stream_;
 };
 
 ssl_tcp_socket::ssl_tcp_socket(boost::asio::any_io_executor exe,

@@ -59,7 +59,7 @@ public:
 
     std::error_code send(const std::span<const std::byte>& data)
     {
-        if (!is_connected() && !is_disconnecting())
+        if (!is_connected())
         {
             return std::make_error_code(std::errc::not_connected);
         }
@@ -195,6 +195,7 @@ private:
 private:
     std::error_code close_socket()
     {
+        pending_data_to_send_.clear();
         return derived().close();
     }
 
@@ -233,7 +234,6 @@ private:
         }
 
         const auto close_ec = close_socket();
-        state_ = state::disconnected;
 
         if (handler_)
         {
@@ -363,17 +363,15 @@ public:
 public:
     std::error_code close()
     {
-        boost::system::error_code ec;
+        state_ = state::disconnected;
 
         if (is_connected())
         {
-            socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-            if (ec)
-            {
-                return ec;
-            }
+            boost::system::error_code ignored_ec;
+            socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
         }
 
+        boost::system::error_code ec;
         socket_.close(ec);
         return ec;
     }
@@ -462,6 +460,7 @@ public:
 public:
     std::error_code close()
     {
+        state_ = state::disconnecting;
         stream_.async_shutdown([self = shared_from_base()](const auto& ec) { self->on_shutdowned(ec); });
         return {};
     }
@@ -469,6 +468,11 @@ public:
 private:
     void on_shutdowned(const boost::system::error_code& ec)
     {
+        state_ = state::disconnected;
+
+        boost::system::error_code ignored_ec;
+        stream_.next_layer().close(ignored_ec);
+
         if (ec)
         {
             if (ec != boost::asio::ssl::error::stream_truncated)
