@@ -29,25 +29,34 @@ public:
         acceptor_.set_option(boost::asio::socket_base::reuse_address{config_.reuse_address}, ec);
         if (ec)
         {
-            boost::system::error_code ignored_ec;
-            acceptor_.close(ignored_ec);
+            close();
             return ec;
         }
+
+#ifndef _WIN32
+        // We also set SO_REUSEPORT on unix-like systems.
+        // It fixes "Address already in use" errors even when SO_REUSEADDR is set (socket in TIME_WAIT state).
+        using reuse_port = boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
+        acceptor_.set_option(reuse_port{config_.reuse_address}, ec);
+        if (ec)
+        {
+            close();
+            return ec;
+        }
+#endif
 
         const auto boost_ep = lux::net::to_boost_endpoint<boost::asio::ip::tcp>(endpoint);
         acceptor_.bind(boost_ep, ec);
         if (ec)
         {
-            boost::system::error_code ignored_ec;
-            acceptor_.close(ignored_ec);
+            close();
             return ec;
         }
 
         acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
         if (ec)
         {
-            boost::system::error_code ignored_ec;
-            acceptor_.close(ignored_ec);
+            close();
             return ec;
         }
 
