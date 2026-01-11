@@ -27,15 +27,33 @@ public:
      * Stores the completion handler and returns an awaitable that completes when
      * trigger(T) is called. This is a single-shot wait; after invocation the handler is reset.
      *
-     * @return lux::promise<void(T)> awaitable that completes on trigger().
+     * @return lux::coro::awaitable<T> that completes on trigger().
      *
      * Completion signature: void(T)
      */
     auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_base_promise), void(T)>(
-            [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_base_promise);
+        return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void(T)>(
+            [this](auto&& h) { handler_ = std::forward<decltype(h)>(h); },
+            lux::coro::use_awaitable);
+    }
+
+    /**
+     * @brief Asynchronously wait for the event to be triggered with a custom completion token.
+     *
+     * @tparam CompletionToken Completion token type.
+     * @param token Completion token for the async operation.
+     *
+     * @return Depends on CompletionToken.
+     *
+     * Completion signature: void(T)
+     */
+    template <typename CompletionToken>
+    auto async_wait(CompletionToken&& token)
+    {
+        return boost::asio::async_initiate<CompletionToken, void(T)>(
+            [this](auto&& h) { handler_ = std::forward<decltype(h)>(h); },
+            token);
     }
 
     /**
@@ -75,15 +93,33 @@ public:
      * Stores the completion handler and returns an awaitable that completes when trigger() is called.
      * Single-shot; the handler is cleared after invocation.
      *
-     * @return lux::promise<void> awaitable that completes on trigger().
+     * @return lux::coro::awaitable<void> that completes on trigger().
      *
      * Completion signature: void()
      */
     auto async_wait()
     {
-        return boost::asio::async_initiate<decltype(lux::coro::use_base_promise), void()>(
-            [&](auto h) { handler_ = lux::move(h); },
-            lux::coro::use_base_promise);
+        return boost::asio::async_initiate<decltype(lux::coro::use_awaitable), void()>(
+            [this](auto&& h) { handler_ = std::forward<decltype(h)>(h); },
+            lux::coro::use_awaitable);
+    }
+
+    /**
+     * @brief Asynchronously wait for the event to be triggered with a custom completion token.
+     *
+     * @tparam CompletionToken Completion token type.
+     * @param token Completion token for the async operation.
+     *
+     * @return Depends on CompletionToken.
+     *
+     * Completion signature: void()
+     */
+    template <typename CompletionToken>
+    auto async_wait(CompletionToken&& token)
+    {
+        return boost::asio::async_initiate<CompletionToken, void()>(
+            [this](auto&& h) { handler_ = std::forward<decltype(h)>(h); },
+            token);
     }
 
     /**

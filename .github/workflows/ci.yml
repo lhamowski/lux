@@ -24,7 +24,7 @@ jobs:
     name: Build and test (linux-gcc-release)
     runs-on: ubuntu-latest
     container:
-      image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest
+      image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.89-latest
 
     steps:
       - name: Checkout repo
@@ -60,7 +60,7 @@ jobs:
       - name: Configure
         run: |
           cmake --preset=linux-gcc-release \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.89.0 \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     container:
-      image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.87-latest
+      image: lhamowski/devops:ubuntu-24.04-cpp-gcc-14-boost-1.89-latest
     strategy:
       matrix:
         preset: [linux-gcc-asan, linux-gcc-tsan, linux-gcc-ubsan]
@@ -115,7 +115,7 @@ jobs:
       - name: Configure
         run: |
           cmake --preset=${{ matrix.preset }} \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.89.0 \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
@@ -146,7 +146,7 @@ jobs:
         id: install-boost
         uses: MarkusJx/install-boost@6d8df42f57de83c5b326b5b83e7b35d650030103
         with:
-          boost_version: 1.87.0
+          boost_version: 1.89.0
           platform_version: 2022
           toolset: msvc
 
@@ -163,7 +163,7 @@ jobs:
     name: Build, test and generate coverage report (linux-clang-coverage)
     runs-on: ubuntu-latest
     container:
-      image: lhamowski/devops:ubuntu-24.04-cpp-clang-19-boost-1.87-latest
+      image: lhamowski/devops:ubuntu-24.04-cpp-clang-19-boost-1.89-latest
 
     steps:
       - name: Checkout repo
@@ -199,7 +199,7 @@ jobs:
       - name: Configure
         run: |
           cmake --preset=linux-clang-coverage \
-                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.87.0 \
+                -DCMAKE_PREFIX_PATH=/usr/local/boost_1.89.0 \
                 -DCMAKE_C_COMPILER_LAUNCHER=ccache \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
