@@ -98,6 +98,12 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/coro/awaitable_event.hpp
 		${lux_include_files_dir}/io/coro/common.hpp
 
+		# io/proc files
+		${lux_include_files_dir}/io/proc/base/process.hpp
+		${lux_include_files_dir}/io/proc/base/process_factory.hpp
+		${lux_include_files_dir}/io/proc/process.hpp ${lux_source_files_dir}/io/proc/process.cpp
+		${lux_include_files_dir}/io/proc/process_factory.hpp ${lux_source_files_dir}/io/proc/process_factory.cpp
+
 		# general io files
 		${lux_include_files_dir}/io/promise.hpp
     )
@@ -107,14 +113,15 @@ if(LUX_ENABLE_IO)
 		target_link_libraries(lux-io PRIVATE Boost::disable_autolinking)
 	endif()
 
-    target_link_libraries(lux-io
+	target_link_libraries(lux-io
 		PUBLIC
 			lux::lux
 			ssl
 			crypto
 			Boost::boost
 			Boost::url
-    )
+			Boost::process
+	)
 
 	target_include_directories(lux-io
 		PRIVATE

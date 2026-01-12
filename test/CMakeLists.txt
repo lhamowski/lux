@@ -58,9 +58,19 @@ if(LUX_ENABLE_IO)
         io/coro/algorithms_test.cpp
         io/coro/awaitable_event_test.cpp
 
+        io/proc/process_test.cpp
+        io/proc/process_factory_test.cpp
+
         io/promise_test.cpp
     )
-    target_link_libraries(lux-test 
+
+    cflex_add_executable(process-test-helper SOURCES io/proc/process_test_helper.cpp)
+    target_link_libraries(process-test-helper
+        PRIVATE 
+            Boost::boost
+    )
+
+    target_link_libraries(lux-test
         PRIVATE 
             lux::io
     )
