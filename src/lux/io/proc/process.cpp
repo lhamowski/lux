@@ -46,23 +46,31 @@ public:
     }
 
 public:
-    void start(const std::vector<std::string>& args)
+    lux::status start(const std::vector<std::string>& args)
     {
         namespace bp = boost::process::v2;
-        process_.emplace(executor_,
-                         exe_path_,
-                         args,
-                         bp::process_stdio{.in = {}, .out = stdout_pipe_, .err = stderr_pipe_}
+
+        try
+        {
+            process_.emplace(executor_,
+                             exe_path_,
+                             args,
+                             bp::process_stdio{.in = {}, .out = stdout_pipe_, .err = stderr_pipe_}
 #if defined(BOOST_PROCESS_V2_WINDOWS)
-                         ,
-                         bp::windows::create_new_process_group
+                             , bp::windows::create_new_process_group
 #endif
-        );
+            );
+        }
+        catch (const std::exception& ex)
+        {
+            return lux::err("Failed to start process (exe={}, err={})", exe_path_, ex.what());
+        }
 
         read_stdout();
         read_stderr();
 
         process_->async_wait([self = this->shared_from_this()](const auto& ec, int exit_code) {
+
             if (ec == boost::asio::error::operation_aborted)
             {
                 return;
@@ -77,12 +85,18 @@ public:
                 self->on_process_exit(exit_code);
             }
         });
+
+        return lux::ok();
     }
 
     void terminate()
     {
         namespace bp = boost::process::v2;
-        LUX_ASSERT(process_.has_value(), "Process must be started before terminating");
+        
+        if (!process_.has_value())
+        {
+            return;
+        }
 
         boost::system::error_code ec;
         process_->terminate(ec);
@@ -122,7 +136,7 @@ private:
 private:
     void on_stdout_read(const boost::system::error_code& ec, std::size_t bytes_transferred)
     {
-        if (ec == boost::asio::error::operation_aborted)
+        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe)
         {
             return;
         }
@@ -143,7 +157,7 @@ private:
 
     void on_stderr_read(const boost::system::error_code& ec, std::size_t bytes_transferred)
     {
-        if (ec == boost::asio::error::operation_aborted)
+        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe)
         {
             return;
         }
@@ -165,8 +179,15 @@ private:
 private:
     void on_process_exit(int exit_code)
     {
+        process_.reset();
+
+        boost::system::error_code ignored_ec;
+        stdout_pipe_.close(ignored_ec);
+        stderr_pipe_.close(ignored_ec);
+
         handler_.on_process_exit(exit_code);
     }
+
 
 private:
     boost::asio::any_io_executor executor_;
@@ -192,10 +213,10 @@ process::process(boost::asio::any_io_executor executor,
 
 process::~process() = default;
 
-void process::start(const std::vector<std::string>& args)
+lux::status process::start(const std::vector<std::string>& args)
 {
     LUX_ASSERT(impl_, "Process implementation must not be null");
-    impl_->start(args);
+    return impl_->start(args);
 }
 
 void process::terminate()

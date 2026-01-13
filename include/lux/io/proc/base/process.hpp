@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lux/support/result.hpp>
+
 #include <memory>
 #include <string>
 #include <string_view>
@@ -19,14 +21,13 @@ protected:
     virtual ~process_handler() = default;
 };
 
-
 class process
 {
 public:
     virtual ~process() = default;
 
 public:
-    virtual void start(const std::vector<std::string>& args) = 0;
+    virtual lux::status start(const std::vector<std::string>& args) = 0;
     virtual void terminate() = 0;
     virtual bool is_running() const = 0;
 };

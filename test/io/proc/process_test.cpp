@@ -72,7 +72,7 @@ LUX_TEST_CASE("process", "captures stdout from child process", "[io][proc]")
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"stdout"});
+    CHECK(proc.start({"stdout"}));
 
     run_io_context_until(io_ctx, [&] { return handler.exit_called; }, std::chrono::seconds{5});
 
@@ -88,7 +88,7 @@ LUX_TEST_CASE("process", "captures stderr from child process", "[io][proc]")
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"stderr"});
+    CHECK(proc.start({"stderr"}));
 
     run_io_context_until(io_ctx, [&] { return handler.exit_called; }, std::chrono::seconds{5});
 
@@ -104,7 +104,7 @@ LUX_TEST_CASE("process", "captures both stdout and stderr from child process", "
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"both"});
+    CHECK(proc.start({"both"}));
 
     run_io_context_until(io_ctx, [&] { return handler.exit_called; }, std::chrono::seconds{5});
 
@@ -120,7 +120,7 @@ LUX_TEST_CASE("process", "returns custom exit code from child process", "[io][pr
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"exit_code", "42"});
+    CHECK(proc.start({"exit_code", "42"}));
 
     run_io_context_until(io_ctx, [&] { return handler.exit_called; }, std::chrono::seconds{5});
 
@@ -134,7 +134,7 @@ LUX_TEST_CASE("process", "returns zero exit code for successful process", "[io][
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"exit_code", "0"});
+    CHECK(proc.start({"exit_code", "0"}));
 
     run_io_context_until(io_ctx, [&] { return handler.exit_called; }, std::chrono::seconds{5});
 
@@ -151,7 +151,7 @@ LUX_TEST_CASE("process", "reports running state correctly", "[io][proc]")
 
     CHECK_FALSE(proc.is_running());
 
-    proc.start({"sleep", "1"});
+    CHECK(proc.start({"sleep", "1"}));
 
     // Process should be running initially
     io_ctx.poll();
@@ -170,7 +170,7 @@ LUX_TEST_CASE("process", "terminates running child process", "[io][proc]")
     test_process_handler handler;
 
     lux::proc::process proc{io_ctx.get_executor(), handler, test_helper_path};
-    proc.start({"sleep", "10"});
+    CHECK(proc.start({"sleep", "10"}));
 
     io_ctx.poll();
     REQUIRE(proc.is_running());

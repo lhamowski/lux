@@ -26,7 +26,7 @@ public:
 
 public:
     // lux::proc::base::process implementation
-    void start(const std::vector<std::string>& args) override;
+    lux::status start(const std::vector<std::string>& args) override;
     void terminate() override;
     bool is_running() const override;
 
