@@ -1,9 +1,9 @@
 #pragma once
 
-#include <initializer_list>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace lux::proc::base {
 
@@ -26,7 +26,7 @@ public:
     virtual ~process() = default;
 
 public:
-    virtual void start(std::initializer_list<std::string> args) = 0;
+    virtual void start(const std::vector<std::string>& args) = 0;
     virtual void terminate() = 0;
     virtual bool is_running() const = 0;
 };

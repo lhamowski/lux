@@ -10,6 +10,15 @@ class memory_arena;
 class error_message;
 } // namespace lux
 
+namespace lux::crypto {
+
+struct ed25519_private_key;
+struct ed25519_public_key;
+
+struct subject_info;
+
+} // namespace lux::crypto
+
 namespace lux::net::base {
 
 class endpoint;
@@ -58,6 +67,20 @@ class tcp_inbound_socket;
 class udp_socket;
 
 } // namespace lux::net
+
+namespace lux::proc::base {
+
+class process_factory;
+class process;
+
+} // namespace lux::proc::base
+
+namespace lux::proc {
+
+class process_factory;
+class process;
+
+} // namespace lux::proc
 
 namespace lux::time::base {
 

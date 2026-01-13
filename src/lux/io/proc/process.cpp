@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <format>
 #include <optional>
-#include <vector>
 
 namespace {
 
@@ -47,7 +46,7 @@ public:
     }
 
 public:
-    void start(std::initializer_list<std::string> args)
+    void start(const std::vector<std::string>& args)
     {
         namespace bp = boost::process::v2;
         process_.emplace(executor_,
@@ -193,7 +192,7 @@ process::process(boost::asio::any_io_executor executor,
 
 process::~process() = default;
 
-void process::start(std::initializer_list<std::string> args)
+void process::start(const std::vector<std::string>& args)
 {
     LUX_ASSERT(impl_, "Process implementation must not be null");
     impl_->start(args);
