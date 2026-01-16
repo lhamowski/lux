@@ -71,6 +71,10 @@ public:
 
         process_->async_wait([self = this->shared_from_this()](const auto& ec, int exit_code) {
 
+            boost::system::error_code ignored_ec;
+            self->stdout_pipe_.close(ignored_ec);
+            self->stderr_pipe_.close(ignored_ec);
+
             if (ec == boost::asio::error::operation_aborted)
             {
                 return;
@@ -180,11 +184,6 @@ private:
     void on_process_exit(int exit_code)
     {
         process_.reset();
-
-        boost::system::error_code ignored_ec;
-        stdout_pipe_.close(ignored_ec);
-        stderr_pipe_.close(ignored_ec);
-
         handler_.on_process_exit(exit_code);
     }
 
