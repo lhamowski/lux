@@ -296,7 +296,6 @@ private:
         switch (state_)
         {
         case state::disconnected:
-        case state::disconnecting:
             return {}; // No error, already disconnected or disconnecting
         case state::connected:
             if (pending_data_to_send_.empty())
@@ -306,6 +305,7 @@ private:
 
             state_ = state::disconnecting;
             return shutdown_receive(); // Shutdown receive to stop reading data
+        case state::disconnecting:
         case state::connecting:
             return disconnect_immediately();
         }
