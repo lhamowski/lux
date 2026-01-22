@@ -79,7 +79,6 @@ lux/
 │   ├── support/             # Core utilities (result, strong_typedef, assert, exception, path, hash)
 │   ├── utils/               # Buffer I/O (buffer_reader/writer), memory_arena, stopwatch, lifetime_guard
 │   └── io/                  # Async I/O module (requires Boost, LUX_ENABLE_IO=ON)
-│       ├── coro/            # Coroutine helpers (awaitable_event, algorithms, common)
 │       ├── net/             # Networking (tcp_socket, udp_socket, tcp_acceptor, socket_factory, SSL types)
 │       └── time/            # Timers and retry (interval_timer, retry_executor, timer_factory)
 ├── src/                     # Implementation files
@@ -96,7 +95,6 @@ lux/
     ├── support/             # result_test.cpp, strong_typedef_test.cpp, exception_test.cpp, etc.
     ├── utils/               # buffer_reader_test.cpp, buffer_writer_test.cpp, memory_arena_test.cpp, etc.
     └── io/                  # I/O module tests (requires LUX_ENABLE_IO=ON)
-        ├── coro/            # algorithms_test.cpp, awaitable_event_test.cpp
         ├── net/             # tcp_socket_test.cpp, udp_socket_test.cpp, tcp_acceptor_test.cpp, test_utils.hpp
         └── time/            # interval_timer_test.cpp, retry_executor_test.cpp, timer_factory_test.cpp, mocks/
 ```

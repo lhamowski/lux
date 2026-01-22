@@ -93,11 +93,6 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/time/retry_executor.hpp ${lux_source_files_dir}/io/time/retry_executor.cpp
 		${lux_include_files_dir}/io/time/timer_factory.hpp
 
-		# io/coro files
-		${lux_include_files_dir}/io/coro/algorithms.hpp
-		${lux_include_files_dir}/io/coro/awaitable_event.hpp
-		${lux_include_files_dir}/io/coro/common.hpp
-
 		# io/proc files
 		${lux_include_files_dir}/io/proc/base/process.hpp
 		${lux_include_files_dir}/io/proc/base/process_factory.hpp

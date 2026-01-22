@@ -2,4 +2,5 @@
 /.vs
 /.vscode
 /out
+/[Tt]esting
 CMakeUserPresets.json

@@ -55,9 +55,6 @@ if(LUX_ENABLE_IO)
         io/time/mocks/interval_timer_mock.hpp
         io/time/mocks/timer_factory_mock.hpp
 
-        io/coro/algorithms_test.cpp
-        io/coro/awaitable_event_test.cpp
-
         io/proc/process_test.cpp
         io/proc/process_factory_test.cpp
 
