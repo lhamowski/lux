@@ -140,7 +140,8 @@ private:
 private:
     void on_stdout_read(const boost::system::error_code& ec, std::size_t bytes_transferred)
     {
-        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe)
+        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe ||
+            ec == boost::asio::error::eof)
         {
             return;
         }
@@ -161,7 +162,8 @@ private:
 
     void on_stderr_read(const boost::system::error_code& ec, std::size_t bytes_transferred)
     {
-        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe)
+        if (ec == boost::asio::error::operation_aborted || ec == boost::asio::error::broken_pipe ||
+            ec == boost::asio::error::eof)
         {
             return;
         }
