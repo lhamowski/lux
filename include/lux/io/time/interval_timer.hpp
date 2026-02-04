@@ -68,7 +68,14 @@ public:
     void cancel() override
     {
         canceled_ = true;
-        timer_.cancel();
+        try
+        {
+            timer_.cancel();
+        }
+        catch (...)
+        {
+            // Swallow exceptions - we don't want to propagate from cancel().
+        }
     }
 
 private:
