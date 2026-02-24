@@ -7,6 +7,8 @@
 #include <spdlog/common.h>
 
 #include <optional>
+#include <functional>
+#include <iosfwd>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -22,6 +24,15 @@ struct console_log_config
     log_level level{default_log_level};
     std::string pattern{default_log_pattern};
     bool colorize{true};
+};
+
+struct ostream_log_config
+{
+    // Non-owning stream reference. Caller is responsible for stream lifetime.
+    std::reference_wrapper<std::ostream> stream;
+    log_level level{default_log_level};
+    std::string pattern{default_log_pattern};
+    bool force_flush{true}; // Whether to flush the stream after every log message.
 };
 
 struct basic_file_log_config
@@ -49,6 +60,7 @@ using file_log_config = std::variant<basic_file_log_config, rotating_file_log_co
 struct log_config
 {
     std::optional<console_log_config> console;
+    std::optional<ostream_log_config> ostream;
     std::optional<file_log_config> file;
 };
 
@@ -80,6 +92,7 @@ public:
 private:
     void configure_sinks(const log_config& config);
     void configure_console_sink(const console_log_config& config);
+    void configure_ostream_sink(const ostream_log_config& config);
     void configure_file_sink(const file_log_config& config);
     void configure_basic_file_sink(const basic_file_log_config& config);
     void configure_rotating_file_sink(const rotating_file_log_config& config);

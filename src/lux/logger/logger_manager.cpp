@@ -10,6 +10,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/daily_file_sink.h>
+#include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #include <algorithm>
@@ -59,6 +60,11 @@ void logger_manager::configure_sinks(const log_config& config)
         configure_file_sink(*config.file);
     }
 
+    if (config.ostream)
+    {
+        configure_ostream_sink(*config.ostream);
+    }
+
     // Set the minimum log level across all sinks
     if (!sinks_.empty())
     {
@@ -84,6 +90,16 @@ void logger_manager::configure_console_sink(const console_log_config& config)
     console_sink->set_level(detail::to_spdlog_level(config.level));
     console_sink->set_color_mode(config.colorize ? spdlog::color_mode::automatic : spdlog::color_mode::never);
     sinks_.push_back(lux::move(console_sink));
+}
+
+void logger_manager::configure_ostream_sink(const ostream_log_config& config)
+{
+    using spdlog::sinks::ostream_sink_mt;
+
+    auto stream_sink = std::make_shared<ostream_sink_mt>(config.stream.get(), config.force_flush);
+    stream_sink->set_pattern(config.pattern);
+    stream_sink->set_level(detail::to_spdlog_level(config.level));
+    sinks_.push_back(lux::move(stream_sink));
 }
 
 void logger_manager::configure_file_sink(const file_log_config& config)

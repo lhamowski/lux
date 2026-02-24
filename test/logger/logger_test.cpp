@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <format>
 #include <fstream>
 #include <iostream>
@@ -193,6 +194,57 @@ LUX_TEST_CASE("logger_manager", "creates loggers with various sink configuration
         REQUIRE_NOTHROW(lux::logger_manager{config});
     }
 
+    SECTION("Logger manager can be created with ostream config")
+    {
+        std::ostringstream output_stream;
+
+        lux::log_config config;
+        config.ostream = lux::ostream_log_config{.stream = std::ref(output_stream),
+                                                 .level = lux::log_level::debug,
+                                                 .pattern = "%v",
+                                                 .force_flush = false};
+
+        lux::logger_manager manager{config};
+        auto& logger = manager.get_logger("test_ostream_logger");
+
+        REQUIRE_NOTHROW(LUX_LOG_INFO(logger, "ostream sink message"));
+        REQUIRE_NOTHROW(logger.flush());
+
+        CHECK(output_stream.str().find("ostream sink message") != std::string::npos);
+    }
+
+    SECTION("Logger manager can log to ostream and file sinks")
+    {
+        std::ostringstream output_stream;
+
+        lux::log_config config;
+        config.ostream = lux::ostream_log_config{.stream = std::ref(output_stream),
+                                                 .level = lux::log_level::debug,
+                                                 .pattern = "%v",
+                                                 .force_flush = true};
+        config.file = lux::basic_file_log_config{.level = lux::log_level::info,
+                                                 .filename = "ostream_file_test.log",
+                                                 .pattern = "%v"};
+
+        std::filesystem::remove("ostream_file_test.log");
+        LUX_FINALLY({ std::filesystem::remove("ostream_file_test.log"); });
+
+        lux::logger_manager manager{config};
+        auto& logger = manager.get_logger("test_ostream_file_logger");
+
+        REQUIRE_NOTHROW(LUX_LOG_INFO(logger, "shared sink message"));
+        REQUIRE_NOTHROW(logger.flush());
+
+        CHECK(output_stream.str().find("shared sink message") != std::string::npos);
+
+        std::ifstream file_stream("ostream_file_test.log");
+        REQUIRE(file_stream.is_open());
+
+        std::string line;
+        std::getline(file_stream, line);
+        CHECK(line.find("shared sink message") != std::string::npos);
+    }
+
     SECTION("Logger manager can be created with basic file config")
     {
         lux::log_config config;
@@ -297,6 +349,16 @@ LUX_TEST_CASE("log_config", "provides default values for all configuration types
         CHECK(config.level == lux::log_level::info);
         CHECK(config.filename == "lux.log");
         CHECK(config.pattern == lux::default_log_pattern);
+    }
+
+    SECTION("Ostream log config has reasonable defaults")
+    {
+        std::ostringstream output_stream;
+        lux::ostream_log_config config{.stream = std::ref(output_stream)};
+
+        CHECK(config.level == lux::log_level::info);
+        CHECK(config.pattern == lux::default_log_pattern);
+        CHECK(config.force_flush == true);
     }
 
     SECTION("Rotating file log config has reasonable defaults")
