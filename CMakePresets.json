@@ -222,14 +222,6 @@
         {
             "name": "linux-clang-msan",
             "inherits": [ "linux", "clang", "msan" ]
-        },
-
-        {
-            "name": "vs2022",
-            "inherits": [ "windows", "msvc" ],
-            "architecture": "x64",
-            "toolset": "host=x64",
-            "generator": "Visual Studio 17 2022"
         }
     ]
 }
