@@ -1,0 +1,8 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - "-std:c++latest" # clang-cl format; needed for header files without compile_commands entry
+
+# Ignore Windows resource files (.rc) — clangd can't compile them
+If:
+  PathExclude: .*\.rc
