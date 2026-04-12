@@ -1,6 +1,7 @@
 #pragma once
 
 #include <compare>
+#include <type_traits>
 
 namespace lux {
 
@@ -21,10 +22,12 @@ public:
     {
         return value_;
     }
+
     operator const T&() const
     {
         return value_;
     }
+
     auto operator<=>(const strong_typedef&) const = default;
 
 public:
@@ -32,9 +35,76 @@ public:
     {
         return value_;
     }
+
     const T& get() const
     {
         return value_;
+    }
+
+public:
+    strong_typedef operator+(const strong_typedef& rhs) const
+        requires std::is_arithmetic_v<T>
+    {
+        return strong_typedef{value_ + rhs.value_};
+    }
+
+    strong_typedef operator-(const strong_typedef& rhs) const
+        requires std::is_arithmetic_v<T>
+    {
+        return strong_typedef{value_ - rhs.value_};
+    }
+
+    strong_typedef operator*(const strong_typedef& rhs) const
+        requires std::is_arithmetic_v<T>
+    {
+        return strong_typedef{value_ * rhs.value_};
+    }
+
+    strong_typedef operator/(const strong_typedef& rhs) const
+        requires std::is_arithmetic_v<T>
+    {
+        return strong_typedef{value_ / rhs.value_};
+    }
+
+    strong_typedef operator%(const strong_typedef& rhs) const
+        requires std::is_integral_v<T>
+    {
+        return strong_typedef{value_ % rhs.value_};
+    }
+
+    strong_typedef& operator+=(const strong_typedef& rhs)
+        requires std::is_arithmetic_v<T>
+    {
+        value_ += rhs.value_;
+        return *this;
+    }
+
+    strong_typedef& operator-=(const strong_typedef& rhs)
+        requires std::is_arithmetic_v<T>
+    {
+        value_ -= rhs.value_;
+        return *this;
+    }
+
+    strong_typedef& operator*=(const strong_typedef& rhs)
+        requires std::is_arithmetic_v<T>
+    {
+        value_ *= rhs.value_;
+        return *this;
+    }
+
+    strong_typedef& operator/=(const strong_typedef& rhs)
+        requires std::is_arithmetic_v<T>
+    {
+        value_ /= rhs.value_;
+        return *this;
+    }
+
+    strong_typedef& operator%=(const strong_typedef& rhs)
+        requires std::is_integral_v<T>
+    {
+        value_ %= rhs.value_;
+        return *this;
     }
 
 private:
