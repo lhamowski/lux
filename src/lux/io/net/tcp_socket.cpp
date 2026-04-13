@@ -713,7 +713,11 @@ public:
 public:
     std::error_code initialize_socket()
     {
-        LUX_ASSERT(stream_.has_value(), "SSL stream is not initialized");
+        // SSL streams cannot be reused after a shutdown. Recreate the stream for each connection
+        // attempt so that ssl_context_ is only ever accessed synchronously from connect(), never
+        // inside an async callback that may outlive the context owner.
+        // https://github.com/boostorg/beast/issues/821
+        stream_.emplace(exe_, ssl_context_);
 
         boost::system::error_code ec;
         socket().open(boost::asio::ip::tcp::v4(), ec);
@@ -810,8 +814,6 @@ private:
                 // TODO: inform the handler about the shutdown error
             }
         }
-
-        stream_.emplace(exe_, ssl_context_); // Recreate the stream for future connections
     }
 
 private:
@@ -819,8 +821,6 @@ private:
     boost::asio::ssl::context& ssl_context_;
 
 private:
-    // need to recreate the stream after closing
-    // https://github.com/boostorg/beast/issues/821
     using stream_type = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
     std::optional<stream_type> stream_;
 };
