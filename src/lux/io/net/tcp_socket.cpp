@@ -495,6 +495,13 @@ private:
             return;
         }
 
+        // The deque may have been cleared by close_socket() during teardown while the state is still
+        // 'disconnecting' (e.g. SSL async_shutdown is in progress). Nothing meaningful to do.
+        if (pending_data_to_send_.empty())
+        {
+            return;
+        }
+
         if (handler_)
         {
             LUX_ASSERT(parent_, "TCP socket parent must not be null");
@@ -759,7 +766,7 @@ private:
     void handshake()
     {
         stream_->async_handshake(boost::asio::ssl::stream_base::client,
-                                [self = shared_from_base()](const auto& ec) { self->on_handshake_completed(ec); });
+                                 [self = shared_from_base()](const auto& ec) { self->on_handshake_completed(ec); });
     }
 
 private:
