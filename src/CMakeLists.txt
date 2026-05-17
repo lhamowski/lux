@@ -80,6 +80,7 @@ if(LUX_ENABLE_IO)
 		${lux_include_files_dir}/io/net/http_router.hpp ${lux_source_files_dir}/io/net/http_router.cpp
 		${lux_include_files_dir}/io/net/http_server.hpp ${lux_source_files_dir}/io/net/http_server.cpp
 		${lux_include_files_dir}/io/net/http_server_app.hpp ${lux_source_files_dir}/io/net/http_server_app.cpp
+		${lux_include_files_dir}/io/net/ssl_utils.hpp ${lux_source_files_dir}/io/net/ssl_utils.cpp
 		${lux_include_files_dir}/io/net/socket_factory.hpp ${lux_source_files_dir}/io/net/socket_factory.cpp
 		${lux_include_files_dir}/io/net/tcp_acceptor.hpp ${lux_source_files_dir}/io/net/tcp_acceptor.cpp
 		${lux_include_files_dir}/io/net/tcp_socket.hpp ${lux_source_files_dir}/io/net/tcp_socket.cpp
@@ -118,6 +119,10 @@ if(LUX_ENABLE_IO)
 			Boost::url
 			Boost::process
 	)
+
+	if(WIN32)
+		target_link_libraries(lux-io PRIVATE crypt32)
+	endif()
 
 	target_include_directories(lux-io
 		PRIVATE
